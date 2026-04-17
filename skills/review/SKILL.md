@@ -60,6 +60,17 @@ Merge subagent reports. Write **How It Works** first — trace the change end-to
 
 De-duplicate across agents. Keep the most detailed version.
 
+### Step 4.5: End-to-end walkthrough
+
+Before finalizing findings, do your own E2E sanity check — this catches goal-level bugs that line-by-line review misses. Write it out in the findings (under **How It Works** or as its own section) — don't just think it.
+
+1. **Infer the goal.** From commit messages, PR description, branch name, or spec.
+2. **List every distinct audience.** For each feature gate, environment check, or role-based condition in the diff, name the relevant audiences (e.g., "Pro user on prod", "non-Pro on staging", "unauthenticated user").
+3. **Trace the happy path for each audience.** Walk through the full conditional chain — from entry point (URL, tab click, API call) through every gate to the final rendered output or API response. Check both client AND server paths.
+4. **Ask: does the end state match the stated goal?** If the chain evaluates to false for an audience the change claims to serve, that's a **Critical** finding — add it before writing the document.
+
+Keep the walkthrough brief (a few lines per audience) but explicit.
+
 ### Step 5: Write findings
 
 Write to `agent/reviews/` using auto-incrementing ordinals:
