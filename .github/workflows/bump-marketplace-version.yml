@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: bump-marketplace-version
+  cancel-in-progress: false
+
 jobs:
   bump:
     runs-on: ubuntu-latest
@@ -32,6 +36,7 @@ jobs:
             '.metadata.version = $v' \
             .claude-plugin/marketplace.json > .claude-plugin/marketplace.json.tmp
           mv .claude-plugin/marketplace.json.tmp .claude-plugin/marketplace.json
+          jq -e . .claude-plugin/marketplace.json > /dev/null
 
       - name: Commit and push
         run: |
