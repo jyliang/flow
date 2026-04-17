@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Flow — a skill system for Claude Code that moves work from idea to shipped PR",
-    "version": "0.1.1"
+    "version": "0.1.7"
   },
   "plugins": [
     {
