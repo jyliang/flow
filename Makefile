@@ -24,7 +24,8 @@ install: ## Install all skills and slash commands into ~/.claude/
 	@echo "Installed $$(echo $(SKILL_DIRS) | wc -w | tr -d ' ') skills to $(SKILLS_DIR)"
 	@echo "Installed $$(echo $(COMMAND_FILES) | wc -w | tr -d ' ') commands to $(COMMANDS_DIR)"
 
-list: ## List all available skills
+list: ## List all available skills and commands
+	@echo "Skills:"
 	@for dir in $(SKILL_DIRS); do \
 		name=$$(basename $$dir); \
 		desc=$$(grep '^  short-description:' $$dir/SKILL.md 2>/dev/null | sed 's/.*: //'); \
@@ -32,6 +33,13 @@ list: ## List all available skills
 			desc=$$(grep '^description:' $$dir/SKILL.md 2>/dev/null | head -1 | sed 's/description: //'); \
 		fi; \
 		printf "  %-16s %s\n" "$$name" "$$desc"; \
+	done
+	@echo ""
+	@echo "Commands:"
+	@for f in $(COMMAND_FILES); do \
+		name=$$(basename $$f .md); \
+		desc=$$(grep '^description:' $$f 2>/dev/null | head -1 | sed 's/description: //'); \
+		printf "  /%-15s %s\n" "$$name" "$$desc"; \
 	done
 
 help: ## Show this help
