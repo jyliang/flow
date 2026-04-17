@@ -48,14 +48,23 @@ If the user provides explicit intent ("review this PR", "ship it"), skip detecti
 
 ### When documents are missing or stale
 
-Don't assume. Ask.
+Don't assume. Ask via `AskUserQuestion` (see `references/user-interaction.md`).
 
-- Spec exists but references files that don't exist → the codebase changed since the spec was written. Tell the user: "The spec references [X] which no longer exists. Want to re-explore, or update the spec manually?"
-- Plan exists but spec doesn't → someone deleted or never created the spec. The plan may still be valid. Ask: "There's a plan but no spec. Continue implementing from the plan, or start fresh?"
-- Findings exist but the code has changed since the review → tell the user: "Code changed since the last review. Re-review, or ship as-is?"
-- Multiple plan files exist → use the most recent. Note the others exist.
+- **Spec exists but references files that don't exist** — the codebase changed since the spec was written.
+  - Question: `"The spec references [X] which no longer exists. How do you want to proceed?"`
+  - Header: `Stale spec`
+  - Options: `Re-explore` / `Update the spec manually` / `Proceed anyway`
+- **Plan exists but spec doesn't** — someone deleted or never created the spec. The plan may still be valid.
+  - Question: `"There's a plan but no spec. How do you want to proceed?"`
+  - Header: `Missing spec`
+  - Options: `Continue from the plan` / `Start fresh with explore`
+- **Findings exist but the code has changed since the review** —
+  - Question: `"Code changed since the last review. How do you want to proceed?"`
+  - Header: `Stale review`
+  - Options: `Re-review` / `Ship as-is`
+- **Multiple plan files exist** — use the most recent. Note the others exist. No question needed unless the user asks.
 
-The goal is never to silently proceed with stale input. Surface the gap, offer a clear choice, move on.
+The goal is never to silently proceed with stale input. Surface the gap via `AskUserQuestion`, let the user choose, move on.
 
 ## Proportional ceremony
 
@@ -82,9 +91,15 @@ The system doesn't decide what's "small enough to skip." It adapts the depth of 
 At each stage boundary:
 
 1. Show a brief summary of what was done
-2. If there are **decisions needed**, present them using `AskUserQuestion` with concrete options
+2. If there are **decisions needed**, present them using `AskUserQuestion` with concrete options (see `references/user-interaction.md`)
 3. If there are items to **verify**, list them clearly
-4. Ask: advance to the next stage, or pause here?
+4. Ask about advancing via `AskUserQuestion`:
+   - Question: `"Advance to the [next-stage] stage?"`
+   - Header: `Advance?`
+   - Options: `Yes, advance (Recommended)` / `Pause here` / `Adjust [this stage's document] first`
+
+* **DO** use `AskUserQuestion` for every user-facing decision (see `references/user-interaction.md`)
+* **DO NOT** print free-form Y/n prompts or list choices in prose and wait for a typed answer
 
 ### Auto-advance vs pause
 

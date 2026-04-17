@@ -26,4 +26,4 @@ When the user says "teach this", "capture this", or "turn this into a skill" mid
    - Each correction as a `* **DO NOT**` rule
    - The working approach as code examples
 
-4. Ask the user to review before writing the skill file.
+4. Use `AskUserQuestion` to confirm the outline before writing the skill file (see `flow/references/user-interaction.md`).
