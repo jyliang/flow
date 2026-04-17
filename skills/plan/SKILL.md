@@ -17,7 +17,7 @@ Read `agent/spec.md` and produce an implementation plan at `agent/plans/IMPLEMEN
 ### Step 1: Read the spec
 
 Read `agent/spec.md`. Check for:
-- Unresolved decisions — if any exist, stop and surface them via `flow` before proceeding
+- Unresolved decisions — if any exist, stop and surface them to the user via `AskUserQuestion` (see `flow/references/user-interaction.md`) before proceeding
 - Resolved decisions — incorporate them into the plan
 - Constraints — respect them
 
@@ -39,7 +39,7 @@ Write to `agent/plans/IMPLEMENTATION_PLAN_<YYYY-MM-DD>.md` following the documen
 * **DO** reference existing implementations as patterns
 * **DO** include test criteria for every step
 * **DO NOT** include steps without corresponding tests
-* **DO NOT** leave ambiguities — ask for clarification rather than guessing
+* **DO NOT** leave ambiguities — use `AskUserQuestion` rather than guessing (see `flow/references/user-interaction.md`)
 
 ## Conventions
 

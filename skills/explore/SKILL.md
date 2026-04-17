@@ -23,6 +23,7 @@ Use parallel subagents to understand the codebase:
 
 * **DO** search for existing implementations before assuming they don't exist
 * **DO** use parallel subagents for all exploration (see `parallel/SKILL.md`)
+* **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `flow/references/user-interaction.md`). Prefer capturing ambiguities under `## Decisions needed` in the spec over interrupting mid-explore.
 * **DO NOT** assume features aren't implemented — study the code first
 
 ## How to produce the spec

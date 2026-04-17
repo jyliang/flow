@@ -37,6 +37,7 @@ For every changed file, read the FULL file — not just the diff hunks. Use para
 Also read related files: protocol definitions, parent modules, test files, `CLAUDE.md`.
 
 * **DO NOT** review based only on diff hunks — this is the #1 source of false claims
+* **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `flow/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Decisions needed` over interrupting mid-review.
 * **CRITICAL: DON'T ASSUME CODE IS UNUSED.** Grep the codebase for all call sites before claiming anything is dead code.
 * **CRITICAL: VERIFY AGAINST THE REMOTE BASE BRANCH.** Run `git fetch origin <base>` and check `origin/<base>` before flagging something as missing.
 

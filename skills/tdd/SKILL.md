@@ -27,7 +27,7 @@ Write tests covering the expected behavior before writing implementation code.
 Write the minimum code to make tests pass.
 
 * **DO** study existing source code before implementing — don't assume features aren't already implemented
-* **DO NOT** guess requirements — ask for clarification if unsure
+* **DO NOT** guess requirements — use `AskUserQuestion` if unsure (see `flow/references/user-interaction.md`)
 
 ### Step 3: Run tests and verify
 

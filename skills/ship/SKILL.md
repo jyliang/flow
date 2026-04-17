@@ -18,7 +18,7 @@ Read the findings document, fix what can be fixed, ask about the rest, and push 
 
 Read the latest `agent/reviews/*` document. Check for:
 - Resolved decisions (human already edited the document) — apply them
-- Unresolved decisions — present to human via `AskUserQuestion`
+- Unresolved decisions — present to human via `AskUserQuestion` (see `flow/references/user-interaction.md`)
 
 ### Step 1.5: Run the tests
 
@@ -53,7 +53,7 @@ A finding requires asking when **ANY** are true:
 - Trade-offs involved
 - Not confident the fix is correct
 
-Present via `AskUserQuestion` with concrete options, batched 1-4 per call. Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
+Present via `AskUserQuestion` with concrete options, batched 1-4 per call (see `flow/references/user-interaction.md`). Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
 
 **Group related findings.** If 3 findings are all about the same architectural concern, present them as one question — don't spam the user with repetitive prompts.
 

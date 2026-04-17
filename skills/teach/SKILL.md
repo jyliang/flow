@@ -31,9 +31,12 @@ Check if an existing skill covers this domain. If yes, add a recipe to it. If no
 
 ### Quick capture rules
 
-1. Ask scope only if ambiguous: "System-wide or this project only?"
+1. Ask scope only if ambiguous — via `AskUserQuestion`:
+   - Question: `"Is this rule system-wide or this-project-only?"`
+   - Header: `Scope`
+   - Options: `System-wide (~/.claude/)` / `This project only (.claude/)`
 2. Do not interview — capture what was said, write it, confirm what was written and where
-3. If the input is unclear, ask one clarifying question max
+3. If the input is unclear, use `AskUserQuestion` for at most one clarifying question
 4. Always show what was written and the file path after capturing
 
 ## Full skill creation
@@ -60,7 +63,7 @@ Scan existing skills before creating anything new.
 
 ### 2. Gather knowledge
 
-Ask the user for:
+Ask the user for (use free-form prompts — these are open-ended, not a choice between options; see `flow/references/user-interaction.md` "When NOT to use"):
 - Concrete examples of the workflow or API
 - Common mistakes or anti-patterns
 - Reference material (docs, interfaces, schemas)
@@ -77,7 +80,7 @@ Follow the structure in `references/template.md`. Key rules:
 - **No prose essays** — code examples communicate faster and cheaper
 - **Cross-reference** other skills by path (`skill-name/SKILL.md`) instead of duplicating
 
-* **DO** ask the user to review before writing the skill file
+* **DO** use `AskUserQuestion` to confirm the outline before writing the skill file
 * **DO** scan existing skills first to avoid duplicates
 * **DO NOT** write vague descriptions like "Provides guidance for X" — include what it does and when to use it
 * **DO NOT** dump everything into SKILL.md — split into references at ~200 lines

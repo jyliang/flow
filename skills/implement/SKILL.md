@@ -34,7 +34,7 @@ Pick the single most important incomplete step from the plan, then:
 * **DO NOT** proceed to the next step with failing tests
 * **DO** update the plan after every step so a fresh agent can pick up
 * **DO** write production-ready code — no placeholders, no stubs
-* **DO** ask for clarification rather than guessing requirements
+* **DO** use `AskUserQuestion` rather than guessing requirements (see `flow/references/user-interaction.md`)
 
 ## How to handle discoveries
 
