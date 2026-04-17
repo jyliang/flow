@@ -1,0 +1,46 @@
+name: Bump marketplace version
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.claude-plugin/marketplace.json'
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute new version
+        id: version
+        run: |
+          count=$(git rev-list --count HEAD)
+          new_version="0.1.${count}"
+          echo "new_version=${new_version}" >> "$GITHUB_OUTPUT"
+          echo "Computed new version: ${new_version}"
+
+      - name: Update marketplace.json
+        run: |
+          jq --arg v "${{ steps.version.outputs.new_version }}" \
+            '.metadata.version = $v' \
+            .claude-plugin/marketplace.json > .claude-plugin/marketplace.json.tmp
+          mv .claude-plugin/marketplace.json.tmp .claude-plugin/marketplace.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/marketplace.json
+          if git diff --cached --quiet; then
+            echo "No version change needed"
+            exit 0
+          fi
+          git commit -m "chore: bump marketplace version to ${{ steps.version.outputs.new_version }} [skip ci]"
+          git push
