@@ -1,0 +1,29 @@
+{
+  "name": "flow",
+  "owner": {
+    "name": "Jason Liang",
+    "url": "https://github.com/jyliang"
+  },
+  "metadata": {
+    "description": "Flow — a skill system for Claude Code that moves work from idea to shipped PR",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "flow",
+      "description": "Move work from idea to PR through document-driven stages: explore, plan, implement, review, ship.",
+      "author": {
+        "name": "Jason Liang",
+        "url": "https://github.com/jyliang"
+      },
+      "homepage": "https://github.com/jyliang/flow",
+      "tags": [
+        "workflow",
+        "code-review",
+        "planning",
+        "tdd"
+      ],
+      "source": "."
+    }
+  ]
+}

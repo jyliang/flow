@@ -87,11 +87,44 @@ This is not a bug in the process — it's a feature. The revision trail answers 
 
 ## Install
 
+Flow ships as both a Claude Code plugin and a `skills.sh`-compatible skill pack. Pick whichever matches your agent.
+
+### Claude Code (native plugin)
+
+```
+/plugin marketplace add jyliang/flow
+/plugin install flow
+```
+
+Updates: `/plugin update flow`. Remove: `/plugin uninstall flow`.
+
+### Any agent via `npx skills`
+
+Works for Claude Code, Cursor, Codex, Copilot, Windsurf, and [40+ others](https://github.com/vercel-labs/skills#supported-agents).
+
+```bash
+# Install globally for Claude Code
+npx skills add jyliang/flow -g -a claude-code
+
+# Install for a different agent (e.g. Cursor)
+npx skills add jyliang/flow -g -a cursor
+
+# Project-scoped (commits skills into the repo)
+npx skills add jyliang/flow -a claude-code
+
+# Pick individual skills
+npx skills add jyliang/flow --skill flow --skill review -g -a claude-code
+```
+
+Updates: `npx skills update`. Remove: `npx skills remove flow`.
+
+### Local development
+
+For iterating on flow itself, use the Makefile to copy the working tree into `~/.claude/skills/`:
+
 ```bash
 make install
 ```
-
-Or copy any skill directory to `~/.claude/skills/`.
 
 ## Philosophy
 

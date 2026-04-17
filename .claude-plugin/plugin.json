@@ -1,0 +1,19 @@
+{
+  "name": "flow",
+  "version": "0.1.0",
+  "description": "A skill system for Claude Code that moves work from idea to shipped PR through structured document handoffs.",
+  "author": {
+    "name": "Jason Liang",
+    "url": "https://github.com/jyliang"
+  },
+  "homepage": "https://github.com/jyliang/flow",
+  "repository": "https://github.com/jyliang/flow",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "code-review",
+    "planning",
+    "implementation",
+    "tdd"
+  ]
+}
