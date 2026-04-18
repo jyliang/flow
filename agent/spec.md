@@ -1,203 +1,180 @@
-# Spec: Flow v1 — `/flow-adopt`, fast empty-state, bootstrap scripts
+# Spec: Flow v2 — per-project `.flow/config.sh` + scripted first-time setup
 
 ## Status
 explore → plan
 
 ## What was done
-- Brainstormed the shape of "scripts in the flow pipeline" across three conversation turns (2026-04-17).
-- Identified four real subproblems hiding under the original "make `/flow` faster" ask:
-  1. Mid-conversation adoption (biggest pain).
-  2. Fast empty-state entry.
-  3. Per-project config.
-  4. Self-recovery / reflection.
-- Agreed to **ship v1 = subproblems 1+2 plus the script-home convention**, defer 3 and 4.
-- Resolved three key design questions (see Decisions below).
+- v1 (PR #6, merged) established scripts home + `/flow-adopt` + empty-state primed prompt. v1 spec deferred v2 (config) and v3 (reflection) explicitly.
+- v2 scope confirmed from the 2026-04-17 brainstorm:
+  - Per-project config so users can modify flow on a per-repo basis.
+  - First-time conversational setup so the defaults path is frictionless.
+- Committed to format/location decisions to keep the scope tight (see Decisions below).
 
-## Decisions needed (all resolved)
-- [x] **Adopt shape**: `/flow-adopt` as a separate slash command, not a mode flag on `/flow`. Keeps the empty-state fast path clean; each command has one job.
-- [x] **Config location (v2)**: User decides per-project via a scripted first-time conversation. Defer implementation; spec the question shape.
-- [x] **Reflection trigger (v3)**: "Twice is a pattern" — any observation the LLM makes twice in a session surfaces at ship.
+## Decisions needed (committed, flag for redirect)
+- [x] **Format**: `.flow/config.sh` as dotenv/bash (`KEY=VALUE`), bash-sourceable. Zero parsing dependencies. YAML was brainstormed but costs a parser (yq, Python) without clear v2 wins.
+- [x] **Location**: always `.flow/config.sh` in the repo root. Personal overrides via environment variables (already supported by v1's `FLOW_TEMPLATE_DIR`). The brainstorm's "shared vs personal" toggle is collapsed — team-shared is the default; individuals who want overrides set env vars.
+- [x] **First-time trigger**: automatic on `/flow` when `.flow/config.sh` is missing AND the workspace is empty (`explore-empty`). Not on every new project — only at the first real use. Explicit re-run via `/flow-config`.
+- [x] **Question count**: 3 questions, all skippable. Smallest set that covers the real v2 value.
 
 ## Verify in reality
-- [ ] After implementing, run `/flow` in an empty project and confirm the first LLM turn is "What do you want to build?" with no skill-preamble thinking.
-- [ ] Mid-session, type `/flow-adopt` after a free-form discussion and confirm `agent/spec.md` captures the distilled idea + prior decisions, branch is created, and the next stage is plan.
-- [ ] Confirm `skills/flow/scripts/*.sh` are installed by `make install` (currently only SKILL.md + references are copied when a skill dir is `cp -r`'d — this should Just Work, but verify).
-- [ ] Confirm the `UserPromptSubmit` hook (or whichever mechanism we pick) actually injects stage context before the LLM sees the prompt. If Claude Code doesn't support this shape, fall back to command-body pre-instructions (see Open questions).
+- [ ] Run `/flow` in a fresh project → scripted setup fires, writes `.flow/config.sh` with user's answers, then proceeds to the normal empty-state prompt.
+- [ ] Run `/flow` in a project with existing `.flow/config.sh` → setup is skipped; bootstrap.sh uses the configured template path.
+- [ ] Run `/flow-config` in a project that already has a config → offer to reconfigure (same 3 questions, current values pre-filled as defaults).
+- [ ] Test `FLOW_TEMPLATE_DIR` env var still overrides `.flow/config.sh`'s `FLOW_TEMPLATE_SPEC` (env > file > built-in default).
 
 ## Spec details
 
 ### Problem
 
-`/flow` today routes everything through the LLM, including mechanical setup (stage detection, branch creation, template materialization). Two pains result:
+v1's flow is rigid: single template, no project-level overrides, no way to declare "this project wants a security-review stage after implement." v1 intentionally deferred this to keep the initial shipping surface small.
 
-1. **Empty-state latency**: First turn on a new idea costs one LLM round-trip just to arrive at "what do you want to build?". The LLM reads the skill, reasons about stage, writes a preamble, then asks. None of that adds value — the user's idea is the only input that matters.
-2. **Mid-conversation rigidity**: When a free-form discussion evolves into something that should be a flow, there's no affordance to "adopt this conversation into a flow." The user has to re-type the idea, losing accumulated context and decisions.
+Two user pains motivate v2:
+1. **Teams share a repo, want shared conventions** — e.g., everyone on team X uses the same spec template, the same pre-ship lint hook. Config must be committable.
+2. **First-time setup should be frictionless** — a new user running `/flow` in a new repo should not face a blank prompt; the system should ask a short, specific set of questions with good defaults.
 
-A script layer can fix (1) deterministically. A new command verb + LLM distillation fixes (2) natively.
+v2 solves (1) with `.flow/config.sh` and (2) with a 3-question setup fired on first `/flow`.
 
 ### Scope
 
 **In:**
-- New command: `commands/flow-adopt.md` — distills current conversation into `agent/spec.md`.
-- Modified `commands/flow.md` — empty-state detection primes the LLM with a minimal instruction so the first turn is the idea prompt, nothing else.
-- New shell scripts under `skills/flow/scripts/`:
-  - `bootstrap.sh` — creates branch, materializes spec template, writes frontmatter. Called by both commands.
-  - `detect-stage.sh` — prints the detected stage (explore / plan / implement / review / ship / done) for command bodies to consume.
-- New template: `skills/flow/templates/spec.md` — placeholder spec body with frontmatter.
-- `make install` installs scripts + templates (verify, don't change, since `cp -r` should already cover this).
+- `.flow/config.sh` schema (dotenv, bash-sourceable).
+- `skills/flow/scripts/load-config.sh` — helper that sources `.flow/config.sh` if present, applies defaults, exports env vars for downstream scripts.
+- `bootstrap.sh` consults `load-config.sh` output; uses `FLOW_TEMPLATE_SPEC` if set, else default.
+- `commands/flow.md` updated: if `explore-empty` AND no `.flow/config.sh`, LLM runs scripted setup before the idea prompt.
+- `commands/flow-config.md` — explicit re-configure command.
+- `skills/flow/references/config.md` — documents the schema, field semantics, env var override precedence.
+- `skills/flow/templates/` stays; users override by pointing `FLOW_TEMPLATE_SPEC` to a different file (usually in `.flow/templates/`).
 
-**Out (deferred to v2/v3):**
-- `.flow/config.yml` + per-project scripted first-time setup.
-- Template overrides per project.
-- Pre/post-stage hooks.
-- `/flow reflect` and "twice is a pattern" auto-surface.
+**Out (deferred to v2.5 or v3):**
+- Extra stages (custom stage insertion). Config schema will declare a placeholder field for forward-compat but the LLM ignores it in v2.
+- Pre/post-stage hooks. Same — declared, not acted on.
+- YAML format. Document migration path only.
+- User-local (non-shared) config. Env vars handle this today.
 
 ### Design
 
-#### Primitive 1: `/flow-adopt`
+#### The config schema
 
-**Command**: `commands/flow-adopt.md`
+File: `.flow/config.sh` at repo root. Bash-sourceable. Example:
+```sh
+# .flow/config.sh — Flow per-project config
+# Managed by /flow-config. Edit carefully; this file is sourced by bash.
 
-**Body (sketch):**
-```
----
-description: Adopt the current conversation into a flow. Distill into agent/spec.md and advance.
----
-
-Use the `flow` skill. You are being invoked mid-conversation. Your job:
-
-1. Read back through this conversation.
-2. Extract: the idea, any decisions already made, open questions, constraints discussed.
-3. Run `~/.claude/skills/flow/scripts/bootstrap.sh <branch-name>` to create the branch and materialize the spec template.
-4. Populate `agent/spec.md` with the distilled content. Match the repo's spec style (see archived examples under `agent/archive/*/spec.md`).
-5. Surface any unresolved decisions from the conversation as `AskUserQuestion`.
-6. Ask about advancing to the plan stage.
-
-$ARGUMENTS
+FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
+FLOW_STAGES="explore plan implement review ship"
+FLOW_EXTRA_STAGES=""   # reserved for v2.5; unused in v2
+FLOW_HOOKS_DIR=""      # reserved for v2.5; unused in v2
 ```
 
-**Shell script**: `skills/flow/scripts/bootstrap.sh`
+Fields:
+- `FLOW_TEMPLATE_SPEC` — path to the spec template (relative to repo root). Overrides built-in `~/.claude/skills/flow/templates/spec.md`.
+- `FLOW_STAGES` — space-separated stage list. Default = `explore plan implement review ship`. Changing this is future-work (v2.5); for v2 it's a read-only declaration.
+- `FLOW_EXTRA_STAGES`, `FLOW_HOOKS_DIR` — reserved. LLM reads and surfaces them if set but doesn't act on them in v2.
 
-Takes a branch name; creates the branch from main; copies `templates/spec.md` → `agent/spec.md`; substitutes date/branch/author placeholders; does not commit (LLM commits after populating content).
+#### Config loader
 
-**Key behavior**: the LLM is front-and-center. Script is thin. The LLM uses its existing context window as the source material — no transcript-file parsing.
+`skills/flow/scripts/load-config.sh` (new):
+```bash
+#!/usr/bin/env bash
+# Load .flow/config.sh if present; export normalized env vars.
+# Precedence: environment > .flow/config.sh > built-in defaults.
 
-#### Primitive 2: Empty-state primed prompt
+set -euo pipefail
 
-**Modified command**: `commands/flow.md`
+if [[ -f .flow/config.sh ]]; then
+  # shellcheck disable=SC1091
+  source .flow/config.sh
+fi
 
-Current body: loads the full flow skill, LLM detects stage, LLM asks what to build.
+export FLOW_TEMPLATE_SPEC="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
+export FLOW_STAGES="${FLOW_STAGES:-explore plan implement review ship}"
 
-New body:
+# Print for debugging / command-body embedding
+echo "FLOW_TEMPLATE_SPEC=$FLOW_TEMPLATE_SPEC"
+echo "FLOW_STAGES=$FLOW_STAGES"
 ```
----
-description: Move work forward from idea to shipped PR — detect stage, advance
----
 
-Detected stage: !`$HOME/.claude/skills/flow/scripts/detect-stage.sh`
+#### `bootstrap.sh` changes
 
-If the detected stage is `explore-empty`, your only first turn is: "What do you want to build?" No preamble, no skill summary.
+Currently `bootstrap.sh` uses `FLOW_TEMPLATE_DIR` (override) + built-in default. v2 changes: honor `FLOW_TEMPLATE_SPEC` (a path to the file, not a dir), still fallback to built-in.
 
-For any other stage, use the `flow` skill to advance work.
+```bash
+# v1
+template_dir="${FLOW_TEMPLATE_DIR:-$HOME/.claude/skills/flow/templates}"
+template="$template_dir/spec.md"
 
-$ARGUMENTS
+# v2
+if [[ -f .flow/config.sh ]]; then source .flow/config.sh; fi
+template="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
 ```
 
-Claude Code runs the `` !`...` `` shell expression before `$ARGUMENTS` substitution and embeds stdout literally. The LLM arrives with the stage already known.
+Backwards-compat: keep `FLOW_TEMPLATE_DIR` working as a fallback-with-deprecation-note (users relying on v1's env var keep working for one release).
 
-**Shell script**: `skills/flow/scripts/detect-stage.sh`
+#### First-time scripted setup
 
-Implements the 6-rule stage detection from `skills/flow/SKILL.md` in bash:
-1. No `agent/spec.md` and no `agent/archive/*/spec.md` in-flight → `explore-empty`
-2. Spec exists, no plan → `plan`
-3. Plan exists with incomplete steps → `implement`
-4. Plan complete or unreviewed changes on branch → `review`
-5. Findings with unresolved items → `ship`
-6. Open PR ready → `done`
+Trigger: `commands/flow.md` runs `detect-stage.sh`. If stage is `explore-empty` AND `.flow/config.sh` is missing, include a primed instruction block:
 
-Stdout: a single line, e.g. `explore-empty` or `plan`. Stderr: brief rationale for debugging.
+```
+First-time setup: this project doesn't have .flow/config.sh yet. Run the
+scripted setup before asking for the idea — 3 AskUserQuestion prompts:
 
-#### Primitive 3: Script home + install path
+1. "Which spec template should this project use?"
+   - Built-in default (from ~/.claude/skills/flow/)
+   - Custom — copy default into .flow/templates/spec.md and edit later
+2. "Declare project-specific extra stages now?"
+   - No (Recommended)
+   - Yes — ask what stage name (FLOW_EXTRA_STAGES, informational only in v2)
+3. "Declare a hooks dir now?"
+   - No (Recommended)
+   - Yes — ask path (FLOW_HOOKS_DIR, informational only in v2)
 
-**Location**: `skills/flow/scripts/` inside the skill dir. Installed by existing `make install` via `cp -r skills/flow $(SKILLS_DIR)/flow`. No Makefile change needed.
+Write answers to .flow/config.sh, then proceed to the idea prompt.
+```
 
-**Invocation convention**: command bodies use absolute path `~/.claude/skills/flow/scripts/<name>.sh`. LLM-authored invocations from within a session use the same path.
+All three questions skippable (Recommended option = do nothing, fall through to defaults). In the frictionless path, user answers nothing-of-substance 3 times and lands on "What do you want to build?" within one turn.
 
-**Template home**: `skills/flow/templates/spec.md`. Same install story. Bootstrap script reads from `~/.claude/skills/flow/templates/spec.md`.
+#### `/flow-config` command
+
+New: `commands/flow-config.md`. Body invokes the same 3-question setup, but with current `.flow/config.sh` values pre-filled as `(Recommended)` defaults. User overrides → rewrite file. User cancels → no change.
+
+Used when: user already has a config and wants to reconfigure, or v2.5 adds new fields and the user wants to declare them.
+
+#### `references/config.md`
+
+New doc under `skills/flow/references/`. Content:
+- The full schema with field semantics.
+- The precedence rule (env > file > default).
+- Migration notes for v1 users (`FLOW_TEMPLATE_DIR` still works).
+- Forward-compat disclaimer (v2.5 will act on `FLOW_EXTRA_STAGES` / `FLOW_HOOKS_DIR`).
 
 ### Impact analysis
 
 **Files to create:**
-- `commands/flow-adopt.md`
-- `skills/flow/scripts/bootstrap.sh`
-- `skills/flow/scripts/detect-stage.sh`
-- `skills/flow/templates/spec.md`
+- `commands/flow-config.md`
+- `skills/flow/scripts/load-config.sh`
+- `skills/flow/references/config.md`
+- `.flow/templates/spec.md` — only if the test case exercises the custom-template path. Not shipped to the repo; created by setup if user opts for custom.
 
 **Files to modify:**
-- `commands/flow.md` — new body with stage-detect pre-execution + conditional empty-state instruction.
-- `skills/flow/SKILL.md` — one-line pointer to the scripts dir under "Related skills" or a new "Scripts" section. Body < 300 lines per `teach/SKILL.md` convention.
-
-**Files to consider:**
-- `Makefile` — verify scripts are executable after install (chmod +x). May need a post-install step.
-- `skills/flow/references/stage-detection.md` — note that the script mirrors the LLM-level logic; keep in sync.
+- `skills/flow/scripts/bootstrap.sh` — add config source + new env var name; keep legacy env var working.
+- `commands/flow.md` — add first-time-setup primed block when applicable.
+- `skills/flow/SKILL.md` — one-line pointer to `references/config.md`.
+- `Makefile list` target — consider enumerating config state (future polish, optional).
 
 ### Constraints
 
-- **Claude Code slash-command shell execution**: confirmed supported via `` !`<command>` `` inline syntax. Runs before `$ARGUMENTS` substitution, in the project working directory.
-- **Script install permissions**: `cp -r` preserves mode. New scripts must be committed with `chmod +x` set, else they arrive non-executable. Git tracks the executable bit.
-- **Stage-detection duplication**: the bash script and the LLM-level logic in `skills/flow/SKILL.md` now encode the same rules. This is a maintenance cost — v1 keeps the LLM logic as the authoritative spec; the script is an optimization. If they drift, the LLM logic wins.
-- **No transcript parsing**: `/flow-adopt` does NOT try to read `~/.claude/projects/*/transcript.jsonl`. The LLM uses its own context window. Simpler, more robust, no Claude Code internals coupling.
+- **No new binary dependencies**: bash + sed + git + gh. No yq, no Python, no jq.
+- **Backwards compat**: v1 users running v2 scripts must keep working. `FLOW_TEMPLATE_DIR` is honored if set (with `FLOW_TEMPLATE_SPEC` taking precedence when both are set).
+- **No silent config**: if `.flow/config.sh` exists but is malformed (bash syntax error), fail loudly rather than ignoring. `set -euo pipefail` + `source` will catch this.
+- **Security**: `.flow/config.sh` is sourced. This is a trust decision — anyone who can edit the repo can inject bash. The file is committed, so code review is the gate. Document this in `references/config.md`.
 
 ### Open questions
 
-1. ~~**Does Claude Code support `!command` inline shell execution inside slash command bodies?**~~ **Resolved (2026-04-18)**: Yes. Syntax is `` !`<command>` `` inline, or a ```` ```! ```` fenced block for multi-line. Runs before `$ARGUMENTS` substitution. Has the user's working directory, env, and PATH. Supports arbitrary bash. Docs: Claude Code "Inject dynamic context" under Slash Commands. No `UserPromptSubmit` hook needed for v1.
-2. **Branch-naming convention for `/flow-adopt`**: LLM picks from conversation content? User prompts for one? Default to `flow-adopt-YYYYMMDD-HHmm` with an override flag in `$ARGUMENTS`? Lean: LLM proposes a name from conversation topic, user confirms via `AskUserQuestion`. Defer resolution to plan stage.
-3. **Should `bootstrap.sh` be idempotent?** If `agent/spec.md` already exists, fail? Overwrite with backup? Leave it? Safe default: refuse and print the existing spec path; let the LLM decide how to recover. Defer resolution to plan stage.
-
-## Future work
-
-### v2 — Per-project config + scripted first-time setup
-
-**Trigger**: user runs `/flow` in a project with no `.flow/config.yml`, and v2 is shipped.
-
-**Scripted conversation (4 questions, skippable):**
-1. "Where should flow config live for this project?" — `.flow/config.yml` (shared via git) or `~/.claude/flow/<project>/config.yml` (personal).
-2. "Use default stages (explore → plan → implement → review → ship), or customize?" — default or custom.
-3. "Any project-specific pre/post-stage hooks to wire up now?" — yes / later.
-4. "Override any spec/plan/review templates now?" — yes / later.
-
-Defaults: `.flow/` in repo, default stages, later, later. Three of four skippable in the 80% case.
-
-**Config schema** (sketch):
-```yaml
-config_location: repo | user
-stages: [explore, plan, implement, review, ship]   # or custom
-extra_stages:
-  - {after: implement, name: security-review, skill: security-review}
-hooks:
-  pre-review: .flow/hooks/pre-review.sh
-templates:
-  spec: .flow/templates/spec.md
-```
-
-**New primitive**: `/flow config` command + `skills/flow/scripts/config-init.sh`.
-
-**Coupling to v1**: v2's `bootstrap.sh` should consult `.flow/config.yml` for template path and branch prefix. v1 scripts hard-code defaults; refactor is mechanical.
-
-### v3 — Reflection and self-recovery
-
-**Two axes** (per brainstorm):
-1. **Project context**: detect when the LLM has repeated the same observation twice in a session (e.g., "migrations live in `db/migrations/*`"). At ship, surface via `AskUserQuestion`: "Persist this to `CLAUDE.md`?" Reuse the `teach` skill's rule-capture path.
-2. **Flow system itself**: `/flow reflect` verb reads `agent/archive/*` and proposes tweaks to `.flow/config.yml` or stage skill bodies. Explicit-invocation only — no background scan.
-
-**Trigger rule**: "twice is a pattern." Implementation: LLM maintains a session-scoped observation log (in `agent/.session-notes.md`?), checks for repeats, surfaces at ship boundary. Cross-session detection needs v2 config to know where session logs live.
-
-**Coupling to v1/v2**: v3 assumes v2's config exists (where do persisted rules land?). Ship in order.
+1. **Config file name**: `.flow/config.sh` is explicit but verbose. Alternatives: `.flowrc` (shell-ish convention but less discoverable), `.flow/config` (no extension — portable but editors don't highlight). Lean: `.flow/config.sh`. Defer final.
+2. **Should the first-time setup auto-write `.flow/config.sh` with defaults even if user skips all questions?** Yes — creating the file marks "this project has been set up" so the setup doesn't fire again. Content: all commented-out defaults. User knows where to look.
 
 ## References
 
-- Brainstorm conversation: 2026-04-17, spanning "Flow v1 design" session.
-- Prior PRs in `agent/archive/pr-1/` and `agent/archive/pr-2/` — spec style reference.
-- `skills/flow/SKILL.md` — current flow semantics (preserve during v1).
-- `skills/teach/SKILL.md` — rule-capture primitive that v3's reflection will reuse.
-- `update-config` skill — for `.claude/settings.json` hook wiring if Open question #1 forces the hook path.
+- Brainstorm: 2026-04-17 session ("Flow v1 design" + "Flow v2/v3 followup").
+- v1: `agent/archive/pr-6/{spec,IMPLEMENTATION_PLAN_2026-04-18,local-flow-v1-adopt-r1}.md`.
+- `skills/flow/SKILL.md` — v1 semantics, preserved.
