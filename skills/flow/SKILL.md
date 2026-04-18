@@ -52,6 +52,13 @@ If a document is missing, stale, or ambiguous, see `references/stage-detection.m
 
 See `references/boundaries.md` for auto-advance vs pause rules, revision handling, and review-finding triage. See `references/user-interaction.md` for the `AskUserQuestion` contract. See `references/protocol.md` for the document format.
 
+## Scripts
+
+Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Called from slash-command bodies and (when needed) directly via the Bash tool.
+
+- `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
+- `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from `templates/spec.md`. Refuses if `agent/spec.md` already exists.
+
 ## Related skills
 
 Stages: `explore`, `plan`, `implement`, `review`, `ship`.
