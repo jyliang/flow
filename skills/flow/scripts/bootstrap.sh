@@ -5,6 +5,10 @@
 # Usage: bootstrap.sh <branch-name>
 # Env:   FLOW_TEMPLATE_DIR (override template location; default ~/.claude/skills/flow/templates)
 # Exits: 0 success; 2 validation or precondition failure; other non-zero on git/fs errors.
+#
+# Future: add --overwrite and --adopt flags so /flow-adopt's recovery options
+# (overwrite / adopt-into-existing) become explicit in the script's contract
+# instead of LLM-inferred. Tracked for v2.
 
 set -euo pipefail
 
@@ -28,10 +32,18 @@ mkdir -p agent
 date_str="$(date +%Y-%m-%d)"
 author="$(git config user.name || echo 'unknown')"
 
+escape_for_sed() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//&/\\&}"
+  s="${s//|/\\|}"
+  printf '%s' "$s"
+}
+
 sed \
-  -e "s|{{DATE}}|$date_str|g" \
-  -e "s|{{BRANCH}}|$branch|g" \
-  -e "s|{{AUTHOR}}|$author|g" \
+  -e "s|{{DATE}}|$(escape_for_sed "$date_str")|g" \
+  -e "s|{{BRANCH}}|$(escape_for_sed "$branch")|g" \
+  -e "s|{{AUTHOR}}|$(escape_for_sed "$author")|g" \
   "$template" > agent/spec.md
 
 echo "branch=$branch spec=agent/spec.md"

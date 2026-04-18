@@ -36,6 +36,8 @@ Document depth scales with task complexity. A one-line fix produces a 3-line spe
 5. Findings exist with unresolved items → **ship**
 6. PR exists and ready → **done**
 
+When multiple conditions are true (e.g., open PR and a stale findings doc), the detection picks the **furthest-downstream** stage: done > ship > review > implement > plan > explore.
+
 If the user gives explicit intent ("review this PR", "ship it"), skip detection and go directly to that stage.
 
 If a document is missing, stale, or ambiguous, see `references/stage-detection.md` for the exact `AskUserQuestion` to raise. Never silently proceed with stale input.
