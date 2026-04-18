@@ -36,6 +36,8 @@ Document depth scales with task complexity. A one-line fix produces a 3-line spe
 5. Findings exist with unresolved items → **ship**
 6. PR exists and ready → **done**
 
+When multiple conditions are true (e.g., open PR and a stale findings doc), the detection picks the **furthest-downstream** stage: done > ship > review > implement > plan > explore.
+
 If the user gives explicit intent ("review this PR", "ship it"), skip detection and go directly to that stage.
 
 If a document is missing, stale, or ambiguous, see `references/stage-detection.md` for the exact `AskUserQuestion` to raise. Never silently proceed with stale input.
@@ -51,6 +53,13 @@ If a document is missing, stale, or ambiguous, see `references/stage-detection.m
    - Options: `Yes, advance (Recommended)` / `Pause here` / `Adjust [this stage's document] first`
 
 See `references/boundaries.md` for auto-advance vs pause rules, revision handling, and review-finding triage. See `references/user-interaction.md` for the `AskUserQuestion` contract. See `references/protocol.md` for the document format.
+
+## Scripts
+
+Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Called from slash-command bodies and (when needed) directly via the Bash tool.
+
+- `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
+- `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from `templates/spec.md`. Refuses if `agent/spec.md` already exists.
 
 ## Related skills
 
