@@ -59,7 +59,8 @@ See `references/boundaries.md` for auto-advance vs pause rules, revision handlin
 Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Called from slash-command bodies and (when needed) directly via the Bash tool.
 
 - `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
-- `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from `templates/spec.md`. Refuses if `agent/spec.md` already exists.
+- `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from the configured template. Refuses if `agent/spec.md` already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
+- `load-config.sh` — sources `.flow/config.sh` (if present) and prints normalized flow env vars. Precedence: env > file > defaults. See `references/config.md` for the schema.
 
 ## Related skills
 

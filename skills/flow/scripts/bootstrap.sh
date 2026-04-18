@@ -20,8 +20,19 @@ branch="${1:-}"
 
 [[ ! -f agent/spec.md ]] || die "spec already exists at agent/spec.md"
 
-template_dir="${FLOW_TEMPLATE_DIR:-$HOME/.claude/skills/flow/templates}"
-template="$template_dir/spec.md"
+# Inlined config precedence (env > file > legacy > default) rather than calling
+# load-config.sh to avoid subprocess + eval overhead. Kept in sync with that
+# script; references/config.md documents the contract.
+env_template="${FLOW_TEMPLATE_SPEC:-}"
+if [[ -f .flow/config.sh ]]; then
+  # shellcheck disable=SC1091
+  source .flow/config.sh
+fi
+[[ -n "$env_template" ]] && FLOW_TEMPLATE_SPEC="$env_template"
+if [[ -z "${FLOW_TEMPLATE_SPEC:-}" ]] && [[ -n "${FLOW_TEMPLATE_DIR:-}" ]]; then
+  FLOW_TEMPLATE_SPEC="$FLOW_TEMPLATE_DIR/spec.md"
+fi
+template="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
 [[ -f "$template" ]] || die "template not found at $template"
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
