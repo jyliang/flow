@@ -1,180 +1,177 @@
-# Spec: Flow v2 — per-project `.flow/config.sh` + scripted first-time setup
+# Spec: Flow v3 — reflection and self-recovery
 
 ## Status
 explore → plan
 
 ## What was done
-- v1 (PR #6, merged) established scripts home + `/flow-adopt` + empty-state primed prompt. v1 spec deferred v2 (config) and v3 (reflection) explicitly.
-- v2 scope confirmed from the 2026-04-17 brainstorm:
-  - Per-project config so users can modify flow on a per-repo basis.
-  - First-time conversational setup so the defaults path is frictionless.
-- Committed to format/location decisions to keep the scope tight (see Decisions below).
+- v1 (PR #6, merged): `/flow-adopt`, fast empty-state, scripts home.
+- v2 (PR #7, merged): per-project `.flow/config.sh`, scripted first-time setup.
+- v3 scope confirmed from the 2026-04-17 brainstorm: reflection across two axes.
+- Committed leans on key design questions to keep v3 shippable (see Decisions).
 
 ## Decisions needed (committed, flag for redirect)
-- [x] **Format**: `.flow/config.sh` as dotenv/bash (`KEY=VALUE`), bash-sourceable. Zero parsing dependencies. YAML was brainstormed but costs a parser (yq, Python) without clear v2 wins.
-- [x] **Location**: always `.flow/config.sh` in the repo root. Personal overrides via environment variables (already supported by v1's `FLOW_TEMPLATE_DIR`). The brainstorm's "shared vs personal" toggle is collapsed — team-shared is the default; individuals who want overrides set env vars.
-- [x] **First-time trigger**: automatic on `/flow` when `.flow/config.sh` is missing AND the workspace is empty (`explore-empty`). Not on every new project — only at the first real use. Explicit re-run via `/flow-config`.
-- [x] **Question count**: 3 questions, all skippable. Smallest set that covers the real v2 value.
+- [x] **Two axes, two triggers**: (a) project-context drift — detected at **ship** via "twice is a pattern" (LLM scans its own conversation for repeat observations), (b) flow-system drift — detected via explicit `/flow-reflect` command reading `agent/archive/*`. No background scans.
+- [x] **No new persistent scratch file**: LLM uses its context window for the "twice" detection at ship. Keeps state ephemeral; no `agent/.session-notes.md` to manage.
+- [x] **Persistence target for axis (a)**: `CLAUDE.md` (per-project) by default. The `teach` skill already handles rule-capture; reuse it.
+- [x] **Persistence target for axis (b)**: `.flow/config.sh` updates or suggested edits to stage skill files. User approves each proposed change individually via `AskUserQuestion`.
 
 ## Verify in reality
-- [ ] Run `/flow` in a fresh project → scripted setup fires, writes `.flow/config.sh` with user's answers, then proceeds to the normal empty-state prompt.
-- [ ] Run `/flow` in a project with existing `.flow/config.sh` → setup is skipped; bootstrap.sh uses the configured template path.
-- [ ] Run `/flow-config` in a project that already has a config → offer to reconfigure (same 3 questions, current values pre-filled as defaults).
-- [ ] Test `FLOW_TEMPLATE_DIR` env var still overrides `.flow/config.sh`'s `FLOW_TEMPLATE_SPEC` (env > file > built-in default).
+- [ ] Ship a PR where the LLM said the same non-obvious thing twice in conversation → at ship boundary, LLM surfaces via `AskUserQuestion` asking to persist to `CLAUDE.md`.
+- [ ] Ship a PR where the LLM said nothing twice → no reflection prompt fires (silent, no noise).
+- [ ] Run `/flow-reflect` in a repo with ≥3 archived PRs → LLM summarizes patterns across archives, proposes changes, user approves per-item.
+- [ ] Run `/flow-reflect` in a repo with no archive → LLM says "not enough history yet" and exits gracefully.
 
 ## Spec details
 
 ### Problem
 
-v1's flow is rigid: single template, no project-level overrides, no way to declare "this project wants a security-review stage after implement." v1 intentionally deferred this to keep the initial shipping surface small.
+After v1 + v2, users can run flow and customize per project. But the system doesn't learn. Two gaps:
 
-Two user pains motivate v2:
-1. **Teams share a repo, want shared conventions** — e.g., everyone on team X uses the same spec template, the same pre-ship lint hook. Config must be committable.
-2. **First-time setup should be frictionless** — a new user running `/flow` in a new repo should not face a blank prompt; the system should ask a short, specific set of questions with good defaults.
+1. **Project-context drift** — the LLM keeps telling the user the same fact twice (e.g., "migrations live in `db/migrations/*.sql`") without the fact ever making it into `CLAUDE.md`. The user has to notice + manually capture. Wasted interaction cycles.
+2. **Flow-system drift** — after a few PRs, patterns emerge: "explore stage always asks the same 3 questions", "ship stage never uses the dry-run flag first". These are tweakable via `.flow/config.sh` or stage skill edits, but no one notices until they bite.
 
-v2 solves (1) with `.flow/config.sh` and (2) with a 3-question setup fired on first `/flow`.
+v3 adds a reflection layer for both.
 
 ### Scope
 
 **In:**
-- `.flow/config.sh` schema (dotenv, bash-sourceable).
-- `skills/flow/scripts/load-config.sh` — helper that sources `.flow/config.sh` if present, applies defaults, exports env vars for downstream scripts.
-- `bootstrap.sh` consults `load-config.sh` output; uses `FLOW_TEMPLATE_SPEC` if set, else default.
-- `commands/flow.md` updated: if `explore-empty` AND no `.flow/config.sh`, LLM runs scripted setup before the idea prompt.
-- `commands/flow-config.md` — explicit re-configure command.
-- `skills/flow/references/config.md` — documents the schema, field semantics, env var override precedence.
-- `skills/flow/templates/` stays; users override by pointing `FLOW_TEMPLATE_SPEC` to a different file (usually in `.flow/templates/`).
+- Ship-stage reflection: when the ship skill wraps up, LLM checks its own conversation for facts stated twice and surfaces via `AskUserQuestion` — "persist to CLAUDE.md?". One short decision at PR time, no noise when nothing's repeated.
+- `commands/flow-reflect.md` — explicit reflect command. LLM reads `agent/archive/*/{spec,IMPLEMENTATION_PLAN,local-*-r1}.md`, `.flow/config.sh`, and current stage skills. Proposes changes grouped by (CLAUDE.md updates / config.sh edits / stage skill tweaks). User accepts per-group via `AskUserQuestion`.
+- `skills/flow/references/reflection.md` — the "twice is a pattern" rule, decision tree, examples of good/bad reflections.
+- `skills/flow/scripts/archive-summary.sh` — helper for `/flow-reflect` that prints one-line summaries of archived PRs (title + date from git log). Cheap, lets the LLM ground its reflection without reading every archive file in full.
+- Update `skills/ship/SKILL.md` — add a final step: "Before closing ship, scan the conversation for repeat observations and offer to persist via the reflection reference."
 
-**Out (deferred to v2.5 or v3):**
-- Extra stages (custom stage insertion). Config schema will declare a placeholder field for forward-compat but the LLM ignores it in v2.
-- Pre/post-stage hooks. Same — declared, not acted on.
-- YAML format. Document migration path only.
-- User-local (non-shared) config. Env vars handle this today.
+**Out (post-v3):**
+- Automatic scan across sessions ("last week you said X three times"). Needs cross-session state the LLM doesn't have natively.
+- Auto-applying reflections without user approval. Always gate on consent.
+- Reflection for skills outside flow (teach, commits, etc.) — they have their own existing learning paths.
 
 ### Design
 
-#### The config schema
+#### Axis (a): ship-stage "twice is a pattern"
 
-File: `.flow/config.sh` at repo root. Bash-sourceable. Example:
-```sh
-# .flow/config.sh — Flow per-project config
-# Managed by /flow-config. Edit carefully; this file is sourced by bash.
+**Trigger**: last step of `skills/ship/SKILL.md` before PR creation.
 
-FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
-FLOW_STAGES="explore plan implement review ship"
-FLOW_EXTRA_STAGES=""   # reserved for v2.5; unused in v2
-FLOW_HOOKS_DIR=""      # reserved for v2.5; unused in v2
+**Detection**: LLM reviews its own conversation in context window. For each observation it made to the user, count occurrences. Anything said ≥2 times about this project that is NOT already in `CLAUDE.md` is a reflection candidate.
+
+**Qualifying "observation"**: a statement of fact about the project (paths, conventions, build commands, gotchas). NOT a status update, NOT a summary, NOT LLM reasoning. Examples:
+- ✓ "Migrations live in `db/migrations/*.sql`" said twice.
+- ✓ "This repo uses `make install` not `npm install`" said twice.
+- ✗ "I'm reading the file now" said twice — status, not fact.
+
+**Surface shape**: `AskUserQuestion` (1 question per candidate, max 3 per ship):
+- Q: "I mentioned `<fact>` twice this session. Persist to CLAUDE.md?"
+- Options: `Yes, add (Recommended)` / `No, not worth it` / `Rephrase first`.
+
+If user says "Rephrase first", they provide new wording, LLM writes exact text.
+
+**False-positive budget**: 3 candidates max per ship. Hard cap to avoid noise. If LLM detects >3, surface top-3 by (how non-obvious × how often repeated).
+
+#### Axis (b): `/flow-reflect`
+
+**Trigger**: explicit user invocation.
+
+**Body sketch (`commands/flow-reflect.md`):**
+
+```
+Read:
+1. `agent/archive/*/` — archived specs, plans, reviews from recent PRs.
+2. `.flow/config.sh` — current project config.
+3. Current `CLAUDE.md` (project + user global).
+4. `skills/flow/scripts/archive-summary.sh` output for orientation.
+
+Identify 2-4 patterns worth acting on. For each, propose one change:
+- Update to CLAUDE.md (new rule or convention).
+- Edit to `.flow/config.sh` (template path, extra stages, hooks dir).
+- Suggested tweak to a stage skill (surface; user decides later).
+
+Surface via AskUserQuestion — one question per proposal, max 4 total.
+
+If there's no archive (< 2 archived PRs), say "not enough history yet" and exit.
 ```
 
-Fields:
-- `FLOW_TEMPLATE_SPEC` — path to the spec template (relative to repo root). Overrides built-in `~/.claude/skills/flow/templates/spec.md`.
-- `FLOW_STAGES` — space-separated stage list. Default = `explore plan implement review ship`. Changing this is future-work (v2.5); for v2 it's a read-only declaration.
-- `FLOW_EXTRA_STAGES`, `FLOW_HOOKS_DIR` — reserved. LLM reads and surfaces them if set but doesn't act on them in v2.
+**Pattern types to look for:**
+- Same phrase appearing in multiple archived findings ("the Makefile install loop doesn't prune" → S1 across 2 PRs).
+- Decisions repeatedly deferred ("defer to v2" showing up in 3 specs → time to schedule).
+- Stages consistently skipped ("no plan for this branch" in 4 PRs → maybe plan stage is overkill for housekeeping).
 
-#### Config loader
+**Not to look for:**
+- Surface-level formatting tweaks.
+- Wordsmithing the skill prose.
+- One-off bugs (that's what review finds).
 
-`skills/flow/scripts/load-config.sh` (new):
+#### `archive-summary.sh`
+
 ```bash
 #!/usr/bin/env bash
-# Load .flow/config.sh if present; export normalized env vars.
-# Precedence: environment > .flow/config.sh > built-in defaults.
+# Print a one-line summary per archived PR: pr-N, date, title.
+# Used by /flow-reflect for orientation without reading every archive in full.
 
 set -euo pipefail
-
-if [[ -f .flow/config.sh ]]; then
-  # shellcheck disable=SC1091
-  source .flow/config.sh
-fi
-
-export FLOW_TEMPLATE_SPEC="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
-export FLOW_STAGES="${FLOW_STAGES:-explore plan implement review ship}"
-
-# Print for debugging / command-body embedding
-echo "FLOW_TEMPLATE_SPEC=$FLOW_TEMPLATE_SPEC"
-echo "FLOW_STAGES=$FLOW_STAGES"
+for dir in agent/archive/pr-*/; do
+  pr="$(basename "$dir" | sed 's/pr-//')"
+  spec="$dir/spec.md"
+  if [[ -f "$spec" ]]; then
+    title="$(head -1 "$spec" | sed 's/^# *Spec: *//')"
+    date="$(grep -o 'date: [0-9-]*' "$spec" 2>/dev/null | head -1 | sed 's/date: //')"
+    [[ -z "$date" ]] && date="$(date -r "$spec" +%Y-%m-%d 2>/dev/null || echo 'unknown')"
+    printf 'pr-%s  %s  %s\n' "$pr" "$date" "$title"
+  fi
+done
 ```
 
-#### `bootstrap.sh` changes
+#### `references/reflection.md`
 
-Currently `bootstrap.sh` uses `FLOW_TEMPLATE_DIR` (override) + built-in default. v2 changes: honor `FLOW_TEMPLATE_SPEC` (a path to the file, not a dir), still fallback to built-in.
+One-page doc with:
+- The "twice is a pattern" rule + qualifying examples.
+- The 3-candidate ship-stage cap.
+- What NOT to reflect on.
+- The `/flow-reflect` command's scope.
 
-```bash
-# v1
-template_dir="${FLOW_TEMPLATE_DIR:-$HOME/.claude/skills/flow/templates}"
-template="$template_dir/spec.md"
+#### `skills/ship/SKILL.md` update
 
-# v2
-if [[ -f .flow/config.sh ]]; then source .flow/config.sh; fi
-template="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
+Add one step before the PR-creation section:
+```
+### Step N: Reflection scan (optional, silent when empty)
+
+Before opening the PR, scan this session's conversation for observations
+stated ≥2 times that aren't in CLAUDE.md. For each (max 3), surface via
+AskUserQuestion: persist / skip / rephrase. See `flow/references/reflection.md`.
 ```
 
-Backwards-compat: keep `FLOW_TEMPLATE_DIR` working as a fallback-with-deprecation-note (users relying on v1's env var keep working for one release).
-
-#### First-time scripted setup
-
-Trigger: `commands/flow.md` runs `detect-stage.sh`. If stage is `explore-empty` AND `.flow/config.sh` is missing, include a primed instruction block:
-
-```
-First-time setup: this project doesn't have .flow/config.sh yet. Run the
-scripted setup before asking for the idea — 3 AskUserQuestion prompts:
-
-1. "Which spec template should this project use?"
-   - Built-in default (from ~/.claude/skills/flow/)
-   - Custom — copy default into .flow/templates/spec.md and edit later
-2. "Declare project-specific extra stages now?"
-   - No (Recommended)
-   - Yes — ask what stage name (FLOW_EXTRA_STAGES, informational only in v2)
-3. "Declare a hooks dir now?"
-   - No (Recommended)
-   - Yes — ask path (FLOW_HOOKS_DIR, informational only in v2)
-
-Write answers to .flow/config.sh, then proceed to the idea prompt.
-```
-
-All three questions skippable (Recommended option = do nothing, fall through to defaults). In the frictionless path, user answers nothing-of-substance 3 times and lands on "What do you want to build?" within one turn.
-
-#### `/flow-config` command
-
-New: `commands/flow-config.md`. Body invokes the same 3-question setup, but with current `.flow/config.sh` values pre-filled as `(Recommended)` defaults. User overrides → rewrite file. User cancels → no change.
-
-Used when: user already has a config and wants to reconfigure, or v2.5 adds new fields and the user wants to declare them.
-
-#### `references/config.md`
-
-New doc under `skills/flow/references/`. Content:
-- The full schema with field semantics.
-- The precedence rule (env > file > default).
-- Migration notes for v1 users (`FLOW_TEMPLATE_DIR` still works).
-- Forward-compat disclaimer (v2.5 will act on `FLOW_EXTRA_STAGES` / `FLOW_HOOKS_DIR`).
+Should be a one-paragraph addition. Skill body stays under 200 lines.
 
 ### Impact analysis
 
 **Files to create:**
-- `commands/flow-config.md`
-- `skills/flow/scripts/load-config.sh`
-- `skills/flow/references/config.md`
-- `.flow/templates/spec.md` — only if the test case exercises the custom-template path. Not shipped to the repo; created by setup if user opts for custom.
+- `commands/flow-reflect.md`
+- `skills/flow/scripts/archive-summary.sh`
+- `skills/flow/references/reflection.md`
 
 **Files to modify:**
-- `skills/flow/scripts/bootstrap.sh` — add config source + new env var name; keep legacy env var working.
-- `commands/flow.md` — add first-time-setup primed block when applicable.
-- `skills/flow/SKILL.md` — one-line pointer to `references/config.md`.
-- `Makefile list` target — consider enumerating config state (future polish, optional).
+- `skills/ship/SKILL.md` — add the reflection-scan step.
+- `skills/flow/SKILL.md` — one-line pointer to `references/reflection.md` under the Scripts or Related skills section.
+
+**Files to consider:**
+- `teach/SKILL.md` — does the existing rule-capture path work unchanged for v3's "persist to CLAUDE.md" call? Expected yes, verify during review.
 
 ### Constraints
 
-- **No new binary dependencies**: bash + sed + git + gh. No yq, no Python, no jq.
-- **Backwards compat**: v1 users running v2 scripts must keep working. `FLOW_TEMPLATE_DIR` is honored if set (with `FLOW_TEMPLATE_SPEC` taking precedence when both are set).
-- **No silent config**: if `.flow/config.sh` exists but is malformed (bash syntax error), fail loudly rather than ignoring. `set -euo pipefail` + `source` will catch this.
-- **Security**: `.flow/config.sh` is sourced. This is a trust decision — anyone who can edit the repo can inject bash. The file is committed, so code review is the gate. Document this in `references/config.md`.
+- **No background state**: reflection is event-driven (ship boundary, explicit command). No cron, no background scan. Predictable latency.
+- **No automatic writes**: every persistence goes through `AskUserQuestion`. Never write to `CLAUDE.md` silently.
+- **Noise budget**: 3 candidates max at ship. If more exist, surface top-3 by weight (repetition × non-obviousness). The 4th+ goes into a `agent/reviews/local-*-r1.md`-style note that the user sees at review time.
+- **Context budget**: `archive-summary.sh` lets the LLM grok the archive in ≤200 tokens; it can read individual archive files only when a pattern hint emerges.
 
 ### Open questions
 
-1. **Config file name**: `.flow/config.sh` is explicit but verbose. Alternatives: `.flowrc` (shell-ish convention but less discoverable), `.flow/config` (no extension — portable but editors don't highlight). Lean: `.flow/config.sh`. Defer final.
-2. **Should the first-time setup auto-write `.flow/config.sh` with defaults even if user skips all questions?** Yes — creating the file marks "this project has been set up" so the setup doesn't fire again. Content: all commented-out defaults. User knows where to look.
+1. **Does the ship-stage reflection fire on every PR or only when the session is long enough to have repetitions?** Lean: always fire, but silent-exit when no candidates. The cost is one LLM sweep of the conversation — cheap in context window.
+2. **How does `/flow-reflect` handle a repo with archives from multiple distinct features?** Does it narrow to recent (last 5 archives) or all? Lean: last 5, configurable via `$ARGUMENTS`.
+3. **Should reflection respect the flow skill's `AskUserQuestion` contract (max 4 questions per call)?** Yes — batch ship-stage + reflect command output into single calls when possible.
 
 ## References
 
-- Brainstorm: 2026-04-17 session ("Flow v1 design" + "Flow v2/v3 followup").
-- v1: `agent/archive/pr-6/{spec,IMPLEMENTATION_PLAN_2026-04-18,local-flow-v1-adopt-r1}.md`.
-- `skills/flow/SKILL.md` — v1 semantics, preserved.
+- Brainstorm: 2026-04-17 session, "reflection + self-recovery" segment.
+- v1 archive: `agent/archive/pr-6/`.
+- v2 archive: `agent/archive/pr-7/`.
+- `skills/teach/SKILL.md` — rule-capture primitive v3 reuses.
+- `skills/ship/SKILL.md` — where the axis-(a) trigger lives.
