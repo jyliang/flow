@@ -137,7 +137,14 @@ Present the final PR URL.
 
 Run the project's test suite to verify nothing broke. Report the result.
 
+### Step 9: Reflection scan (silent when empty)
+
+Before returning control, scan this session's conversation for facts stated ≥ 2 times that aren't already in `CLAUDE.md`. See `flow/references/reflection.md` for qualifying observations and the 3-candidate cap.
+
+If there are candidates, surface each via `AskUserQuestion` (at most 3). If there are none, say nothing — reflection is silent when empty.
+
 ## Related skills
 
 - `review/SKILL.md` — produces the findings this stage consumes
 - `commits/SKILL.md` — commit practices (auto-triggers)
+- `flow/references/reflection.md` — the "twice is a pattern" rule used in Step 9

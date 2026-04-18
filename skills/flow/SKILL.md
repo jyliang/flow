@@ -61,9 +61,10 @@ Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Ca
 - `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
 - `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from the configured template. Refuses if `agent/spec.md` already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
 - `load-config.sh` — sources `.flow/config.sh` (if present) and prints normalized flow env vars. Precedence: env > file > defaults. See `references/config.md` for the schema.
+- `archive-summary.sh [scope]` — one-line summary per archived PR. Used by `/flow-reflect` for cross-archive pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y`.
 
 ## Related skills
 
 Stages: `explore`, `plan`, `implement`, `review`, `ship`.
 Internal (auto-triggered): `tdd`, `commits`, `parallel`.
-Meta: `teach` — create skills or capture rules.
+Meta: `teach` — create skills or capture rules. Reflection — see `references/reflection.md` for the "twice is a pattern" rule; triggered at ship-stage and via `/flow-reflect`.
