@@ -20,6 +20,9 @@ branch="${1:-}"
 
 [[ ! -f agent/spec.md ]] || die "spec already exists at agent/spec.md"
 
+# Inlined config precedence (env > file > legacy > default) rather than calling
+# load-config.sh to avoid subprocess + eval overhead. Kept in sync with that
+# script; references/config.md documents the contract.
 env_template="${FLOW_TEMPLATE_SPEC:-}"
 if [[ -f .flow/config.sh ]]; then
   # shellcheck disable=SC1091
