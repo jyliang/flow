@@ -68,9 +68,11 @@ Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Ca
 - `bootstrap.sh <branch>` — creates the branch and materializes the initial spec at `agent/workstreams/<today>-<branch>/01-spec-r1.md` from the configured template. Refuses if the workstream folder already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
 - `load-config.sh` — sources `.flow/config.sh` (if present) and prints normalized flow env vars. Precedence: env > file > defaults. See `references/config.md` for the schema.
 - `workstreams-summary.sh [scope]` — one-line summary per shipped workstream (those whose spec has a `pr: <N>` in the frontmatter). Used by `/flow-reflect` for cross-workstream pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y`.
+- `spike-branch.sh <thesis>` — slugifies a thesis to `spike-<slug>`. Used by `/flow-spike` to name the unattended-spike branch; `bootstrap.sh` then adds the date prefix to form the workstream folder.
 
 ## Related skills
 
 Stages: `explore`, `plan`, `implement`, `review`, `ship`.
 Internal (auto-triggered): `tdd`, `commits`, `parallel`.
 Meta: `teach` — create skills or capture rules. Reflection — see `references/reflection.md` for the "twice is a pattern" rule; triggered at ship-stage and via `/flow-reflect`.
+Spike mode: `spike/SKILL.md` — runs the full pipeline unattended to produce a draft PR for human review. Used via `/flow-spike "<thesis>"` when you want to validate a thesis fast and come back to something testable.
