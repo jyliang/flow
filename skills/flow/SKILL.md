@@ -21,21 +21,25 @@ Idea → [explore] → Spec → [plan] → Plan → [implement] → Changes → 
 
 | Stage | Input | Output | Path |
 |-------|-------|--------|------|
-| explore | Idea | Spec | `agent/spec.md` |
-| plan | Spec | Plan | `agent/plans/IMPLEMENTATION_PLAN_*.md` |
+| explore | Idea | Spec | `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` |
+| plan | Spec | Plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
 | implement | Plan | Changes | git branch |
-| review | Changes | Findings | `agent/reviews/*` |
-| ship | Findings | PR | GitHub PR |
+| review | Changes | Findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
+| ship | Findings | PR | GitHub PR (records `pr: <N>` in the spec's frontmatter comment; folder stays in `agent/workstreams/`) |
+
+Every document within a workstream follows `<NN>-<stage>-r<N>.md`: stage-order prefix (`01`/`02`/`03`), stage name, and a revision suffix (`-r1`, `-r2`, …). Revisions create a new file — the previous `-rN` is frozen; the new file's `## Revisions` section explains what changed. "Current" means the highest-`N` file for that stage.
 
 Document depth scales with task complexity. A one-line fix produces a 3-line spec and skips most ceremony; a complex feature produces full analysis at every stage. Structure is constant, depth is proportional.
 
 ## Detect the current stage
 
-1. No `agent/spec.md` → **explore**
-2. Spec exists, no plan → **plan**
-3. Plan exists with incomplete steps → **implement**
-4. Plan complete or unreviewed changes on branch → **review**
-5. Findings exist with unresolved items → **ship**
+The active workstream is `agent/workstreams/*-$(git branch --show-current)/` (1:1 branch↔workstream). Within it:
+
+1. No `01-spec-r*.md` → **explore**
+2. Latest spec exists, no `02-plan-r*.md` → **plan**
+3. Latest plan has unchecked steps → **implement**
+4. Latest plan complete or unreviewed changes on branch → **review**
+5. Latest `03-review-r*.md` has unchecked items → **ship**
 6. PR exists and ready → **done**
 
 When multiple conditions are true (e.g., open PR and a stale findings doc), the detection picks the **furthest-downstream** stage: done > ship > review > implement > plan > explore.
@@ -61,9 +65,9 @@ See `references/boundaries.md` for auto-advance vs pause rules, revision handlin
 Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Called from slash-command bodies and (when needed) directly via the Bash tool.
 
 - `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
-- `bootstrap.sh <branch>` — creates the branch and materializes `agent/spec.md` from the configured template. Refuses if `agent/spec.md` already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
+- `bootstrap.sh <branch>` — creates the branch and materializes the initial spec at `agent/workstreams/<today>-<branch>/01-spec-r1.md` from the configured template. Refuses if the workstream folder already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
 - `load-config.sh` — sources `.flow/config.sh` (if present) and prints normalized flow env vars. Precedence: env > file > defaults. See `references/config.md` for the schema.
-- `archive-summary.sh [scope]` — one-line summary per archived PR. Used by `/flow-reflect` for cross-archive pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y`.
+- `workstreams-summary.sh [scope]` — one-line summary per shipped workstream (those whose spec has a `pr: <N>` in the frontmatter). Used by `/flow-reflect` for cross-workstream pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y`.
 
 ## Related skills
 

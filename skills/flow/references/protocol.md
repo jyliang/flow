@@ -74,7 +74,7 @@ Spec originally said:
 
 During implementation, the agent discovers the existing middleware only supports session cookies. Rewriting middleware is out of scope. The agent:
 
-1. Updates `agent/spec.md`:
+1. Writes a spec revision at `agent/workstreams/<date>-<branch>/01-spec-r2.md` (keeping `01-spec-r1.md` frozen as history):
    ```markdown
    ## Revisions
    - **implement → spec** 2026-04-16: Changed auth from JWT to session cookies
@@ -83,7 +83,7 @@ During implementation, the agent discovers the existing middleware only supports
      **Impact**: Plan steps 3-5 updated. No JWT dependency needed.
    ```
 
-2. Updates the plan to reflect the new approach.
+2. Writes a plan revision (`02-plan-r2.md`) reflecting the new approach.
 
 3. Continues implementing with the revised approach.
 
@@ -110,9 +110,13 @@ The human edits the spec directly — changes scope, adds constraints, removes a
 
 ## Document locations
 
-| Document | Path | Produced by |
-|----------|------|------------|
-| Spec | `agent/spec.md` | explore |
-| Plan | `agent/plans/IMPLEMENTATION_PLAN_<date>.md` | plan |
-| Findings | `agent/reviews/<branch>-r<N>.md` | review |
-| PR | GitHub (via `gh`) | ship |
+Every workstream — in-flight or shipped — lives in `agent/workstreams/<YYYY-MM-DD>-<branch>/` (1:1 with the git branch). Merged workstreams stay put; their spec's frontmatter comment gets a `pr: <N>` field at ship time, which marks the workstream as shipped.
+
+| Document | Path within workstream | Produced by |
+|----------|------------------------|-------------|
+| Spec | `01-spec-r<N>.md` | explore |
+| Plan | `02-plan-r<N>.md` | plan |
+| Findings | `03-review-r<N>.md` | review |
+| PR | GitHub (via `gh`); PR number written to spec frontmatter | ship |
+
+Each document starts at `-r1`. A revision creates a new file with `-rN+1`; the previous file stays frozen. The new file's `## Revisions` section explains what changed, why, and the impact. "Latest" means the highest-`-rN` for a given stage prefix.

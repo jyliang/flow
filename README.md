@@ -71,11 +71,11 @@ This is not a bug in the process — it's a feature. The revision trail answers 
 
 | Skill | Transition | Document |
 |-------|-----------|----------|
-| **explore** | idea → spec | `agent/spec.md` |
-| **plan** | spec → plan | `agent/plans/IMPLEMENTATION_PLAN_*.md` |
+| **explore** | idea → spec | `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` |
+| **plan** | spec → plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
 | **implement** | plan → changes | code on branch |
-| **review** | changes → findings | `agent/reviews/*` |
-| **ship** | findings → PR | GitHub PR |
+| **review** | changes → findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
+| **ship** | findings → PR | GitHub PR (records `pr:` in spec; workstream folder stays at `agent/workstreams/<date>-<branch>/`) |
 
 ### Internal (auto-triggered)
 

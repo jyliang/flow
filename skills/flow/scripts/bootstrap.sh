@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# Bootstrap a new flow: create a branch, materialize agent/spec.md from template.
+# Bootstrap a new flow: create a branch, materialize the initial spec.
 # Does NOT commit; the caller (LLM or user) populates content and commits.
 #
 # Usage: bootstrap.sh <branch-name>
-# Env:   FLOW_TEMPLATE_DIR (override template location; default ~/.claude/skills/flow/templates)
+# Env:   FLOW_TEMPLATE_SPEC (override template location)
 # Exits: 0 success; 2 validation or precondition failure; other non-zero on git/fs errors.
-#
-# Future: add --overwrite and --adopt flags so /flow-adopt's recovery options
-# (overwrite / adopt-into-existing) become explicit in the script's contract
-# instead of LLM-inferred. Tracked for v2.
 
 set -euo pipefail
 
@@ -18,7 +14,10 @@ branch="${1:-}"
 [[ -n "$branch" ]] || die "usage: bootstrap.sh <branch-name>"
 [[ "$branch" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "invalid branch name '$branch' (expected lowercase kebab-case)"
 
-[[ ! -f agent/spec.md ]] || die "spec already exists at agent/spec.md"
+date_str="$(date +%Y-%m-%d)"
+workstream_dir="agent/workstreams/${date_str}-${branch}"
+
+[[ ! -d "$workstream_dir" ]] || die "workstream already exists at $workstream_dir"
 
 # Inlined config precedence (env > file > legacy > default) rather than calling
 # load-config.sh to avoid subprocess + eval overhead. Kept in sync with that
@@ -39,8 +38,8 @@ git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git wor
 
 git checkout -b "$branch"
 
-mkdir -p agent
-date_str="$(date +%Y-%m-%d)"
+mkdir -p "$workstream_dir"
+spec_file="$workstream_dir/01-spec-r1.md"
 author="$(git config user.name || echo 'unknown')"
 
 escape_for_sed() {
@@ -55,6 +54,6 @@ sed \
   -e "s|{{DATE}}|$(escape_for_sed "$date_str")|g" \
   -e "s|{{BRANCH}}|$(escape_for_sed "$branch")|g" \
   -e "s|{{AUTHOR}}|$(escape_for_sed "$author")|g" \
-  "$template" > agent/spec.md
+  "$template" > "$spec_file"
 
-echo "branch=$branch spec=agent/spec.md"
+echo "branch=$branch spec=$spec_file"

@@ -16,7 +16,7 @@ Read the findings document, fix what can be fixed, ask about the rest, and push 
 
 ### Step 1: Read findings
 
-Read the latest `agent/reviews/*` document. Check for:
+Read the latest `03-review-r*.md` in the active workstream (`agent/workstreams/*-$(git branch --show-current)/`). Check for:
 - Resolved decisions (human already edited the document) — apply them
 - Unresolved decisions — present to human via `AskUserQuestion` (see `flow/references/user-interaction.md`)
 
@@ -132,6 +132,16 @@ gh pr ready <pr-number>
 ```
 
 Present the final PR URL.
+
+### Step 7.5: Record the PR number in spec frontmatter
+
+Write the PR number into the latest `01-spec-r*.md` header comment:
+
+```
+<!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->
+```
+
+If the line already has `pr:` with a value, leave it. The folder stays at `agent/workstreams/<date>-<branch>/` after merge — the `pr:` field marks "shipped", and `workstreams-summary.sh` uses it as the filter. There is no separate archive location.
 
 ### Step 8: Re-run tests
 
