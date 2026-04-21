@@ -11,6 +11,8 @@ Move work forward from idea to shipped PR. Detect the current stage, run the rig
 
 Each document serves two readers: the human reviews and edits it, the next stage consumes it as input.
 
+**Every user-facing decision goes through `AskUserQuestion`.** Free-form prose is for status updates, narration, and summaries only. When in doubt, `AskUserQuestion`. See `references/user-interaction.md` for the rule and its exceptions (open-ended text prompts, irreversible-action confirms).
+
 ## Pipeline
 
 ```
