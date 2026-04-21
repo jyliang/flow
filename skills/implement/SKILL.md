@@ -10,13 +10,13 @@ metadata:
 
 ## Goal
 
-Read the latest `agent/plans/IMPLEMENTATION_PLAN_*.md` and execute it step by step, producing code changes on the current branch.
+Read the latest `02-plan-r*.md` in the active workstream (`agent/workstreams/*-$(git branch --show-current)/`) and execute it step by step, producing code changes on the current branch.
 
 ## How to set up
 
 1. Study `CLAUDE.md` for project patterns and guidelines
-2. Read `agent/spec.md` for the feature spec (what we're building and why)
-3. Read the latest `agent/plans/IMPLEMENTATION_PLAN_*.md` for the steps to execute
+2. Read the latest `01-spec-r*.md` in the active workstream for the feature spec (what we're building and why)
+3. Read the latest `02-plan-r*.md` in the active workstream for the steps to execute
 4. Study the source code around the affected files
 
 ## How to run the loop
@@ -42,8 +42,8 @@ During implementation you will discover things that contradict the spec or plan 
 
 When this happens:
 
-1. **Update the earlier document.** Go back to `agent/spec.md` or the plan and revise the affected section.
-2. **Add a Revisions entry** to the document you changed (see `flow/references/protocol.md`):
+1. **Update the earlier document.** Create a new revision of the spec or plan (`-rN+1`) in the active workstream folder with the affected section revised. The prior `-rN` stays frozen as history.
+2. **Add a Revisions entry** to the new file (see `flow/references/protocol.md`):
    ```markdown
    ## Revisions
    - **implement → spec** [date]: [What changed]

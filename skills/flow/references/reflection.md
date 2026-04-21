@@ -34,9 +34,9 @@ Reflection is how flow learns. Two axes, two triggers — both gated on user con
 **When**: explicit `/flow-reflect` invocation.
 
 **Input**: `$ARGUMENTS` selects scope:
-- `all` (default) — every `agent/archive/pr-*/`
+- `all` (default) — every `agent/archive/<date>-<slug>/`
 - `N` — last N archives
-- `pr-6,pr-7` — specific archive subset
+- `pr-6,pr-7` — specific archive subset (matches the `pr:` number in each archive's `01-spec-r*.md` frontmatter)
 
 **What to look for** — cross-archive patterns:
 - Same suggestion appearing in 2+ review docs (e.g., "Makefile install loop doesn't prune" noted across PRs) → propose fix to the code.
@@ -53,7 +53,7 @@ Reflection is how flow learns. Two axes, two triggers — both gated on user con
 - Edit to `.flow/config.sh` (template, stages, hooks).
 - Tweak to a stage skill file (show proposed diff; user decides).
 
-**No archives yet**: if `agent/archive/` has fewer than 2 PRs, say "not enough history yet" and exit. Reflection needs data.
+**No archives yet**: if `agent/archive/` has fewer than 2 archived workstreams, say "not enough history yet" and exit. Reflection needs data.
 
 ## Never
 

@@ -11,7 +11,7 @@ metadata:
 
 ## Goal
 
-Review code changes and produce a findings document at `agent/reviews/`. The findings follow the document protocol so the human can resolve decisions and the ship stage can apply fixes.
+Review code changes and produce a findings document at `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/*-$(git branch --show-current)/`). The findings follow the document protocol so the human can resolve decisions and the ship stage can apply fixes.
 
 **Input**: `$ARGUMENTS` — a PR number, PR URL, or empty/`local` for local changes.
 
@@ -74,9 +74,7 @@ Keep the walkthrough brief (a few lines per audience) but explicit.
 
 ### Step 5: Write findings
 
-Write to `agent/reviews/` using auto-incrementing ordinals:
-- PR mode: `agent/reviews/pr-<number>-r<N>.md`
-- Local mode: `agent/reviews/local-<branch>-r<N>.md`
+Write to `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/<date>-<branch>/`). Round ordinal auto-increments: the first review of the workstream is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives inside the document (see template), not the filename.
 
 Follow the document protocol (`flow/references/protocol.md`):
 
@@ -129,10 +127,10 @@ Summary of critical/suggestion/nit/question counts plus highlights from each spe
 
 ## How to handle spec/plan drift
 
-After synthesizing findings, compare the implementation against `agent/spec.md` and the plan:
+After synthesizing findings, compare the implementation against the latest `01-spec-r*.md` and `02-plan-r*.md` in the active workstream:
 
-- If the code does something the spec doesn't describe → flag as a goal gap in findings AND add a Revisions entry to the spec noting the drift
-- If the code skips a plan step or does it differently → update the plan with a Revisions entry
+- If the code does something the spec doesn't describe → flag as a goal gap in findings AND write a spec revision (`01-spec-rN+1.md`) with a Revisions entry noting the drift
+- If the code skips a plan step or does it differently → write a plan revision (`02-plan-rN+1.md`) with a Revisions entry
 
 This ensures the documents stay in sync with reality, and the revision trail explains why.
 

@@ -1,4 +1,4 @@
-<!-- branch: {{BRANCH}} · date: {{DATE}} · author: {{AUTHOR}} -->
+<!-- branch: {{BRANCH}} · date: {{DATE}} · author: {{AUTHOR}} · pr: -->
 
 # Spec: {{BRANCH}}
 

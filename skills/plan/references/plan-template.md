@@ -1,6 +1,6 @@
 # Implementation Plan Template
 
-Save as `./agent/plans/IMPLEMENTATION_PLAN_<YYYY-MM-DD>.md`.
+Save as `./agent/workstreams/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-plan-r1.md` for a new plan; use the next `-rN` for revisions and include a `## Revisions` section).
 
 ```markdown
 # Plan: [Feature Name]

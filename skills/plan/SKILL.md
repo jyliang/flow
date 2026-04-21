@@ -10,13 +10,13 @@ metadata:
 
 ## Goal
 
-Read `agent/spec.md` and produce an implementation plan at `agent/plans/IMPLEMENTATION_PLAN_<YYYY-MM-DD>.md`. The plan breaks the spec into small, testable steps that the implement stage can execute.
+Read the latest `01-spec-r*.md` in the active workstream (`agent/workstreams/*-$(git branch --show-current)/`) and produce an implementation plan at `02-plan-r<N>.md` in the same folder. The plan breaks the spec into small, testable steps that the implement stage can execute.
 
 ## How to plan
 
 ### Step 1: Read the spec
 
-Read `agent/spec.md`. Check for:
+Read the latest `01-spec-r*.md` in the active workstream folder (highest `-rN` = current). Check for:
 - Unresolved decisions — if any exist, stop and surface them to the user via `AskUserQuestion` (see `flow/references/user-interaction.md`) before proceeding
 - Resolved decisions — incorporate them into the plan
 - Constraints — respect them
@@ -32,7 +32,7 @@ Based on the spec's impact analysis and current state:
 
 ### Step 3: Write the plan
 
-Write to `agent/plans/IMPLEMENTATION_PLAN_<YYYY-MM-DD>.md` following the document protocol (`flow/references/protocol.md`) and the template in `references/plan-template.md`.
+Write to `02-plan-r<N>.md` in the active workstream folder following the document protocol (`flow/references/protocol.md`) and the template in `references/plan-template.md`. A new workstream starts at `r1`; a revision creates `r2`, `r3`, ... with a `## Revisions` section explaining the delta.
 
 * **DO** divide into small, testable steps
 * **DO** document architecture decisions and rationale
@@ -43,8 +43,8 @@ Write to `agent/plans/IMPLEMENTATION_PLAN_<YYYY-MM-DD>.md` following the documen
 
 ## Conventions
 
-- `agent/spec.md` — input (produced by explore stage)
-- `agent/plans/IMPLEMENTATION_PLAN_*.md` — output (consumed by implement stage)
+- `agent/workstreams/<date>-<branch>/01-spec-r*.md` — input (produced by explore stage; latest `-rN` is current)
+- `agent/workstreams/<date>-<branch>/02-plan-r*.md` — output (consumed by implement stage)
 - `roadmap.md` — product vision (read-only reference)
 
 If the spec and plan drift apart during implementation, update the plan — the spec is the source of truth for *what*, the plan is the source of truth for *how*.
