@@ -23,7 +23,7 @@ for dir in "${dirs[@]}"; do
   specs=("$dir"01-spec-r*.md)
   shopt -u nullglob
   [[ ${#specs[@]} -gt 0 ]] || continue
-  spec="$(printf '%s\n' "${specs[@]}" | sort -V | head -1)"
+  spec="$(printf '%s\n' "${specs[@]}" | sort -V | tail -1)"
 
   header="$(head -1 "$spec")"
   pr="$(printf '%s' "$header" | grep -oE 'pr: *[0-9]+' | head -1 | sed 's/pr: *//' || true)"
