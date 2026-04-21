@@ -1,177 +1,178 @@
-# Spec: Flow v3 — reflection and self-recovery
+<!-- branch: document-name · date: 2026-04-21 · author: Jason Liang -->
+
+# Spec: Document naming convention — workstream folders
 
 ## Status
 explore → plan
 
 ## What was done
-- v1 (PR #6, merged): `/flow-adopt`, fast empty-state, scripts home.
-- v2 (PR #7, merged): per-project `.flow/config.sh`, scripted first-time setup.
-- v3 scope confirmed from the 2026-04-17 brainstorm: reflection across two axes.
-- Committed leans on key design questions to keep v3 shippable (see Decisions).
+- Inventoried the current convention: singleton `agent/spec.md`, `agent/plans/IMPLEMENTATION_PLAN_<date>.md`, `agent/reviews/{pr-<N>,local-<branch>}-r<N>.md`, `agent/archive/pr-<N>/`.
+- Identified pain points with the user: (1) singleton spec blocks parallel exploration, (2) stage-based grouping doesn't match how humans track workstreams, (3) same-day plan collisions handled ad-hoc via `-v2`/`-v3`, (4) review filenames have no date, (5) archive already groups by workstream — active work should too.
+- Resolved all naming decisions via AskUserQuestion (see Decisions below).
 
-## Decisions needed (committed, flag for redirect)
-- [x] **Two axes, two triggers**: (a) project-context drift — detected at **ship** via "twice is a pattern" (LLM scans its own conversation for repeat observations), (b) flow-system drift — detected via explicit `/flow-reflect` command reading `agent/archive/*`. No background scans.
-- [x] **No new persistent scratch file**: LLM uses its context window for the "twice" detection at ship. Keeps state ephemeral; no `agent/.session-notes.md` to manage.
-- [x] **Persistence target for axis (a)**: `CLAUDE.md` (per-project) by default. The `teach` skill already handles rule-capture; reuse it.
-- [x] **Persistence target for axis (b)**: `.flow/config.sh` updates or suggested edits to stage skill files. User approves each proposed change individually via `AskUserQuestion`.
+## Decisions needed (resolved)
+- [x] **Workstream folders, not stage folders**: `agent/workstreams/<date>-<slug>/` contains spec + plan + review together. Matches how humans think (one context per task) and how the archive already works.
+- [x] **Folder name**: `<YYYY-MM-DD>-<branch-slug>/`. Date sorts chronologically; slug = git branch name.
+- [x] **File names inside folder**: `01-spec-rN.md`, `02-plan-rN.md`, `03-review-rN.md`. Numeric stage prefix makes order obvious; `-rN` tracks revisions.
+- [x] **Revision model**: any revision to any doc creates a new `-rN+1` file. Previous `-rN` is frozen. The new file's `## Revisions` section explains what changed.
+- [x] **Active-workstream detection**: 1:1 branch ↔ workstream. `detect-stage.sh` reads `git branch --show-current` → globs `agent/workstreams/*-<branch>/`.
+- [x] **Archive shape**: `agent/archive/<YYYY-MM-DD>-<branch-slug>/` — same shape as active. Just `mv` on merge.
+- [x] **PR number**: stored in `01-spec-rN.md` YAML frontmatter as `pr: <N>`, written at archive time.
 
 ## Verify in reality
-- [ ] Ship a PR where the LLM said the same non-obvious thing twice in conversation → at ship boundary, LLM surfaces via `AskUserQuestion` asking to persist to `CLAUDE.md`.
-- [ ] Ship a PR where the LLM said nothing twice → no reflection prompt fires (silent, no noise).
-- [ ] Run `/flow-reflect` in a repo with ≥3 archived PRs → LLM summarizes patterns across archives, proposes changes, user approves per-item.
-- [ ] Run `/flow-reflect` in a repo with no archive → LLM says "not enough history yet" and exits gracefully.
+- [ ] After migration, `ls agent/workstreams/` shows one folder per in-flight branch; archive shows one folder per merged PR.
+- [ ] `bash skills/flow/scripts/detect-stage.sh` on a branch with a workstream folder returns the right stage.
+- [ ] `bash skills/flow/scripts/bootstrap.sh <new-branch>` creates `agent/workstreams/<date>-<new-branch>/01-spec-r1.md` from the template.
+- [ ] `bash skills/flow/scripts/archive-summary.sh` walks the migrated archive without errors.
+- [ ] Migrated archive entries still let `/flow-reflect` find patterns across past PRs.
 
 ## Spec details
 
 ### Problem
 
-After v1 + v2, users can run flow and customize per project. But the system doesn't learn. Two gaps:
+Two concrete problems with the current layout:
 
-1. **Project-context drift** — the LLM keeps telling the user the same fact twice (e.g., "migrations live in `db/migrations/*.sql`") without the fact ever making it into `CLAUDE.md`. The user has to notice + manually capture. Wasted interaction cycles.
-2. **Flow-system drift** — after a few PRs, patterns emerge: "explore stage always asks the same 3 questions", "ship stage never uses the dry-run flag first". These are tweakable via `.flow/config.sh` or stage skill edits, but no one notices until they bite.
+1. **Singleton spec blocks parallel context.** `agent/spec.md` is overwritten each explore run. Drafting a second idea while the first is mid-flow is impossible without manual file juggling.
+2. **Stage-based grouping scatters one workstream across three folders.** Spec, plan, and review for the same task live in `agent/spec.md`, `agent/plans/…`, `agent/reviews/…`. "What am I working on?" requires a join. The archive already solves this (`agent/archive/pr-N/` bundles spec + plan + review) — active work should have the same shape.
 
-v3 adds a reflection layer for both.
+Secondary issues:
+- Same-day plan collisions produce ad-hoc `-v2`/`-v3` suffixes not specified anywhere.
+- Review filenames (`pr-<N>-r<N>.md`, `local-<branch>-r<N>.md`) carry no date.
+- The `-v<N>` plan suffix and `-r<N>` review suffix serve the same purpose (revisions) with different shapes.
 
 ### Scope
 
 **In:**
-- Ship-stage reflection: when the ship skill wraps up, LLM checks its own conversation for facts stated twice and surfaces via `AskUserQuestion` — "persist to CLAUDE.md?". One short decision at PR time, no noise when nothing's repeated.
-- `commands/flow-reflect.md` — explicit reflect command. LLM reads `agent/archive/*/{spec,IMPLEMENTATION_PLAN,local-*-r1}.md`, `.flow/config.sh`, and current stage skills. Proposes changes grouped by (CLAUDE.md updates / config.sh edits / stage skill tweaks). User accepts per-group via `AskUserQuestion`.
-- `skills/flow/references/reflection.md` — the "twice is a pattern" rule, decision tree, examples of good/bad reflections.
-- `skills/flow/scripts/archive-summary.sh` — helper for `/flow-reflect` that prints one-line summaries of archived PRs (title + date from git log). Cheap, lets the LLM ground its reflection without reading every archive file in full.
-- Update `skills/ship/SKILL.md` — add a final step: "Before closing ship, scan the conversation for repeat observations and offer to persist via the reflection reference."
+- New active layout: `agent/workstreams/<date>-<slug>/{01-spec-rN,02-plan-rN,03-review-rN}.md`.
+- New archive layout: `agent/archive/<date>-<slug>/` (same shape).
+- Update every skill doc, template, and script that references the old paths: `skills/{explore,plan,implement,review,ship,flow}/**`.
+- Update `skills/flow/references/{protocol,reflection,config,stage-detection,boundaries,user-interaction}.md` wherever paths appear.
+- Migrate existing files: `agent/spec.md` (none currently — archived above), any remaining `agent/plans/*`, `agent/reviews/*`, and all of `agent/archive/pr-*/` → new layout.
+- Write a `pr:` frontmatter line into each migrated spec using the PR number derived from the old `pr-<N>/` folder name, mapped via `gh pr view`.
+- Update `README.md` if it references old paths.
 
-**Out (post-v3):**
-- Automatic scan across sessions ("last week you said X three times"). Needs cross-session state the LLM doesn't have natively.
-- Auto-applying reflections without user approval. Always gate on consent.
-- Reflection for skills outside flow (teach, commits, etc.) — they have their own existing learning paths.
+**Out (this PR):**
+- Changes to the CLAUDE.md file's global rules.
+- Any stage-skill behavior change beyond path references (explore still produces a spec; plan still reads it; etc.).
+- Support for multiple workstreams on the same branch (1:1 rule stays).
+- Renaming git branches or PRs retroactively.
+- New tooling on top of the layout (e.g., a `flow status` command) — tracked as a future enhancement.
 
 ### Design
 
-#### Axis (a): ship-stage "twice is a pattern"
-
-**Trigger**: last step of `skills/ship/SKILL.md` before PR creation.
-
-**Detection**: LLM reviews its own conversation in context window. For each observation it made to the user, count occurrences. Anything said ≥2 times about this project that is NOT already in `CLAUDE.md` is a reflection candidate.
-
-**Qualifying "observation"**: a statement of fact about the project (paths, conventions, build commands, gotchas). NOT a status update, NOT a summary, NOT LLM reasoning. Examples:
-- ✓ "Migrations live in `db/migrations/*.sql`" said twice.
-- ✓ "This repo uses `make install` not `npm install`" said twice.
-- ✗ "I'm reading the file now" said twice — status, not fact.
-
-**Surface shape**: `AskUserQuestion` (1 question per candidate, max 3 per ship):
-- Q: "I mentioned `<fact>` twice this session. Persist to CLAUDE.md?"
-- Options: `Yes, add (Recommended)` / `No, not worth it` / `Rephrase first`.
-
-If user says "Rephrase first", they provide new wording, LLM writes exact text.
-
-**False-positive budget**: 3 candidates max per ship. Hard cap to avoid noise. If LLM detects >3, surface top-3 by (how non-obvious × how often repeated).
-
-#### Axis (b): `/flow-reflect`
-
-**Trigger**: explicit user invocation.
-
-**Body sketch (`commands/flow-reflect.md`):**
+#### Active layout
 
 ```
-Read:
-1. `agent/archive/*/` — archived specs, plans, reviews from recent PRs.
-2. `.flow/config.sh` — current project config.
-3. Current `CLAUDE.md` (project + user global).
-4. `skills/flow/scripts/archive-summary.sh` output for orientation.
-
-Identify 2-4 patterns worth acting on. For each, propose one change:
-- Update to CLAUDE.md (new rule or convention).
-- Edit to `.flow/config.sh` (template path, extra stages, hooks dir).
-- Suggested tweak to a stage skill (surface; user decides later).
-
-Surface via AskUserQuestion — one question per proposal, max 4 total.
-
-If there's no archive (< 2 archived PRs), say "not enough history yet" and exit.
+agent/
+  workstreams/
+    2026-04-21-document-name/
+      01-spec-r1.md
+      02-plan-r1.md
+      03-review-r1.md
+    2026-04-25-some-other-branch/
+      01-spec-r1.md
 ```
 
-**Pattern types to look for:**
-- Same phrase appearing in multiple archived findings ("the Makefile install loop doesn't prune" → S1 across 2 PRs).
-- Decisions repeatedly deferred ("defer to v2" showing up in 3 specs → time to schedule).
-- Stages consistently skipped ("no plan for this branch" in 4 PRs → maybe plan stage is overkill for housekeeping).
+#### Revision model
 
-**Not to look for:**
-- Surface-level formatting tweaks.
-- Wordsmithing the skill prose.
-- One-off bugs (that's what review finds).
+A revision to any document creates a new file with `rN+1`. The prior file is left untouched (frozen history). The new file's standard `## Revisions` section (already part of the protocol) explains what changed, why, and the downstream impact.
 
-#### `archive-summary.sh`
-
-```bash
-#!/usr/bin/env bash
-# Print a one-line summary per archived PR: pr-N, date, title.
-# Used by /flow-reflect for orientation without reading every archive in full.
-
-set -euo pipefail
-for dir in agent/archive/pr-*/; do
-  pr="$(basename "$dir" | sed 's/pr-//')"
-  spec="$dir/spec.md"
-  if [[ -f "$spec" ]]; then
-    title="$(head -1 "$spec" | sed 's/^# *Spec: *//')"
-    date="$(grep -o 'date: [0-9-]*' "$spec" 2>/dev/null | head -1 | sed 's/date: //')"
-    [[ -z "$date" ]] && date="$(date -r "$spec" +%Y-%m-%d 2>/dev/null || echo 'unknown')"
-    printf 'pr-%s  %s  %s\n' "$pr" "$date" "$title"
-  fi
-done
+```
+02-plan-r1.md          (initial plan)
+02-plan-r2.md          (revision 1 — Revisions section explains delta from r1)
+02-plan-r3.md          (revision 2 — Revisions section explains delta from r2)
 ```
 
-#### `references/reflection.md`
+"Current" = highest-N file for that stage prefix. Scripts and skills always read the latest.
 
-One-page doc with:
-- The "twice is a pattern" rule + qualifying examples.
-- The 3-candidate ship-stage cap.
-- What NOT to reflect on.
-- The `/flow-reflect` command's scope.
+#### Archive layout
 
-#### `skills/ship/SKILL.md` update
+On PR merge, `mv agent/workstreams/<date>-<slug>/ agent/archive/<date>-<slug>/`. Before the move, `ship` writes `pr: <N>` into the frontmatter of the latest `01-spec-rN.md` so the PR number survives the move.
 
-Add one step before the PR-creation section:
 ```
-### Step N: Reflection scan (optional, silent when empty)
-
-Before opening the PR, scan this session's conversation for observations
-stated ≥2 times that aren't in CLAUDE.md. For each (max 3), surface via
-AskUserQuestion: persist / skip / rephrase. See `flow/references/reflection.md`.
+agent/archive/
+  2026-04-21-document-name/
+    01-spec-r1.md           # frontmatter: pr: 9
+    02-plan-r1.md
+    03-review-r1.md
 ```
 
-Should be a one-paragraph addition. Skill body stays under 200 lines.
+#### Script changes
 
-### Impact analysis
+- **`detect-stage.sh`**: resolve active workstream as `agent/workstreams/*-$(git branch --show-current)/`. Detection rules stay the same, just path-adjusted:
+  - No `01-spec-r*.md` → `explore-empty`
+  - Spec exists, no `02-plan-r*.md` → `plan`
+  - Latest plan has unchecked `- [ ]` steps → `implement`
+  - Plan checked or unreviewed changes → `review`
+  - Latest `03-review-r*.md` has unchecked items → `ship`
+  - PR open → `done`
+- **`bootstrap.sh`**: create `agent/workstreams/<today>-<branch>/01-spec-r1.md` from template. Refuse if the folder already exists for this branch.
+- **`archive-summary.sh`**: walk `agent/archive/<date>-<slug>/` instead of `agent/archive/pr-*/`. Read `pr:` frontmatter from `01-spec-r*.md` to print the PR number alongside the date and title.
+- **`load-config.sh`**: path reference updates only.
 
-**Files to create:**
-- `commands/flow-reflect.md`
-- `skills/flow/scripts/archive-summary.sh`
-- `skills/flow/references/reflection.md`
+#### Skill doc updates (path references)
 
-**Files to modify:**
-- `skills/ship/SKILL.md` — add the reflection-scan step.
-- `skills/flow/SKILL.md` — one-line pointer to `references/reflection.md` under the Scripts or Related skills section.
+For each of `skills/{explore,plan,implement,review,ship,flow}/SKILL.md`, replace every path reference with the new convention. Also update:
+- Plan template at `skills/plan/references/plan-template.md`.
+- Findings template at `skills/review/references/findings-template.md`.
+- Spec template at `skills/flow/templates/spec.md` — add `pr:` to the frontmatter comment line (blank until archive).
+- `skills/flow/references/protocol.md` — document-locations table, examples.
+- `skills/flow/references/reflection.md` — archive scanning path.
 
-**Files to consider:**
-- `teach/SKILL.md` — does the existing rule-capture path work unchanged for v3's "persist to CLAUDE.md" call? Expected yes, verify during review.
+#### Migration approach
+
+1. Create new layout and rewrite all scripts/skills **first**.
+2. Write a one-shot migration script (in `skills/flow/scripts/migrate-layout.sh`, removed after migration) that:
+   - For each `agent/archive/pr-<N>/`, resolves date via `gh pr view <N>` → creates `agent/archive/<YYYY-MM-DD>-<slug>/`. Slug derived from the PR branch name.
+   - Renames files inside: `spec.md` → `01-spec-r1.md`; `IMPLEMENTATION_PLAN_*.md` → `02-plan-r1.md` (pick the latest `-v<N>` as the newest `r` if there are multiple, older ones become `-r1`, `-r2`); `local-*-r<N>.md` or `pr-<N>-r<N>.md` → `03-review-r<N>.md`.
+   - Writes `pr: <N>` into the frontmatter of the new `01-spec-r1.md`.
+3. Delete the migration script in the same PR (one-shot; record approach in commit message).
+
+#### Why the `-r<N>` suffix from r1 (not r2 onwards)
+
+Uniform from the start = simpler rule. "Latest file" is always `max(r<N>)` without special-casing "the one without a suffix". Small extra ceremony on day one; pays off as soon as any revision happens.
 
 ### Constraints
 
-- **No background state**: reflection is event-driven (ship boundary, explicit command). No cron, no background scan. Predictable latency.
-- **No automatic writes**: every persistence goes through `AskUserQuestion`. Never write to `CLAUDE.md` silently.
-- **Noise budget**: 3 candidates max at ship. If more exist, surface top-3 by weight (repetition × non-obviousness). The 4th+ goes into a `agent/reviews/local-*-r1.md`-style note that the user sees at review time.
-- **Context budget**: `archive-summary.sh` lets the LLM grok the archive in ≤200 tokens; it can read individual archive files only when a pattern hint emerges.
+- **No behavior change beyond paths.** Stages produce the same documents with the same content. Only filenames and folders move.
+- **Git history preserved.** Use `git mv` so blame/log works. The migration script uses `git mv` internally.
+- **Bootstrapping order.** The flow scripts running this PR are the same ones being rewritten. Approach: write the spec to the OLD location (done — `agent/spec.md`), let plan/implement run under old paths, and have the implementation's final step migrate everything (including the current workstream's spec/plan/review) to the new layout. This is the ONLY run under the old layout.
+- **Atomic PR.** All skill/script updates and the file migration land in a single PR. Downstream users should not see a half-migrated repo.
+- **README.** If `README.md` references path conventions, update it in the same PR.
+
+### Impact analysis
+
+Files modified (path references or content):
+- `skills/explore/SKILL.md`
+- `skills/plan/SKILL.md` + `skills/plan/references/plan-template.md`
+- `skills/implement/SKILL.md`
+- `skills/review/SKILL.md` + `skills/review/references/findings-template.md`
+- `skills/ship/SKILL.md`
+- `skills/flow/SKILL.md`
+- `skills/flow/templates/spec.md`
+- `skills/flow/references/protocol.md`
+- `skills/flow/references/reflection.md`
+- `skills/flow/references/config.md` (if any path refs)
+- `skills/flow/references/stage-detection.md` (if any path refs)
+- `skills/flow/references/boundaries.md` (if any path refs)
+- `skills/flow/scripts/detect-stage.sh`
+- `skills/flow/scripts/bootstrap.sh`
+- `skills/flow/scripts/archive-summary.sh`
+- `skills/flow/scripts/load-config.sh` (if any path refs)
+- `README.md` (if any path refs)
+- `commands/flow*.md` (if any path refs)
+
+Files moved (migration):
+- `agent/archive/pr-{1,2,4,6,7,8}/` → `agent/archive/<date>-<slug>/`
+- `agent/plans/` (empty after archiving PR #8 docs) — remove directory
+- `agent/reviews/` (empty after archiving PR #8 docs) — remove directory
+- `agent/spec.md` (this very spec) → `agent/workstreams/2026-04-21-document-name/01-spec-r1.md` as the final implementation step
+- Any plan/review produced during this flow, same migration
+
+Files created:
+- `agent/workstreams/2026-04-21-document-name/` (at migration time)
+- `skills/flow/scripts/migrate-layout.sh` (one-shot, deleted in same PR)
 
 ### Open questions
 
-1. **Does the ship-stage reflection fire on every PR or only when the session is long enough to have repetitions?** Lean: always fire, but silent-exit when no candidates. The cost is one LLM sweep of the conversation — cheap in context window.
-2. **How does `/flow-reflect` handle a repo with archives from multiple distinct features?** Does it narrow to recent (last 5 archives) or all? Lean: last 5, configurable via `$ARGUMENTS`.
-3. **Should reflection respect the flow skill's `AskUserQuestion` contract (max 4 questions per call)?** Yes — batch ship-stage + reflect command output into single calls when possible.
-
-## References
-
-- Brainstorm: 2026-04-17 session, "reflection + self-recovery" segment.
-- v1 archive: `agent/archive/pr-6/`.
-- v2 archive: `agent/archive/pr-7/`.
-- `skills/teach/SKILL.md` — rule-capture primitive v3 reuses.
-- `skills/ship/SKILL.md` — where the axis-(a) trigger lives.
+None — all decisions resolved. Leaving this section in case review surfaces new questions.
