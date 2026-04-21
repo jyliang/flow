@@ -1,177 +1,193 @@
-# Spec: Flow v3 — reflection and self-recovery
+# Spec: `/flow-autopilot` — thesis-validation spike mode
 
 ## Status
 explore → plan
 
 ## What was done
-- v1 (PR #6, merged): `/flow-adopt`, fast empty-state, scripts home.
-- v2 (PR #7, merged): per-project `.flow/config.sh`, scripted first-time setup.
-- v3 scope confirmed from the 2026-04-17 brainstorm: reflection across two axes.
-- Committed leans on key design questions to keep v3 shippable (see Decisions).
+- Brainstormed autopilot shape across three turns (2026-04-21). Converged on "spike tool for thesis validation" framing, not "production PR generator."
+- Pipeline confirmed: explore → plan → implement → **1 LLM-review round** → draft PR.
+- Terminology pinned (user correction, 2026-04-21): **LLM review** is the "clear eyes" re-evaluation performed by the `review` skill inside the pipeline; it can trigger one self-fix pass. **Human review** is what happens on the draft PR after the pipeline completes — final approval, outside the pipeline. Autopilot spec uses "LLM review" and "human review" explicitly; bare "review" is avoided.
+- Committed to a set of safety rails and audit-log conventions (see Design).
+- Scope confirmed: one chunky PR is fine. Autopilot does NOT split scope; if follow-up work emerges, it lands in the "Next moves" section of the PR body for the human to decide.
 
 ## Decisions needed (committed, flag for redirect)
-- [x] **Two axes, two triggers**: (a) project-context drift — detected at **ship** via "twice is a pattern" (LLM scans its own conversation for repeat observations), (b) flow-system drift — detected via explicit `/flow-reflect` command reading `agent/archive/*`. No background scans.
-- [x] **No new persistent scratch file**: LLM uses its context window for the "twice" detection at ship. Keeps state ephemeral; no `agent/.session-notes.md` to manage.
-- [x] **Persistence target for axis (a)**: `CLAUDE.md` (per-project) by default. The `teach` skill already handles rule-capture; reuse it.
-- [x] **Persistence target for axis (b)**: `.flow/config.sh` updates or suggested edits to stage skill files. User approves each proposed change individually via `AskUserQuestion`.
+- [x] **LLM-review depth**: single LLM-review round. No re-review loop even if critical findings surface — fix once, ship with residuals flagged. Human review on the draft PR is the backstop.
+- [x] **Audit log location**: `agent/autopilot-log.md`, committed as part of the PR. Human can audit every auto-decision from the PR diff during human review.
+- [x] **Recommended-option fallback**: when an `AskUserQuestion` decision has no explicit `(Recommended)`, autopilot picks the first option and logs the fallback reasoning.
+- [x] **Reflection skipped in autopilot**: the v3 "twice is a pattern" + `/flow-reflect` aren't useful on a throwaway spike; skipped to keep runtime bounded.
+- [x] **Runtime ceiling**: no wall-clock timeout. Step-count ceiling in the implement stage (≤ 20 substeps per run); LLM self-aborts if it blows past.
+- [x] **Terminology** (user-specified 2026-04-21): use "LLM review" and "human review" explicitly everywhere in autopilot artifacts (spec, plan, skill body, PR template). Bare "review" is ambiguous and avoided.
 
 ## Verify in reality
-- [ ] Ship a PR where the LLM said the same non-obvious thing twice in conversation → at ship boundary, LLM surfaces via `AskUserQuestion` asking to persist to `CLAUDE.md`.
-- [ ] Ship a PR where the LLM said nothing twice → no reflection prompt fires (silent, no noise).
-- [ ] Run `/flow-reflect` in a repo with ≥3 archived PRs → LLM summarizes patterns across archives, proposes changes, user approves per-item.
-- [ ] Run `/flow-reflect` in a repo with no archive → LLM says "not enough history yet" and exits gracefully.
+- [ ] Run `/flow-autopilot "validate that X approach is faster than Y"` in a sample project. Confirm: pipeline runs end-to-end without user interrupts, draft PR opens, PR body contains all 7 review-package sections, `agent/autopilot-log.md` lists every auto-decision.
+- [ ] Confirm "What the spike shows" section is honestly adversarial (actively looks for thesis-contradicting evidence), not rubber-stamp.
+- [ ] Confirm draft status sticks: PR is not `ready`, no auto-merge.
+- [ ] Run two autopilot commands in parallel from different terminals; confirm branches + agent dirs don't collide.
 
 ## Spec details
 
 ### Problem
 
-After v1 + v2, users can run flow and customize per project. But the system doesn't learn. Two gaps:
+The v1–v3 flow pipeline is tuned for human-in-the-loop work: every stage boundary has an `AskUserQuestion`, the ship stage opens a real PR with auto-merge. This makes flow slow for **spikes** — experiments where the goal is to validate a thesis ("will approach X actually feel faster to users?", "can the parser handle Y edge case at all?") and come back with something to poke at.
 
-1. **Project-context drift** — the LLM keeps telling the user the same fact twice (e.g., "migrations live in `db/migrations/*.sql`") without the fact ever making it into `CLAUDE.md`. The user has to notice + manually capture. Wasted interaction cycles.
-2. **Flow-system drift** — after a few PRs, patterns emerge: "explore stage always asks the same 3 questions", "ship stage never uses the dry-run flag first". These are tweakable via `.flow/config.sh` or stage skill edits, but no one notices until they bite.
-
-v3 adds a reflection layer for both.
+Autopilot addresses that gap:
+- Run unattended: kick off one or many spikes, walk away, come back to draft PRs.
+- Thesis-centric: the draft PR body is organized around "does this support or refute the thesis?", not around "is this mergeable?".
+- Human-light: no mid-pipeline prompts; the human's only touchpoint is **human review** of the draft PR after the pipeline completes.
+- Throwaway-friendly: the PR may never merge — it's a scratchpad that either gets picked up via `/flow-adopt` for real work, or archived.
 
 ### Scope
 
 **In:**
-- Ship-stage reflection: when the ship skill wraps up, LLM checks its own conversation for facts stated twice and surfaces via `AskUserQuestion` — "persist to CLAUDE.md?". One short decision at PR time, no noise when nothing's repeated.
-- `commands/flow-reflect.md` — explicit reflect command. LLM reads `agent/archive/*/{spec,IMPLEMENTATION_PLAN,local-*-r1}.md`, `.flow/config.sh`, and current stage skills. Proposes changes grouped by (CLAUDE.md updates / config.sh edits / stage skill tweaks). User accepts per-group via `AskUserQuestion`.
-- `skills/flow/references/reflection.md` — the "twice is a pattern" rule, decision tree, examples of good/bad reflections.
-- `skills/flow/scripts/archive-summary.sh` — helper for `/flow-reflect` that prints one-line summaries of archived PRs (title + date from git log). Cheap, lets the LLM ground its reflection without reading every archive file in full.
-- Update `skills/ship/SKILL.md` — add a final step: "Before closing ship, scan the conversation for repeat observations and offer to persist via the reflection reference."
+- New command `commands/flow-autopilot.md` — mode verb that drives the pipeline end-to-end.
+- New skill `skills/autopilot/SKILL.md` — encapsulates the decision policy, audit log, and review package shape.
+- New script `skills/flow/scripts/autopilot-branch.sh` — generates a unique branch name (`autopilot-<slug>-<date>`) from the thesis string.
+- Review-package template: `skills/autopilot/templates/pr-body.md` — the 7-section draft PR body.
+- Audit-log convention: `agent/autopilot-log.md` (committed) + template at `skills/autopilot/templates/autopilot-log.md`.
 
-**Out (post-v3):**
-- Automatic scan across sessions ("last week you said X three times"). Needs cross-session state the LLM doesn't have natively.
-- Auto-applying reflections without user approval. Always gate on consent.
-- Reflection for skills outside flow (teach, commits, etc.) — they have their own existing learning paths.
+**Out (deferred):**
+- Retry/resume on failure (autopilot that stops halfway; user picks up manually via `/flow`).
+- Cross-spike synthesis ("here are three spikes and what they collectively show about the thesis").
+- Auto-selection of which thesis to try next based on prior spike outcomes.
 
 ### Design
 
-#### Axis (a): ship-stage "twice is a pattern"
+#### Command entry
 
-**Trigger**: last step of `skills/ship/SKILL.md` before PR creation.
-
-**Detection**: LLM reviews its own conversation in context window. For each observation it made to the user, count occurrences. Anything said ≥2 times about this project that is NOT already in `CLAUDE.md` is a reflection candidate.
-
-**Qualifying "observation"**: a statement of fact about the project (paths, conventions, build commands, gotchas). NOT a status update, NOT a summary, NOT LLM reasoning. Examples:
-- ✓ "Migrations live in `db/migrations/*.sql`" said twice.
-- ✓ "This repo uses `make install` not `npm install`" said twice.
-- ✗ "I'm reading the file now" said twice — status, not fact.
-
-**Surface shape**: `AskUserQuestion` (1 question per candidate, max 3 per ship):
-- Q: "I mentioned `<fact>` twice this session. Persist to CLAUDE.md?"
-- Options: `Yes, add (Recommended)` / `No, not worth it` / `Rephrase first`.
-
-If user says "Rephrase first", they provide new wording, LLM writes exact text.
-
-**False-positive budget**: 3 candidates max per ship. Hard cap to avoid noise. If LLM detects >3, surface top-3 by (how non-obvious × how often repeated).
-
-#### Axis (b): `/flow-reflect`
-
-**Trigger**: explicit user invocation.
-
-**Body sketch (`commands/flow-reflect.md`):**
-
+`commands/flow-autopilot.md`:
 ```
-Read:
-1. `agent/archive/*/` — archived specs, plans, reviews from recent PRs.
-2. `.flow/config.sh` — current project config.
-3. Current `CLAUDE.md` (project + user global).
-4. `skills/flow/scripts/archive-summary.sh` output for orientation.
+---
+description: Spike-mode flow. Run explore → plan → implement → 1 review → draft PR autonomously.
+---
 
-Identify 2-4 patterns worth acting on. For each, propose one change:
-- Update to CLAUDE.md (new rule or convention).
-- Edit to `.flow/config.sh` (template path, extra stages, hooks dir).
-- Suggested tweak to a stage skill (surface; user decides later).
+You are in AUTOPILOT mode. Do NOT interrupt the user at any point during this run.
 
-Surface via AskUserQuestion — one question per proposal, max 4 total.
+Thesis: $ARGUMENTS  (what we're validating)
 
-If there's no archive (< 2 archived PRs), say "not enough history yet" and exit.
+Run: `$HOME/.claude/skills/flow/scripts/autopilot-branch.sh "$ARGUMENTS"` to get the branch name.
+
+Then follow skills/autopilot/SKILL.md end-to-end:
+1. Explore (auto-decisions logged to agent/autopilot-log.md).
+2. Plan.
+3. Implement (step-count ceiling: 20 substeps).
+4. LLM review — 1 round of "clear eyes" re-evaluation via the `review` skill. Fix auto-fixable findings once; flag the rest as residuals. Do NOT loop.
+5. Open draft PR for human review. Body assembled from skills/autopilot/templates/pr-body.md.
+
+Safety rails:
+- Draft PR only. Never `gh pr ready`. Never auto-merge.
+- Never push to main. Never force-push.
+- Every AskUserQuestion-equivalent decision is auto-resolved per the Recommended option (or first if none), and logged to agent/autopilot-log.md.
+- If blocked (compile error, missing tool, hard contradiction in thesis), abort: commit current state, open draft PR with "ABORTED" status, explain.
 ```
 
-**Pattern types to look for:**
-- Same phrase appearing in multiple archived findings ("the Makefile install loop doesn't prune" → S1 across 2 PRs).
-- Decisions repeatedly deferred ("defer to v2" showing up in 3 specs → time to schedule).
-- Stages consistently skipped ("no plan for this branch" in 4 PRs → maybe plan stage is overkill for housekeeping).
+#### Skill: `skills/autopilot/SKILL.md`
 
-**Not to look for:**
-- Surface-level formatting tweaks.
-- Wordsmithing the skill prose.
-- One-off bugs (that's what review finds).
+Orchestrates the full pipeline. Key sections:
 
-#### `archive-summary.sh`
+1. **Decision policy** — "Pick `(Recommended)` option; if no `(Recommended)`, pick the first; log choice + 1-sentence rationale + the full options set to `agent/autopilot-log.md`."
+
+2. **Stage-by-stage guidance** — autopilot-flavored version of each stage:
+   - **Explore** — writes `agent/spec.md` same as normal; no user prompts. All "Decisions needed" auto-resolve.
+   - **Plan** — writes `agent/plans/IMPLEMENTATION_PLAN_*.md`. Hard step-count ceiling enforced.
+   - **Implement** — runs steps. Commits atomically per step. If tests fail, fix once; if still failing, abort.
+   - **LLM review** — single "clear eyes" round via the `review` skill. Classifies findings; auto-fixes mechanical + critical (one pass); residuals flagged for human review on the draft PR. Loop cap = 1; never re-reviews after fix pass.
+   - **Ship** — opens a **draft** PR for human review (`gh pr create --draft`). Populates body from the template. Never marks ready.
+
+3. **Adversarial "What the spike shows"** — the LLM-review stage is instructed to actively hunt for thesis-contradicting evidence before writing this section. Checklist:
+   - What's the strongest fact I found that *supports* the thesis?
+   - What's the strongest fact I found that *contradicts* the thesis?
+   - What tests did I run that would have falsified the thesis, and did they?
+   - What would a skeptical reviewer point out?
+
+4. **Abort protocol** — autopilot detects it can't make honest progress (step-count ceiling hit, tests still failing after one fix, thesis is fundamentally unclear). It commits whatever exists, opens a draft PR titled `[AUTOPILOT ABORTED] <thesis>`, body explains the blocker, no quiz, no "next moves."
+
+#### Human-review package (draft PR body)
+
+Assembled from `skills/autopilot/templates/pr-body.md`. This is the sole input to **human review**. Every section is authored so the reviewer can decide "keep iterating vs archive" without reading the full diff.
+
+1. **Thesis** — `$ARGUMENTS` verbatim.
+2. **What the spike built** — one paragraph, plain English.
+3. **How to poke at it** — one or two commands to reproduce what the human needs to see (run the dev server, `cargo run --example X`, a REPL snippet). Filled by the implement stage as commands are run.
+4. **What the spike shows** — adversarial thesis read produced by the LLM-review stage (see above).
+5. **Decisions log** — summary of `agent/autopilot-log.md`'s most impactful decisions (top 5–10; full file in the diff).
+6. **Quiz** — 3–5 thesis-oriented diagnostic questions. Not graded; they prime the human reviewer. Example: *"Before running the example, predict what the output will be for input X. Did the actual output match?"*
+7. **Next moves** — two buttons in prose: "Continue with `/flow-adopt` from this branch" (iterate with human-in-loop) and "Archive and start a new flow" (let the branch die, run a different spike).
+
+#### Audit log (`agent/autopilot-log.md`)
+
+Appended to during the run. Template:
+```markdown
+# Autopilot decision log
+
+_Branch_: <branch>
+_Thesis_: <thesis>
+_Started_: <timestamp>
+
+## Decisions
+
+### [<timestamp>] <stage>: <short decision label>
+- **Context**: <what was being decided, 1 sentence>
+- **Options**:
+  1. <option> (Recommended) — <description>
+  2. <option> — <description>
+- **Chose**: <label>
+- **Why**: <1-sentence rationale>
+```
+
+Appended to exactly once per auto-decision. Committed per implement-step; visible in the final diff.
+
+#### Branch naming: `autopilot-branch.sh`
 
 ```bash
 #!/usr/bin/env bash
-# Print a one-line summary per archived PR: pr-N, date, title.
-# Used by /flow-reflect for orientation without reading every archive in full.
-
+# Generate a unique branch name from a thesis string.
+# Output: autopilot-<slug>-<YYYYMMDD-HHmm>
 set -euo pipefail
-for dir in agent/archive/pr-*/; do
-  pr="$(basename "$dir" | sed 's/pr-//')"
-  spec="$dir/spec.md"
-  if [[ -f "$spec" ]]; then
-    title="$(head -1 "$spec" | sed 's/^# *Spec: *//')"
-    date="$(grep -o 'date: [0-9-]*' "$spec" 2>/dev/null | head -1 | sed 's/date: //')"
-    [[ -z "$date" ]] && date="$(date -r "$spec" +%Y-%m-%d 2>/dev/null || echo 'unknown')"
-    printf 'pr-%s  %s  %s\n' "$pr" "$date" "$title"
-  fi
-done
+thesis="$1"
+slug="$(printf '%s' "$thesis" \
+  | tr '[:upper:]' '[:lower:]' \
+  | tr -c 'a-z0-9-' '-' \
+  | sed -E 's/-+/-/g; s/^-|-$//g' \
+  | cut -c1-40)"
+stamp="$(date +%Y%m%d-%H%M)"
+printf 'autopilot-%s-%s\n' "$slug" "$stamp"
 ```
 
-#### `references/reflection.md`
-
-One-page doc with:
-- The "twice is a pattern" rule + qualifying examples.
-- The 3-candidate ship-stage cap.
-- What NOT to reflect on.
-- The `/flow-reflect` command's scope.
-
-#### `skills/ship/SKILL.md` update
-
-Add one step before the PR-creation section:
-```
-### Step N: Reflection scan (optional, silent when empty)
-
-Before opening the PR, scan this session's conversation for observations
-stated ≥2 times that aren't in CLAUDE.md. For each (max 3), surface via
-AskUserQuestion: persist / skip / rephrase. See `flow/references/reflection.md`.
-```
-
-Should be a one-paragraph addition. Skill body stays under 200 lines.
+Always includes a timestamp so two runs on the same thesis don't collide.
 
 ### Impact analysis
 
 **Files to create:**
-- `commands/flow-reflect.md`
-- `skills/flow/scripts/archive-summary.sh`
-- `skills/flow/references/reflection.md`
+- `commands/flow-autopilot.md`
+- `skills/autopilot/SKILL.md`
+- `skills/autopilot/templates/pr-body.md`
+- `skills/autopilot/templates/autopilot-log.md`
+- `skills/flow/scripts/autopilot-branch.sh`
 
 **Files to modify:**
-- `skills/ship/SKILL.md` — add the reflection-scan step.
-- `skills/flow/SKILL.md` — one-line pointer to `references/reflection.md` under the Scripts or Related skills section.
+- `skills/flow/SKILL.md` — one-line pointer to the autopilot skill under Related skills.
+- `skills/flow/references/user-interaction.md` — note the autopilot exception ("Autopilot auto-answers via decision policy; see `autopilot/SKILL.md`").
 
-**Files to consider:**
-- `teach/SKILL.md` — does the existing rule-capture path work unchanged for v3's "persist to CLAUDE.md" call? Expected yes, verify during review.
+**Files NOT to modify**: the stage skills (explore, plan, implement, review, ship). Autopilot orchestrates them by referencing them; each stage still operates normally under its own rules. Autopilot's "don't interrupt the user" wrapper is at the orchestration layer, not inside the stages.
 
 ### Constraints
 
-- **No background state**: reflection is event-driven (ship boundary, explicit command). No cron, no background scan. Predictable latency.
-- **No automatic writes**: every persistence goes through `AskUserQuestion`. Never write to `CLAUDE.md` silently.
-- **Noise budget**: 3 candidates max at ship. If more exist, surface top-3 by weight (repetition × non-obviousness). The 4th+ goes into a `agent/reviews/local-*-r1.md`-style note that the user sees at review time.
-- **Context budget**: `archive-summary.sh` lets the LLM grok the archive in ≤200 tokens; it can read individual archive files only when a pattern hint emerges.
+- **Draft-only**: `gh pr create --draft`. Never `--title "Ready"` or `gh pr ready`.
+- **Never escape the branch**: no push to other branches, no rebase against main mid-run.
+- **Bounded**: ≤ 20 implement substeps, ≤ 1 LLM-review round, ≤ 1 fix pass. Human review (on the draft PR) has no bound — that's the user's call.
+- **Honest adversarial LLM review**: explicit instruction in the LLM-review stage to look for falsifying evidence. Anti-pattern to avoid: LLM building what it thought the thesis asked for, then "confirming" the thesis by looking at its own output.
+- **No reflection**: `/flow-reflect` behavior is skipped inside autopilot to keep runtime bounded. Reflection is for longitudinal flow use, not spikes.
 
 ### Open questions
 
-1. **Does the ship-stage reflection fire on every PR or only when the session is long enough to have repetitions?** Lean: always fire, but silent-exit when no candidates. The cost is one LLM sweep of the conversation — cheap in context window.
-2. **How does `/flow-reflect` handle a repo with archives from multiple distinct features?** Does it narrow to recent (last 5 archives) or all? Lean: last 5, configurable via `$ARGUMENTS`.
-3. **Should reflection respect the flow skill's `AskUserQuestion` contract (max 4 questions per call)?** Yes — batch ship-stage + reflect command output into single calls when possible.
+1. **Quiz question generation**: who writes them, the implement stage or the LLM-review stage? Lean: LLM-review stage, because it has the end-to-end view and can phrase questions adversarially. Defer concrete mechanism to plan.
+2. **How does autopilot handle existing `agent/spec.md`?** Refuse like `bootstrap.sh`, or treat as a resume? Lean: refuse (spike mode assumes clean branch), force a new branch.
+3. **Should the PR title be a prefix (`[AUTOPILOT] <thesis>`) to make it filterable in lists?** Lean: yes. Easy to add; helpful for "what have my spikes done lately?"
+4. **Should the broader flow vocabulary adopt LLM-review / human-review** throughout (SKILL.md, references, ship-stage guidance)? Out-of-scope for this spec, but worth a follow-up — current flow docs use bare "review" which becomes ambiguous once autopilot normalizes the two-review model.
 
 ## References
 
-- Brainstorm: 2026-04-17 session, "reflection + self-recovery" segment.
-- v1 archive: `agent/archive/pr-6/`.
-- v2 archive: `agent/archive/pr-7/`.
-- `skills/teach/SKILL.md` — rule-capture primitive v3 reuses.
-- `skills/ship/SKILL.md` — where the axis-(a) trigger lives.
+- Brainstorm: 2026-04-21 session.
+- Prior arcs: `agent/archive/pr-6/` (v1), `pr-7/` (v2), the unarchived v3 + AUQ-defaulting shipped under PRs #8/#9.
+- `skills/flow/references/user-interaction.md` — the AskUserQuestion rule autopilot bypasses via its decision policy.
+- `skills/review/SKILL.md` — the single review round consumes this skill's output shape.
