@@ -1,4 +1,4 @@
-<!-- branch: document-name · date: 2026-04-21 · author: Jason Liang -->
+<!-- branch: document-name · date: 2026-04-21 · author: Jason Liang · pr: 11 -->
 
 # Spec: Document naming convention — workstream folders
 
