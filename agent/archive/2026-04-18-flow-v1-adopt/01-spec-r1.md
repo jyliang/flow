@@ -1,3 +1,5 @@
+<!-- pr: 6 -->
+
 # Spec: Flow v1 — `/flow-adopt`, fast empty-state, bootstrap scripts
 
 ## Status

@@ -1,3 +1,5 @@
+<!-- pr: 2 -->
+
 # Spec: Auto-bump marketplace.json version on every merge
 
 ## Status

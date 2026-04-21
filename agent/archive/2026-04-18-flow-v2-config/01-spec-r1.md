@@ -1,3 +1,5 @@
+<!-- pr: 7 -->
+
 # Spec: Flow v2 — per-project `.flow/config.sh` + scripted first-time setup
 
 ## Status
