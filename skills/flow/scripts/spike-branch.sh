@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Generate a unique branch name from a thesis string.
-# Output: autopilot-<slug>-<YYYYMMDD-HHmm>
+# Output: spike-<slug>-<YYYYMMDD-HHmm>
 #
-# Usage: autopilot-branch.sh "<thesis>"
+# Usage: spike-branch.sh "<thesis>"
 # Exits: 0 success; 2 usage error.
 
 set -euo pipefail
 
 thesis="${1:-}"
-[[ -n "$thesis" ]] || { echo "usage: autopilot-branch.sh <thesis>" >&2; exit 2; }
+[[ -n "$thesis" ]] || { echo "usage: spike-branch.sh <thesis>" >&2; exit 2; }
 
 slug="$(printf '%s' "$thesis" \
   | tr '[:upper:]' '[:lower:]' \
@@ -20,4 +20,4 @@ slug="$(printf '%s' "$thesis" \
 [[ -z "$slug" ]] && slug="spike"
 
 stamp="$(date +%Y%m%d-%H%M)"
-printf 'autopilot-%s-%s\n' "$slug" "$stamp"
+printf 'spike-%s-%s\n' "$slug" "$stamp"

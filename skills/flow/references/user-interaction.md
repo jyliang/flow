@@ -24,7 +24,7 @@ Every stage (explore, plan, implement, review, ship) — and internal skills tha
 - **Irreversible-action confirmations** — `git push --force`, destructive operations. The Claude Code permission layer handles these; duplicating the confirmation in `AskUserQuestion` is noise.
 - **Purely informational output** — findings, summaries, diffs. Write these as prose or documents.
 - **Open-ended knowledge gathering** — "Give me a concrete example", "Share reference material", "Describe your use case". The tool requires 2–4 discrete options per question; there's no natural option set for open-ended answers. Use free-form prompts instead.
-- **Autopilot mode** — the `autopilot` skill overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to `agent/autopilot-log.md`). Stage skills remain unchanged; autopilot intercepts at the orchestration layer. See `autopilot/SKILL.md`.
+- **Spike mode** — the `spike` skill overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to `agent/spike-log.md`). Stage skills remain unchanged; spike intercepts at the orchestration layer. See `spike/SKILL.md`.
 
 ## Tool contract
 
