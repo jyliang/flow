@@ -70,3 +70,4 @@ Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Ca
 Stages: `explore`, `plan`, `implement`, `review`, `ship`.
 Internal (auto-triggered): `tdd`, `commits`, `parallel`.
 Meta: `teach` — create skills or capture rules. Reflection — see `references/reflection.md` for the "twice is a pattern" rule; triggered at ship-stage and via `/flow-reflect`.
+Spike mode: `autopilot/SKILL.md` — runs the full pipeline unattended to produce a draft PR for human review. Used via `/flow-autopilot "<thesis>"` when you want to validate a thesis fast and come back to something testable.
