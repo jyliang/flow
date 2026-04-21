@@ -13,6 +13,6 @@ You are being invoked mid-conversation. Adopt the current conversation into a fl
    - If the script exits non-zero with "spec already exists", surface recovery via `AskUserQuestion`: overwrite (remove the file, re-run) / adopt into existing (edit in place) / pick a different branch name.
 5. Populate `agent/spec.md` with the distilled content. Match the repo's spec style — see `agent/archive/*/spec.md` for examples.
 6. Surface any unresolved decisions from the conversation via `AskUserQuestion`.
-7. Ask about advancing to the plan stage.
+7. Use `AskUserQuestion` to ask about advancing — question `"Advance to the plan stage?"`, header `Advance?`, options `Yes, advance (Recommended)` / `Pause here` / `Adjust spec first`.
 
 $ARGUMENTS
