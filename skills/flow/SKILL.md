@@ -25,7 +25,7 @@ Idea → [explore] → Spec → [plan] → Plan → [implement] → Changes → 
 | plan | Spec | Plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
 | implement | Plan | Changes | git branch |
 | review | Changes | Findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
-| ship | Findings | PR | GitHub PR (workstream folder moves to `agent/archive/` on merge) |
+| ship | Findings | PR | GitHub PR (records `pr: <N>` in the spec's frontmatter comment; folder stays in `agent/workstreams/`) |
 
 Every document within a workstream follows `<NN>-<stage>-r<N>.md`: stage-order prefix (`01`/`02`/`03`), stage name, and a revision suffix (`-r1`, `-r2`, …). Revisions create a new file — the previous `-rN` is frozen; the new file's `## Revisions` section explains what changed. "Current" means the highest-`N` file for that stage.
 
@@ -67,7 +67,7 @@ Shell helpers under `skills/flow/scripts/` avoid LLM cost on mechanical work. Ca
 - `detect-stage.sh` — mirrors the 6-rule stage detection above. Prints one of `explore-empty` / `plan` / `implement` / `review` / `ship` / `done`. SKILL.md is authoritative if the bash drifts.
 - `bootstrap.sh <branch>` — creates the branch and materializes the initial spec at `agent/workstreams/<today>-<branch>/01-spec-r1.md` from the configured template. Refuses if the workstream folder already exists. Consults `.flow/config.sh` for `FLOW_TEMPLATE_SPEC`; env var overrides file.
 - `load-config.sh` — sources `.flow/config.sh` (if present) and prints normalized flow env vars. Precedence: env > file > defaults. See `references/config.md` for the schema.
-- `archive-summary.sh [scope]` — one-line summary per archived workstream. Used by `/flow-reflect` for cross-archive pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y` (matches the `pr:` number from spec frontmatter).
+- `workstreams-summary.sh [scope]` — one-line summary per shipped workstream (those whose spec has a `pr: <N>` in the frontmatter). Used by `/flow-reflect` for cross-workstream pattern scans. Scope: `all` (default), `N` (last N), or `pr-X,pr-Y`.
 
 ## Related skills
 

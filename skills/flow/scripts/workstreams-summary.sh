@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Print one-line summary per archived workstream: pr-N, date, title.
-# Used by /flow-reflect for orientation without reading every archive in full.
+# Print one-line summary per shipped workstream: pr-N, date, title.
+# Used by /flow-reflect for orientation without reading every workstream in full.
 #
-# Archive convention: agent/archive/<YYYY-MM-DD>-<branch-slug>/
+# Convention: agent/workstreams/<YYYY-MM-DD>-<branch-slug>/
 #   Initial spec at 01-spec-r1.md, header comment: <!-- ... · pr: <N> · ... -->
+#   "Shipped" = header comment contains a non-blank `pr:` value.
 #
-# Usage: archive-summary.sh [limit]
+# Usage: workstreams-summary.sh [limit]
 #   limit: "all" (default), "N" for last N, or a comma-separated list like "pr-6,pr-7"
 
 set -euo pipefail
@@ -13,7 +14,7 @@ set -euo pipefail
 limit="${1:-all}"
 
 shopt -s nullglob
-dirs=(agent/archive/*/)
+dirs=(agent/workstreams/*/)
 shopt -u nullglob
 
 [[ ${#dirs[@]} -eq 0 ]] && exit 0
@@ -27,8 +28,10 @@ for dir in "${dirs[@]}"; do
 
   header="$(head -1 "$spec")"
   pr="$(printf '%s' "$header" | grep -oE 'pr: *[0-9]+' | head -1 | sed 's/pr: *//' || true)"
-  date="$(printf '%s' "$header" | grep -oE 'date: *[0-9-]+' | head -1 | sed 's/date: *//' || true)"
+  # Skip unshipped workstreams (no pr: value yet).
+  [[ -n "$pr" ]] || continue
 
+  date="$(printf '%s' "$header" | grep -oE 'date: *[0-9-]+' | head -1 | sed 's/date: *//' || true)"
   if [[ -z "$date" ]]; then
     folder="$(basename "$dir")"
     date="$(printf '%s' "$folder" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)"
@@ -37,9 +40,7 @@ for dir in "${dirs[@]}"; do
 
   title="$(grep -m1 '^# ' "$spec" | sed 's/^# *Spec: *//;s/^# *//')"
 
-  pr_col="${pr:+pr-$pr}"
-  pr_col="${pr_col:-pr-?}"
-  printf '%s\t%s\t%s\n' "$pr_col" "$date" "$title"
+  printf 'pr-%s\t%s\t%s\n' "$pr" "$date" "$title"
 done | sort -k2 | awk -v limit="$limit" '
 BEGIN {
   if (limit == "all") n = -1;

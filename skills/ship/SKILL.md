@@ -135,13 +135,13 @@ Present the final PR URL.
 
 ### Step 7.5: Record the PR number in spec frontmatter
 
-Write the PR number into the latest `01-spec-r*.md` header comment so the workstream carries the link once it's archived:
+Write the PR number into the latest `01-spec-r*.md` header comment:
 
 ```
 <!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->
 ```
 
-If the line already has `pr:` with a value, leave it. This does not commit the change — archiving the workstream folder is a separate operation (today performed manually after merge; future flows may automate the `mv agent/workstreams/<…> agent/archive/<…>`).
+If the line already has `pr:` with a value, leave it. The folder stays at `agent/workstreams/<date>-<branch>/` after merge — the `pr:` field marks "shipped", and `workstreams-summary.sh` uses it as the filter. There is no separate archive location.
 
 ### Step 8: Re-run tests
 

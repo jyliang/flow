@@ -110,7 +110,7 @@ The human edits the spec directly — changes scope, adds constraints, removes a
 
 ## Document locations
 
-All in-flight documents live in `agent/workstreams/<YYYY-MM-DD>-<branch>/` (1:1 with the git branch). On merge, the folder moves to `agent/archive/<YYYY-MM-DD>-<branch>/`.
+Every workstream — in-flight or shipped — lives in `agent/workstreams/<YYYY-MM-DD>-<branch>/` (1:1 with the git branch). Merged workstreams stay put; their spec's frontmatter comment gets a `pr: <N>` field at ship time, which marks the workstream as shipped.
 
 | Document | Path within workstream | Produced by |
 |----------|------------------------|-------------|

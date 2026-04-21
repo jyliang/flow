@@ -75,7 +75,7 @@ This is not a bug in the process — it's a feature. The revision trail answers 
 | **plan** | spec → plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
 | **implement** | plan → changes | code on branch |
 | **review** | changes → findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
-| **ship** | findings → PR | GitHub PR (workstream archived to `agent/archive/<date>-<branch>/` on merge) |
+| **ship** | findings → PR | GitHub PR (records `pr:` in spec; workstream folder stays at `agent/workstreams/<date>-<branch>/`) |
 
 ### Internal (auto-triggered)
 
