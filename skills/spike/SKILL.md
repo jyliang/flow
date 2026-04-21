@@ -24,8 +24,37 @@ Anywhere this skill says bare "review" — it's ambiguous and should be rewritte
 
 ## When to use
 
-- User invoked `/flow-spike "<thesis>"` — this skill orchestrates the run.
+- User invoked `/flow-spike` — this skill orchestrates the run. Invokable at **any conviction point**: from a clean workspace with a thesis argument, mid-conversation with no arguments (LLM distills a thesis), or mid-workstream to let the rest run unattended.
 - Do NOT use spike for work that requires judgment calls the user wants to make themselves — use regular `/flow`.
+
+## Conversation absorption (three entry modes, one behavior)
+
+| Mode | Trigger | Entry action |
+|---|---|---|
+| **Cold** | Clean workspace, `$ARGUMENTS` = thesis | Create branch via `spike-branch.sh`, run `bootstrap.sh`, populate `01-spec-r1.md` from the thesis and conversation (if any), continue. |
+| **Warm-fresh** | Feature branch without a workstream folder for this branch | Synthesize a one-sentence thesis from the conversation context (or use `$ARGUMENTS` if provided). Create branch + workstream, but populate `01-spec-r1.md` by distilling the conversation — the human's exploration already happened; spike just formalizes it. |
+| **Resume** | Branch already has a workstream folder | Do NOT create a new workstream. Read the current state via `detect-stage.sh`; decision policy applies to every subsequent AUQ. Prior human answers already recorded in spec/plan stay intact. |
+
+Detection:
+1. Check branch — refuse if it's `main` (or the repo's default). Spike must run on a feature branch.
+2. Run `$HOME/.claude/skills/flow/scripts/detect-stage.sh`.
+3. If the detected stage is `explore-empty` and no workstream folder exists for the current branch → **cold** (if `$ARGUMENTS` present) or **warm-fresh** (no args).
+4. Otherwise → **resume**. Pick up from the detected stage.
+
+All three modes end identically: draft PR with the 7-section human-review package, `spike-log.md` listing every auto-decision.
+
+## Seeding the audit log
+
+The first entry in `spike-log.md` records how spike entered. Template:
+
+```
+### [<ISO-8601>] entry: <mode>
+- **Context**: <mode-specific — key points absorbed, existing workstream state, etc.>
+- **Thesis (synthesized)**: <LLM's one-sentence read>   <!-- warm-fresh / resume only; cold uses $ARGUMENTS verbatim -->
+- **Starting stage**: <plan | implement | review | ship>
+```
+
+This is the only pre-seeded entry. Everything else gets appended as decisions are made.
 
 ## Workstream layout
 
@@ -47,14 +76,19 @@ Everywhere the stage skills (explore, plan, implement, review, ship) would call 
    - stage, short decision label, context, full options set, chosen label, 1-sentence rationale.
 4. Continue without pausing. Do NOT narrate the decision to the user mid-pipeline.
 
+**Resume-mode caveat**: decisions already recorded by the human in the spec/plan (under `## Decisions needed` as `[x]` or with explicit prose) stand. The decision policy only applies to decisions spike encounters from its entry point forward. Don't retroactively override prior human judgment.
+
 ## Stage-by-stage guidance
 
 ### Explore
 
-- Compute a branch name via `$HOME/.claude/skills/flow/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`.
-- Run `$HOME/.claude/skills/flow/scripts/bootstrap.sh <branch>` — creates the branch, makes the workstream folder, materializes `01-spec-r1.md` from the configured template.
-- Also materialize `spike-log.md` in the workstream folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601).
-- Run the normal explore skill to populate the spec. All "Decisions needed" auto-resolve via the decision policy.
+Only runs in **cold** and **warm-fresh** entry modes. Skipped in **resume** mode (the spec already exists).
+
+- Determine the thesis: `$ARGUMENTS` wins if non-empty; otherwise LLM distills a one-sentence thesis from the conversation context.
+- Compute a branch name via `$HOME/.claude/skills/flow/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
+- Run `$HOME/.claude/skills/flow/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the workstream folder, materializes `01-spec-r1.md` from the configured template.
+- Materialize `spike-log.md` in the workstream folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "Seeding the audit log" above.
+- Run the normal explore skill to populate the spec. In **warm-fresh** mode, distill the conversation context directly into the spec body (the human's exploration is the source material). All "Decisions needed" auto-resolve via the decision policy.
 
 ### Plan
 
