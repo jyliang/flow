@@ -37,3 +37,24 @@ Every auto-answered decision during this spike run is appended below, chronologi
   2. Bundle the reflect reshape into this workstream — one PR with both fixes plus the protocol change.
 - **Chose**: option 1.
 - **Why**: Keeps the PR legible under review; the reshape deserves its own spec + plan because it changes a user-facing command contract. The deferral is explicit in the spec's "Decisions needed" and "Out of scope".
+
+### [2026-04-21T18:05:00-04:00] review: auto-fix classification
+- **Context**: LLM-review produced 0 critical, 4 suggestions, 4 nits, 3 questions. Per spike protocol, one auto-fix pass on mechanical + critical findings only; residuals flagged for human review.
+- **Options**:
+  1. Auto-fix all 8 non-question findings in one pass — some of them (S2 promote Step 5 algorithm, S3 HEREDOC conditional) involve design choices, not just typo-correction. Risky to mechanize.
+  2. Auto-fix only the purely-mechanical findings (S1 drift-trap note, S4 subagent hedge, N1 example command, N3 prose tightening); flag S2, S3, N2, N4 and Q1–Q3 for human review (Recommended).
+- **Chose**: option 2.
+- **Why**: Matches the spike-protocol rule "auto-fix mechanical + critical, flag the rest." S2/S3 require picking between three candidate patch-algorithms and rewriting a template block — judgment calls that belong in human review. The four mechanical fixes are each one-line text swaps with obvious correct targets.
+
+### [2026-04-21T18:08:00-04:00] review: applied auto-fixes
+- **Context**: Applied the four mechanical fixes from the prior decision.
+- **Fixes**:
+  - `skills/flow/references/config.md`: tightened "before and after applying fixes" wording (N3); added the drift-trap note about `bootstrap.sh` inlined precedence (S1); swapped `bash scripts/tests/*.sh` example to `bash scripts/run-tests.sh` (N1).
+  - `commands/flow-config.md`: swapped the same glob-prone `bash scripts/tests/*.sh` example to `bash scripts/run-tests.sh` (N1).
+  - `skills/ship/SKILL.md`: dropped "(via a subagent for long-running commands)" hedge; now unconditionally "run it via a subagent" (S4).
+- **Residuals flagged for human review**:
+  - S2: Step 5's patch-not-rewrite algorithm needs to be promoted from spec into SKILL.md; three candidate approaches exist, not mechanical.
+  - S3: Empty-verify HEREDOC conditional — needs template-block rewrite.
+  - N2: Spec's `[x]` convention in Decisions-needed section — debatable, no single right answer.
+  - N4: Cross-link from plan Risks to spike-log entry — optional polish.
+  - Q1–Q3: Quiz-oriented questions, meant to prime human review; not findings to fix.

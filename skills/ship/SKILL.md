@@ -28,7 +28,7 @@ Load the project's test command from config:
 eval "$($HOME/.claude/skills/flow/scripts/load-config.sh)"
 ```
 
-If `FLOW_TEST_CMD` is non-empty, run it (via a subagent for long-running commands). If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.
+If `FLOW_TEST_CMD` is non-empty, run it via a subagent. If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.
 
 If tests fail:
 1. Add each failure as an 8+ severity finding — include test name, file, error message.

@@ -19,7 +19,7 @@ Ask the user these 4 questions via `AskUserQuestion`. For each, if a value is al
    - None — this project relies on manual verification (Recommended for docs-only / shell-script repos)
    - `make test`
    - `npm test`
-   - Custom (user provides; any shell command — e.g. `pytest`, `go test ./...`, `bash scripts/tests/*.sh`)
+   - Custom (user provides; any shell command — e.g. `pytest`, `go test ./...`, `bash scripts/run-tests.sh`)
 
 3. **Extra stages** (informational in v2, acted on in v2.5+): "Declare extra stages for this project?"
    - Header: "Extra stages"
