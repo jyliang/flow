@@ -2,6 +2,8 @@
 
 A skill system for Claude Code that moves work from idea to shipped PR through structured handoffs.
 
+This README has two readers: a **human** browsing the repo deciding whether to install, and the **agent** that installs and loads the skills. Both need the same mental model.
+
 ## The problem
 
 AI coding tools get you 80% of the way. The last 20% is where they fail — they either silently guess wrong or dump everything on you to figure out. There's no good middle ground.
@@ -17,7 +19,7 @@ The human can intervene at any document boundary — or skip it and let the pipe
 
 ## Stages
 
-```
+```text
 Idea
   ↓
  [explore]
@@ -43,19 +45,19 @@ PR                ← human review (final approval)
 
 Document depth scales with task complexity. A one-line bug fix produces a 3-line spec and skips straight to implementation. A complex feature produces a full spec with impact analysis, a multi-step plan, and multiple review rounds. The structure is always there; the ceremony is proportional.
 
-**Two "reviews" — keep them distinct**: **LLM review** happens inside the pipeline (bounded, one round + one fix pass by default). **Human review** happens on the PR after the pipeline completes (unbounded, your call).
+> **Note:** "Review" appears twice and they're different. **LLM review** happens inside the pipeline (bounded, one round + one fix pass by default). **Human review** happens on the PR after the pipeline completes (unbounded, your call).
 
 ## Workstream folders
 
 Each piece of work lives at `agent/workstreams/<YYYY-MM-DD>-<branch>/` with stage-ordered filenames:
 
-- `01-spec-r1.md` — explore output
-- `02-plan-r1.md` — plan output
-- `03-review-r1.md` — LLM-review output
+- `01-spec-r1.md` — explore output.
+- `02-plan-r1.md` — plan output.
+- `03-review-r1.md` — LLM-review output.
 
 Revisions create a new file rather than editing in place: `01-spec-r2.md`, `02-plan-r3.md`, etc. The previous `-rN` is frozen; the new file's `## Revisions` section explains what changed and why.
 
-The folder is 1:1 with the branch. After a PR merges, the folder stays put — `ship` records the PR number into the spec's frontmatter comment (`<!-- ... pr: 42 -->`), and `workstreams-summary.sh` uses that marker as the filter for "shipped work."
+The folder is 1:1 with the branch. After a PR merges, the folder stays put — `ship` records the PR number into the spec's frontmatter comment (`<!-- ... pr: 42 -->`), and `workstreams-summary.sh` uses that marker as the filter for "shipped work".
 
 ## Revisions
 
@@ -76,11 +78,11 @@ This is not a bug in the process — it's a feature. The revision trail answers 
 
 | Command | What it does |
 |---|---|
-| **`/flow`** | Single entry point. Detects current stage and advances. Empty workspace → asks for the idea. |
-| **`/flow-adopt`** | Adopt the current conversation into a flow — distill into the workstream's `01-spec-r1.md` and advance. For when you're mid-chat and realize this should be a flow. |
-| **`/flow-config`** | Configure (or reconfigure) this project's `.flow/config.sh` — template, stages, hooks. |
-| **`/flow-reflect`** | Scan shipped workstreams for cross-PR patterns — CLAUDE.md additions, `.flow/config.sh` edits, stage-skill tweaks. Explicit opt-in. |
-| **`/flow-spike "<thesis>"`** | Unattended **spike mode**: explore → plan → implement → 1 LLM-review round → draft PR for human review. Kick off, walk away, come back to something testable. |
+| `/flow` | Single entry point. Detects current stage and advances. Empty workspace → asks for the idea. |
+| `/flow-adopt` | Adopt the current conversation into a flow — distill into the workstream's `01-spec-r1.md` and advance. For when you're mid-chat and realize this should be a flow. |
+| `/flow-config` | Configure (or reconfigure) this project's `.flow/config.sh` — template, stages, hooks. |
+| `/flow-reflect` | Scan shipped workstreams for cross-PR patterns — `CLAUDE.md` additions, `.flow/config.sh` edits, stage-skill tweaks. Explicit opt-in. |
+| `/flow-spike "<thesis>"` | Unattended **spike mode**: explore → plan → implement → 1 LLM-review round → draft PR for human review. Kick off, walk away, come back to something testable. |
 
 ## Skills
 
@@ -88,27 +90,28 @@ This is not a bug in the process — it's a feature. The revision trail answers 
 
 | Skill | What it does |
 |---|---|
-| **flow** | Single entry point — detects current stage and advances work |
-| **spike** | Orchestrates `/flow-spike`: runs the full pipeline unattended, opens a draft PR for human review |
-| **teach** | Create skills from patterns, or quick-capture a rule |
+| `flow` | Single entry point — detects current stage and advances work. |
+| `spike` | Orchestrates `/flow-spike`: runs the full pipeline unattended, opens a draft PR. |
+| `teach` | Create skills from patterns, or quick-capture a rule. |
+| `docs-style` | House style for markdown in this repo — applied when authoring or editing docs. |
 
 ### Stages (invoked by flow)
 
 | Skill | Transition | Document |
 |---|---|---|
-| **explore** | idea → spec | `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` |
-| **plan** | spec → plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
-| **implement** | plan → changes | code on branch |
-| **review** | changes → findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
-| **ship** | findings → PR | GitHub PR (records `pr:` in spec; workstream folder stays at `agent/workstreams/<date>-<branch>/`) |
+| `explore` | idea → spec | `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` |
+| `plan` | spec → plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
+| `implement` | plan → changes | code on branch |
+| `review` | changes → findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
+| `ship` | findings → PR | GitHub PR (records `pr:` in spec; workstream folder stays at `agent/workstreams/<date>-<branch>/`) |
 
 ### Internal (auto-triggered)
 
 | Skill | Referenced by |
 |---|---|
-| **tdd** | implement |
-| **commits** | implement, ship |
-| **parallel** | explore, implement, review |
+| `tdd` | implement |
+| `commits` | implement, ship |
+| `parallel` | explore, implement, review |
 
 ## Per-project configuration
 
@@ -117,6 +120,7 @@ Flow reads `.flow/config.sh` at the repo root for per-project overrides. First r
 Precedence for every setting: **environment variable > `.flow/config.sh` > built-in default**.
 
 Minimal example:
+
 ```sh
 # .flow/config.sh
 FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
@@ -134,7 +138,7 @@ Flow ships as both a Claude Code plugin and a `skills.sh`-compatible skill pack.
 
 ### Claude Code (native plugin)
 
-```
+```text
 /plugin marketplace add jyliang/flow
 /plugin install flow
 ```
