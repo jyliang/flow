@@ -16,7 +16,7 @@ This PR is a **thesis-validation spike** produced by `/flow-spike`. The pipeline
 
 <!-- One or two commands to reproduce what the human needs to see. Filled by the implement stage as commands are run. -->
 
-```
+```bash
 # e.g. make install && /flow-spike "..."
 ```
 
