@@ -1,4 +1,4 @@
-<!-- branch: reflect-verify-and-test-cmd · date: 2026-04-21 · author: Jason Liang · pr: -->
+<!-- branch: reflect-verify-and-test-cmd · date: 2026-04-21 · author: Jason Liang · pr: 13 -->
 
 # Spec: reflect-verify-and-test-cmd
 
