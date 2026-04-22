@@ -1,5 +1,7 @@
 # Findings Document Template
 
+The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the workstream file and replace the bracketed placeholders.
+
 ```markdown
 # Review: <PR "#<number> - <title>" or "Local changes on <branch>">
 

@@ -1,5 +1,7 @@
 # Implementation Plan Template
 
+The plan stage fills this scaffold to produce the plan document a human (or the implement stage) reads next. Copy the code block below into the workstream file and replace the bracketed placeholders.
+
 Save as `./agent/workstreams/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-plan-r1.md` for a new plan; use the next `-rN` for revisions and include a `## Revisions` section).
 
 ```markdown
@@ -45,4 +47,4 @@ plan → implement
 - [ ] No sensitive data exposed
 ```
 
-**FRESH AGENT CHECKPOINT**: If picking up mid-implementation, find the last `[PASTE TEST SUMMARY HERE]` to know where to continue.
+> **Note:** Fresh-agent checkpoint — if picking up mid-implementation, find the last `[PASTE TEST SUMMARY HERE]` to know where to continue.
