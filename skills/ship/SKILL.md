@@ -22,7 +22,15 @@ Read the latest `03-review-r*.md` in the active workstream (`agent/workstreams/*
 
 ### Step 1.5: Run the tests
 
-Before applying any fixes, run the project's test suite (via a subagent). If tests fail:
+Load the project's test command from config:
+
+```bash
+eval "$($HOME/.claude/skills/flow/scripts/load-config.sh)"
+```
+
+If `FLOW_TEST_CMD` is non-empty, run it (via a subagent for long-running commands). If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.
+
+If tests fail:
 1. Add each failure as an 8+ severity finding — include test name, file, error message.
 2. Mechanical fixes (e.g., updating a mock for a newly imported function) qualify for auto-fix in Step 2.
 3. If a failure suggests a real bug in the changes, surface it to the user, not as an auto-fix.
@@ -105,6 +113,8 @@ Check if a PR already exists:
 gh pr view --json number,url 2>/dev/null
 ```
 
+**Before writing the body**, copy the unchecked `- [ ]` items from the latest `03-review-r*.md`'s **Verify in reality** section into a `## Post-merge verify` block in the PR body. GitHub renders them as clickable checkboxes so the reviewer (or the author post-merge) can tick each off as they confirm. The review doc stays the in-repo source-of-truth; the PR-body copy is the live checklist. If the review has no "Verify in reality" items (or none remain unchecked), omit the section entirely.
+
 If no PR exists, create a draft:
 ```bash
 git push -u origin HEAD
@@ -112,11 +122,13 @@ gh pr create --draft --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <bullet points>
 
-## Test plan
-- [ ] <verification steps>
+## Post-merge verify
+- [ ] <copied verbatim from the review doc's "Verify in reality" section>
 EOF
 )"
 ```
+
+If a PR already exists, update its body via `gh api repos/<owner>/<repo>/pulls/<num> -X PATCH -f body="…"` so the Post-merge verify block reflects the latest review. Preserve any checkboxes the user already ticked on GitHub — only add new items, don't rewrite existing state.
 
 ### Step 6: Self-review loop
 
@@ -145,7 +157,7 @@ If the line already has `pr:` with a value, leave it. The folder stays at `agent
 
 ### Step 8: Re-run tests
 
-Run the project's test suite to verify nothing broke. Report the result.
+If `FLOW_TEST_CMD` is set (see Step 1.5), re-run it to verify nothing broke. Otherwise skip. Report the result.
 
 ### Step 9: Reflection scan (silent when empty)
 

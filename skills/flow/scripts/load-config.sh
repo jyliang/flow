@@ -11,6 +11,7 @@ set -euo pipefail
 
 env_template_spec="${FLOW_TEMPLATE_SPEC:-}"
 env_stages="${FLOW_STAGES:-}"
+env_test_cmd="${FLOW_TEST_CMD:-}"
 env_extra="${FLOW_EXTRA_STAGES:-}"
 env_hooks="${FLOW_HOOKS_DIR:-}"
 legacy_dir="${FLOW_TEMPLATE_DIR:-}"
@@ -22,6 +23,7 @@ fi
 
 [[ -n "$env_template_spec" ]] && FLOW_TEMPLATE_SPEC="$env_template_spec"
 [[ -n "$env_stages" ]]        && FLOW_STAGES="$env_stages"
+[[ -n "$env_test_cmd" ]]      && FLOW_TEST_CMD="$env_test_cmd"
 [[ -n "$env_extra" ]]         && FLOW_EXTRA_STAGES="$env_extra"
 [[ -n "$env_hooks" ]]         && FLOW_HOOKS_DIR="$env_hooks"
 
@@ -31,10 +33,12 @@ fi
 
 FLOW_TEMPLATE_SPEC="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
 FLOW_STAGES="${FLOW_STAGES:-explore plan implement review ship}"
+FLOW_TEST_CMD="${FLOW_TEST_CMD:-}"
 FLOW_EXTRA_STAGES="${FLOW_EXTRA_STAGES:-}"
 FLOW_HOOKS_DIR="${FLOW_HOOKS_DIR:-}"
 
 printf 'FLOW_TEMPLATE_SPEC=%q\n' "$FLOW_TEMPLATE_SPEC"
 printf 'FLOW_STAGES=%q\n' "$FLOW_STAGES"
+printf 'FLOW_TEST_CMD=%q\n' "$FLOW_TEST_CMD"
 printf 'FLOW_EXTRA_STAGES=%q\n' "$FLOW_EXTRA_STAGES"
 printf 'FLOW_HOOKS_DIR=%q\n' "$FLOW_HOOKS_DIR"
