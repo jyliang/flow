@@ -9,6 +9,9 @@
 **Review round**: <N> (or omit if round 1)
 **Date reviewed**: <today>
 
+## Status
+<e.g. `review → ship` or `review → ship → PR`>
+
 ## Summary
 <1-2 sentence summary of what the change does>
 
@@ -21,6 +24,16 @@ what triggers the behavior, and any key implementation choices.>
 <Rate: low / medium / high. Justify with: number of files changed, whether it touches hot paths
 or shared abstractions, concurrency or state management concerns, how easy it would be to
 revert, and likelihood of subtle regressions.>
+
+## Decisions needed
+<Checklist of open decisions the human must resolve before ship. Mark `[x]` once resolved
+inline (noting the outcome), or `[ ]` if still open. Omit the section if none.>
+
+## Verify in reality
+<Unchecked list of what needs to be confirmed post-merge (or post-ship in a live session) —
+things that cannot be verified from the diff alone: live commands, UI behavior, production
+config, manual smoke tests. One `- [ ]` per item. Items here are expected to flow into the
+PR description so a human can check them off on GitHub.>
 
 ## Findings
 
@@ -47,4 +60,9 @@ revert, and likelihood of subtle regressions.>
 
 ## Files Changed
 <list of files with brief note on what changed in each>
+
+## Ship Summary
+<Added during ship, not review. Records what ship actually did with the findings:
+**Auto-fixed** (X items), **User-approved fixes** (X items), **Skipped — documented for future work**,
+**Open question — deferred to a follow-up PR**. See ship/SKILL.md Step 3.5.>
 ```

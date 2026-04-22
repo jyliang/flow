@@ -10,8 +10,11 @@ Precedence for every field: **environment variable > `.flow/config.sh` > built-i
 |---|---|---|
 | `FLOW_TEMPLATE_SPEC` | `$HOME/.claude/skills/flow/templates/spec.md` | Path to the spec template used by `bootstrap.sh`. |
 | `FLOW_STAGES` | `explore plan implement review ship` | Declared stage order. Read-only in v2 (informational). |
+| `FLOW_TEST_CMD` | `""` | Shell command ship runs in Steps 1.5 and 8 (before fixes + after push). Empty = no automated tests; ship notes "no test command configured" and continues. Example: `make test`, `npm test`, `bash scripts/run-tests.sh`. |
 | `FLOW_EXTRA_STAGES` | `""` | Reserved for v2.5 (custom stage insertion). LLM surfaces if set, but `detect-stage.sh` ignores it in v2. |
 | `FLOW_HOOKS_DIR` | `""` | Reserved for v2.5 (pre/post-stage hooks). Declared-only in v2. |
+
+If a new `FLOW_*` field needs to be consulted by `bootstrap.sh` (before `.flow/config.sh` can be trusted to exist), it must also be added to `bootstrap.sh`'s inlined precedence block. Fields only consumed later in the pipeline (like `FLOW_TEST_CMD`) live in `load-config.sh` alone.
 
 ## Backwards compat
 
@@ -25,6 +28,7 @@ Precedence for every field: **environment variable > `.flow/config.sh` > built-i
 
 FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
 FLOW_STAGES="explore plan implement review ship"
+FLOW_TEST_CMD=""                        # e.g. "make test" or "npm test"
 # FLOW_EXTRA_STAGES="security-review"  # v2.5
 # FLOW_HOOKS_DIR=".flow/hooks"          # v2.5
 ```
