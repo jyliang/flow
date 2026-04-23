@@ -1,4 +1,4 @@
-<!-- branch: docs-readability · date: 2026-04-22 · author: Jason Liang · pr: -->
+<!-- branch: docs-readability · date: 2026-04-22 · author: Jason Liang · pr: 14 -->
 
 # Spec: docs-readability
 
