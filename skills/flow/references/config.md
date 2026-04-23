@@ -14,7 +14,7 @@ Every configurable knob is listed below; unlisted `FLOW_*` variables are not con
 |---|---|---|
 | `FLOW_TEMPLATE_SPEC` | `$HOME/.claude/skills/flow/templates/spec.md` | Path to the spec template used by `bootstrap.sh`. |
 | `FLOW_STAGES` | `explore plan implement review ship` | Declared stage order. Read-only in v2 (informational). |
-| `FLOW_TEST_CMD` | `""` | Shell command ship runs in Steps 1.5 and 8 (before fixes + after push). Empty means no automated tests; ship notes "no test command configured" and continues. Example: `make test`, `npm test`, `bash scripts/run-tests.sh`. |
+| `FLOW_TEST_CMD` | `""` | Shell command ship runs in Steps 2 and 11 (before fixes + after push). Empty means no automated tests; ship notes "no test command configured" and continues. Example: `make test`, `npm test`, `bash scripts/run-tests.sh`. |
 | `FLOW_EXTRA_STAGES` | `""` | Reserved for v2.5 (custom stage insertion). The LLM surfaces if set, but `detect-stage.sh` ignores it in v2. |
 | `FLOW_HOOKS_DIR` | `""` | Reserved for v2.5 (pre/post-stage hooks). Declared-only in v2. |
 

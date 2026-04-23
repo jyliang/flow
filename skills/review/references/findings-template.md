@@ -3,7 +3,7 @@
 The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the workstream file and replace the bracketed placeholders.
 
 ```markdown
-# Review: <PR "#<number> - <title>" or "Local changes on <branch>">
+# Findings: <PR "#<number> - <title>" or "Local changes on <branch>">
 
 **PR**: <PR URL — omit for local mode>
 **Author**: <author or current git user>
@@ -66,5 +66,5 @@ PR description so a human can check them off on GitHub.>
 ## Ship Summary
 <Added during ship, not review. Records what ship actually did with the findings:
 **Auto-fixed** (X items), **User-approved fixes** (X items), **Skipped — documented for future work**,
-**Open question — deferred to a follow-up PR**. See ship/SKILL.md Step 3.5.>
+**Open question — deferred to a follow-up PR**. See ship/SKILL.md Step 5.>
 ```

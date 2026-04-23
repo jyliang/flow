@@ -25,7 +25,7 @@ Load context before touching any code:
 
 ## How to run the loop
 
-Pick the single most important incomplete step from the plan, then run it through the six-phase loop:
+Pick the single most important incomplete step from the plan, then run it through this six-step loop:
 
 1. **Explore** — spawn parallel subagents to read all relevant files and search for existing implementations.
 2. **Implement** — spawn parallel subagents to write code (tests first, then implementation).

@@ -32,7 +32,7 @@ For each pattern, propose exactly one of:
 
 | Target | What you propose |
 |---|---|
-| `CLAUDE.md` | A new convention, with exact text. |
+| `CLAUDE.md` | A new rule, with exact text. |
 | `.flow/config.sh` | A field plus its new value. |
 | A stage skill file | A proposed diff — do not apply unless approved. |
 

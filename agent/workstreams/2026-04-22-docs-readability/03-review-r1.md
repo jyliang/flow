@@ -16,14 +16,12 @@ review → ship
 
 ## Decisions needed
 
-- [ ] **Principle 2 vs `## Goal` reality.** The docs-style principle says "verb-first heading names", but 8 stage/internal SKILL.md files use a shared `## Goal` section as a structural label. Options:
-  - **(a) Amend the principle** to whitelist structural labels (`## Goal`, `## Schema`, `## Security`, `## Conventions`). The style guide becomes honest about its own corpus. (Recommended — smaller diff, less churn, keeps consistent cross-file shape.)
-  - **(b) Rewrite all 8 headings** to verb-first (e.g., `## Goal` → `## What this skill does`). Consistency with the stated rule; bigger diff.
-  - **(c) Fold each `## Goal` section into the opening lede and delete the heading.** Shortest result; strongest adherence; highest editorial risk.
-- [ ] **`skills/flow/references/boundaries.md` section renames.** The refactor renamed `## Revisions` → `## Handle revisions`, `## Auto-advance vs pause` → `## Choose auto-advance vs pause`, `## Review-finding triage (review → ship)` → `## Triage review findings at the review → ship boundary`. No runtime breakage (nothing greps these by literal name), but "`## Revisions`" is a load-bearing term in the protocol.
-  - **(a) Keep the renames** (the principle-2 move was correct).
-  - **(b) Restore `## Revisions`** specifically (since it's the glossary-canonical term) but keep the other two renames. (Recommended.)
-  - **(c) Restore all three.**
+Resolved at review → ship boundary (user answered via `AskUserQuestion`):
+
+- [x] **Principle 2 vs `## Goal` reality → (a) Amend principle 2**. Add `## Goal`, `## Schema`, `## Security`, `## Conventions` to the whitelist in `skills/docs-style/SKILL.md`. No renames to the 8 SKILL.md files.
+- [x] **`boundaries.md` section renames → (a) Restore `## Revisions` only**. `## Handle revisions` reverts to `## Revisions`; `## Choose auto-advance vs pause` and `## Triage review findings at the review → ship boundary` stay as-is.
+- [x] **Critical findings → auto-fix all 7** (all are mechanical string replacements).
+- [x] **Suggestion scope → fix docs-style self-violations + glossary drift** (suggestions #1-4 in this doc); park the rest as backlog.
 
 ## Verify in reality
 - [ ] `bash skills/flow/scripts/bootstrap.sh docs-readability-throwaway` on a throwaway branch — confirm the generated `01-spec-r1.md` matches expectations. Template was left byte-identical so should pass.

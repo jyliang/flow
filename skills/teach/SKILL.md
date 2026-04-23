@@ -11,9 +11,9 @@ Skill read by the authoring agent when the user wants to persist a rule or spin 
 
 ## Quick capture
 
-For simple rules and conventions — the user states it once, write it down, confirm, done.
+For simple rules — the user states it once, write it down, confirm, done.
 
-### How to capture a simple rule or convention
+### How to capture a simple rule
 
 Examples: "always use bun", "never auto-commit", "prefer guard over if-let".
 
@@ -128,7 +128,7 @@ After using the skill in real tasks:
 Every new or edited skill must follow the house docs style — it keeps skills scannable for humans and predictable for the loader.
 
 - `skills/docs-style/SKILL.md` — the ten principles to apply whenever authoring or editing any skill in this repo. Read this before writing a new skill.
-- `references/guidelines.md` — the full set of skill-authoring design guidelines specific to this `teach` skill.
+- `references/guidelines.md` — the full set of skill-authoring rules specific to this `teach` skill (legacy filename).
 
 ## Related skills
 

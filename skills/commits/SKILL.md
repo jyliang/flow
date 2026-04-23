@@ -38,7 +38,7 @@ Drop a checkpoint commit after these events — no batching:
 
 - Code generation (scaffolding, generators) — *before* any modifications.
 - Initial project setup.
-- Each completed phase or feature.
+- Each completed step or feature.
 - Adding or fixing tests.
 - Bug fixes.
 - Before starting new major work.

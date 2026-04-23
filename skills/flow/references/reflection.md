@@ -15,7 +15,7 @@ Runs as the last step of the ship stage, on every PR, to catch project facts wor
 | Qualifies (concrete project statement) | Does not qualify |
 |---|---|
 | Paths: *"migrations live in `db/migrations/*.sql`"* | Status updates: *"I'm reading the file now"* |
-| Conventions: *"this repo uses `make install`, not `npm install`"* | Restatements during summaries: *"I changed X, Y, and Z"* |
+| Rules: *"this repo uses `make install`, not `npm install`"* | Restatements during summaries: *"I changed X, Y, and Z"* |
 | Gotchas: *"`gh pr edit --body` fails because of GraphQL deprecation; use `gh api` instead"* | Transient reasoning: *"let me check the diff"* |
 | | Wordsmith tweaks: *"we should rename `foo` to `bar`"* — use review, not reflection |
 
@@ -35,7 +35,7 @@ One `AskUserQuestion` per candidate:
 
 ## Axis (b): flow-system drift
 
-Runs only on explicit `/flow-reflect` invocation, looking across shipped workstreams for cross-archive patterns.
+Runs only on explicit `/flow-reflect` invocation, looking across shipped workstreams for cross-workstream patterns.
 
 ### Scope
 
@@ -65,7 +65,7 @@ Runs only on explicit `/flow-reflect` invocation, looking across shipped workstr
 
 2–4 proposals, each via `AskUserQuestion`. Each proposal is one of:
 
-- Update to `CLAUDE.md` (new convention).
+- Update to `CLAUDE.md` (new rule).
 - Edit to `.flow/config.sh` (template, stages, hooks).
 - Tweak to a stage skill file (show proposed diff; user decides).
 

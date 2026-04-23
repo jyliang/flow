@@ -17,7 +17,7 @@ Hard refuse if the current branch is `main` (or the repo's default branch). Stop
 
 ## How to determine entry mode
 
-See `skills/spike/SKILL.md` under "Conversation absorption".
+See `skills/spike/SKILL.md` under "How to determine entry mode".
 
 | Mode | Condition | Thesis source |
 |---|---|---|
@@ -49,7 +49,7 @@ Run a single round via the review skill. Output `03-review-r1.md`. Adversarial r
 
 ### Step 5: Ship
 
-Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 7.5.
+Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
 
 ## Safety rails
 

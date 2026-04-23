@@ -53,13 +53,13 @@ For every changed file, read the full file — not just the diff hunks. Use para
 
 ### Step 3: Launch parallel specialist subagents
 
-Give each specialist the full diff and changed file list.
+Give each specialist the full diff and changed file list. Be aggressive on severity — false confidence hides real problems.
 
-| Agent | Focus | Threshold |
+| Agent | Focus | Severity rules |
 |---|---|---|
-| Error Handling Hunter | Every try/catch, optional chain, guard/throw, fallback. Is the error logged? Could it swallow unrelated errors? Silent failures? Empty catch blocks? | — |
-| Test Coverage Analyzer | Be aggressive. | New public API with zero tests = 10. Changed behavior without test updates = 8. Any new behavior without tests = 8+. |
-| Pattern Reuse Scanner | Level 1: does the codebase already solve this? Level 2: does the change duplicate across files? Level 3: structural similarity to existing code? | Be aggressive. |
+| Error Handling Hunter | Every try/catch, optional chain, guard/throw, fallback. Is the error logged? Could it swallow unrelated errors? Silent failures? Empty catch blocks? | Rate by blast radius: silent swallow in a hot path = 9, missing log on a recoverable error = 6. |
+| Test Coverage Analyzer | Coverage of new or changed behavior. | New public API with zero tests = 10. Changed behavior without test updates = 8. Any new behavior without tests = 8+. |
+| Pattern Reuse Scanner | Level 1: does the codebase already solve this? Level 2: does the change duplicate across files? Level 3: structural similarity to existing code. | Duplication of an existing utility = 7. Structural near-duplicate = 5. |
 
 ### Step 4: Synthesize
 

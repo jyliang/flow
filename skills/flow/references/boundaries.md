@@ -11,9 +11,9 @@ A boundary either hands control back to the human or flows straight into the nex
 | Pause | Unresolved decisions in the current doc; the stage involves scope or architectural choices (explore, plan); the review found critical issues. |
 | Auto-advance | No decisions needed; the human explicitly asked for end-to-end; the stage is mechanical (implement with a clear plan). |
 
-## Handle revisions
+## Revisions
 
-When a later stage discovers an earlier document is wrong, revise the earlier doc rather than silently diverging.
+When a later stage discovers an earlier document is wrong, revise the earlier doc rather than silently diverging. `## Revisions` is the glossary-canonical heading — it appears inside every workstream doc and is defined in `skills/flow/references/protocol.md`.
 
 1. Update the earlier document with a `## Revisions` entry (see `skills/flow/references/protocol.md`).
 2. Capture what changed, why, and what downstream work is impacted.
