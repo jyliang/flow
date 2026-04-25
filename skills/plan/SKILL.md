@@ -37,14 +37,33 @@ Based on the spec's impact analysis and current state:
 
 ### Step 3: Write the plan
 
-Write to `02-plan-r<N>.md` in the active workstream folder following the document protocol (`skills/flow/references/protocol.md`) and the template in `references/plan-template.md`. A new workstream starts at `r1`; a revision creates `r2`, `r3`, … with a `## Revisions` section explaining the delta.
+Write to `02-plan-r<N>.md` in the active workstream folder following the document protocol (`skills/flow/references/protocol.md`) and the scaffold in `references/plan-template.md`. The scaffold seeds the structure; break from it only when the work has a natural shape that scans better. A new workstream starts at `r1`; a revision creates `r2`, `r3`, … with a `## Revisions` section explaining the delta.
+
+### Structure: Pyramid Principle
+
+Organize the plan as a Minto pyramid — answer first, then support. The reader should be able to stop at any level and still have a complete thought.
+
+- **Top of the pyramid — the `What / Why` blockquote.** Two sentences carried over from the spec. A reader who only reads the blockquote should know what ships when this plan is executed and why.
+- **Supporting level — the five sections.** MECE: Approach (the design), Steps (ordered work), Constraints (guardrails), Verification (done-when), Open (unresolved). Don't overlap; don't leave gaps; don't add a sixth unless the work genuinely needs it.
+- **Evidence level — inside each section.** Lead with the section's conclusion in one sentence, then the detail. For Steps, each step's title is its thesis and the checklist is the evidence.
+
+### Readability rules
+
+The plan is read by the implement stage and by a human checking scope before coding starts. Write so a skimmer re-orients in under 10 seconds — on first draft and on revision.
+
+1. **One-sentence lede per section.** Every `##` heading opens with one line stating that section's conclusion.
+2. **Tables for 3+ parallel items.** Lists of three or more items sharing the same shape become tables.
+3. **Collapse decisions into conclusions with inline rationale.** Don't preserve the deliberation — record the chosen approach as "X (over Y) because Z" in one line, not a paragraph.
+4. **Bold the key term first** in each rule or DO/DON'T bullet.
+5. **Preserve technical content verbatim on revision.** Restructure freely on `-rN+1`, but never drop a step's test criteria or a `[PASTE TEST SUMMARY HERE]` marker.
+6. **No new content during a readability pass.** Format-only unless the plan is wrong.
 
 ### Rules
 
 - **DO** divide into small, testable steps.
-- **DO** document architecture decisions and rationale.
 - **DO** reference existing implementations as patterns.
 - **DO** include test criteria for every step.
+- **DO** collapse architecture decisions into one-liner conclusions in the Approach section — rationale inline, not as its own paragraph.
 - **DO NOT** include steps without corresponding tests.
 - **DO NOT** leave ambiguities — use `AskUserQuestion` rather than guessing (see `skills/flow/references/user-interaction.md`).
 

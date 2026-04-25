@@ -1,70 +1,64 @@
 # Findings Document Template
 
-The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the workstream file and replace the bracketed placeholders.
+The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the workstream file and fill the placeholders.
+
+Save as `./agent/workstreams/<YYYY-MM-DD>-<branch>/03-review-r<N>.md`. PR-vs-local distinction lives in the frontmatter comment, not the filename.
 
 ```markdown
-# Findings: <PR "#<number> - <title>" or "Local changes on <branch>">
+<!-- branch: [branch] · date: [YYYY-MM-DD] · author: [git user] · pr: [PR URL or omit for local] · base: [base branch] -->
 
-**PR**: <PR URL — omit for local mode>
-**Author**: <author or current git user>
-**Branch**: <branch> -> <base>
-**Review round**: <N> (or omit if round 1)
-**Date reviewed**: <today>
+# Findings: [PR "#<number> - <title>" or "Local changes on <branch>"] · review → ship
 
-## Status
-<e.g. `review → ship` or `review → ship → PR`>
+> **What:** [one sentence — what the change does]  
+> **Why:** [one sentence — the spec/ticket goal it serves]
 
-## Summary
-<1-2 sentence summary of what the change does>
+## Changes
 
-## How It Works
-<Technical summary of the approach — how the change actually works, not just what it does.
-Describe the mechanism: what components are involved, how data/control flows through them,
-what triggers the behavior, and any key implementation choices.>
+[One-sentence lede. Technical summary: components involved, data flow, key implementation choices.]
 
-## Complexity & Risk
-<Rate: low / medium / high. Justify with: number of files changed, whether it touches hot paths
-or shared abstractions, concurrency or state management concerns, how easy it would be to
-revert, and likelihood of subtle regressions.>
+### Files
 
-## Decisions needed
-<Checklist of open decisions the human must resolve before ship. Mark `[x]` once resolved
-inline (noting the outcome), or `[ ]` if still open. Omit the section if none.>
+- [path] — [what changed]
 
-## Verify in reality
-<Unchecked list of what needs to be confirmed post-merge (or post-ship in a live session) —
-things that cannot be verified from the diff alone: live commands, UI behavior, production
-config, manual smoke tests. One `- [ ]` per item. Items here are expected to flow into the
-PR description so a human can check them off on GitHub.>
+## Walkthrough
+
+[One-sentence lede. End-to-end trace per audience — catches goal-level bugs that line-by-line review misses.]
+
+- **[Audience 1]:** [entry → gate → output. Does the end state match the goal?]
+- **[Audience 2]:** [same]
+
+## Risk
+
+[Rating: low / medium / high. Justify: files changed, hot paths, concurrency, revert difficulty, regression likelihood.]
 
 ## Findings
 
 ### Critical
-<issues that must be fixed before merge>
+
+[Issues that must be fixed before merge. Include findings from Error Handling Hunter, Test Coverage Analyzer, Pattern Reuse Scanner — classified by severity, not by source agent.]
 
 ### Suggestions
-<improvements that would be nice but aren't blocking>
+
+[Improvements that would be nicer but aren't blocking.]
 
 ### Nits
-<minor style/naming/formatting observations>
 
-### Questions
-<things that are unclear and need clarification>
+[Minor style/naming/formatting observations.]
 
-## Error Handling
-<findings from the error handling hunter agent>
+## Verification
 
-## Test Coverage Gaps
-<findings from the test coverage analyzer agent>
+[One-sentence lede. Post-merge checks that can't be done from the diff alone — live commands, UI behavior, production config.]
 
-## Pattern Reuse Opportunities
-<findings from the pattern reuse scanner agent>
+- [ ] [thing to check]
 
-## Files Changed
-<list of files with brief note on what changed in each>
+## Open
 
-## Ship Summary
-<Added during ship, not review. Records what ship actually did with the findings:
-**Auto-fixed** (X items), **User-approved fixes** (X items), **Skipped — documented for future work**,
-**Open question — deferred to a follow-up PR**. See ship/SKILL.md Step 5.>
+[One-sentence lede. Decisions or clarifying questions the human must resolve before ship.]
+
+- [ ] **[file:line]**: [decision or question requiring human judgment]
+
+## Ship trail
+
+<!-- Appended by ship stage — do not fill during review. -->
+<!-- Records what ship did with the findings: auto-fixed (N), user-approved (N), skipped, deferred. See ship/SKILL.md Step 5. -->
 ```

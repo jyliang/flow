@@ -1,27 +1,20 @@
 <!-- branch: {{BRANCH}} · date: {{DATE}} · author: {{AUTHOR}} · pr: -->
 
-# Spec: {{BRANCH}}
+# Spec: {{BRANCH}} · {{STATUS}}
 
-## Status
-explore → plan
+> **What:** {{WHAT}}  
+> **Why:** {{WHY}}
 
-## What was done
-- 
+## Scope
 
-## Decisions needed
+## Decisions
+
+## Design
+
+## Constraints
+
+## Verification
+
 - [ ] 
 
-## Verify in reality
-- [ ] 
-
-## Spec details
-
-### Problem
-
-### Scope
-
-### Design
-
-### Constraints
-
-### Open questions
+## Open

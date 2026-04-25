@@ -44,7 +44,7 @@ For every changed file, read the full file — not just the diff hunks. Use para
 
 #### Rules
 
-- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Decisions needed` over interrupting mid-review.
+- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
 - **DO NOT** review based only on diff hunks — this is the #1 source of false claims.
 
 > **Warning:** Don't assume code is unused. Grep the codebase for all call sites before claiming anything is dead code.
@@ -63,18 +63,18 @@ Give each specialist the full diff and changed file list. Be aggressive on sever
 
 ### Step 4: Synthesize
 
-Merge subagent reports. Write **How It Works** first — trace the change end-to-end. Then **Complexity & Risk**. Then cover:
+Merge subagent reports into the template sections. Start with `## Changes` (trace the change end-to-end), then `## Risk` (rate low/medium/high with justification). Then cover:
 
-- **Testing** — new behavior without tests goes in Critical.
-- **Goal gaps** — compare claimed intent vs actual code.
-- **End-to-end reachability** — trace feature gates for each target audience.
+- **Testing** — new behavior without tests goes in `## Findings > ### Critical`.
+- **Goal gaps** — compare claimed intent (What/Why) vs actual code.
+- **End-to-end reachability** — trace feature gates for each target audience, write to `## Walkthrough`.
 - Correctness, bugs, architecture, naming, security, performance.
 
 De-duplicate across agents. Keep the most detailed version.
 
 #### End-to-end walkthrough
 
-Before finalizing findings, do your own E2E sanity check — this catches goal-level bugs that line-by-line review misses. Write it out in the findings (under **How It Works** or as its own section); don't just think it.
+Before finalizing findings, do your own E2E sanity check — this catches goal-level bugs that line-by-line review misses. Write it out in the findings under `## Walkthrough`; don't just think it.
 
 1. **Infer the goal.** From commit messages, PR description, branch name, or spec.
 2. **List every distinct audience.** For each feature gate, environment check, or role-based condition in the diff, name the relevant audiences (e.g., "Pro user on prod", "non-Pro on staging", "unauthenticated user").
@@ -85,56 +85,64 @@ Keep the walkthrough brief (a few lines per audience) but explicit.
 
 ### Step 5: Write findings
 
-Write to `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/<date>-<branch>/`). Round ordinal auto-increments: the first review of the workstream is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives inside the document (see template), not the filename.
-
-Follow the document protocol (`skills/flow/references/protocol.md`):
+Write to `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/<date>-<branch>/`) following the document protocol (`skills/flow/references/protocol.md`) and the scaffold in `references/findings-template.md`. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the workstream is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
 
 ```markdown
-# Findings: [PR title or branch description]
+<!-- branch: [branch] · date: [date] · author: [git user] · pr: [URL or omit] · base: [base] -->
 
-## Status
-review → ship
+# Findings: [PR title or "Local changes on <branch>"] · review → ship
 
-## What was done
-- Reviewed [N] files, launched 3 specialist subagents
-- Found [N] critical, [N] suggestions, [N] nits
+> **What:** [one sentence — what the change does]  
+> **Why:** [one sentence — the spec/ticket goal it serves]
 
-## Decisions needed
-- [ ] **[file:line]**: [Issue requiring human judgment — describe options]
-- [ ] **[file:line]**: [Design decision — describe trade-offs]
+## Changes
+[One-sentence lede. Technical summary + changed files.]
 
-## Verify in reality
-- [ ] Test [specific scenario] manually
-- [ ] Confirm [behavior] in [environment]
+## Walkthrough
+[One-sentence lede. Per-audience E2E trace from Step 4.]
 
-## Critical
-[Issues that must be fixed]
+## Risk
+[Rating + justification.]
 
-## Suggestions
-[Improvements, not blocking]
+## Findings
+### Critical
+### Suggestions
+### Nits
 
-## Nits
-[Minor observations]
+## Verification
+- [ ] [manual checks that can't be done from the diff]
 
-## Questions
-[Things that need clarification]
+## Open
+- [ ] **[file:line]**: [decision or question for the human]
 
-## Error Handling
-[From specialist agent]
-
-## Test Coverage Gaps
-[From specialist agent]
-
-## Pattern Reuse Opportunities
-[From specialist agent]
-
-## Files Changed
-[List with brief notes]
+## Ship trail
+<!-- Appended by ship stage — do not fill during review. -->
 ```
+
+Findings from the three specialist subagents merge into `## Findings`, classified by severity rather than by source agent. Don't create separate Error Handling / Test Coverage / Pattern Reuse sections — they drift out of sync with the graded findings.
 
 ### Step 6: Present findings
 
-Summary of critical/suggestion/nit/question counts plus highlights from each specialist.
+Summary of critical/suggestion/nit counts plus highlights from each specialist.
+
+### Structure: Pyramid Principle
+
+Organize the findings as a Minto pyramid — answer first, then support. The reader should be able to stop at any level and still have a complete thought.
+
+- **Top of the pyramid — the `What / Why` blockquote.** Two sentences. A reader who only reads the blockquote knows what shipped and why. If the code's actual intent disagrees with the stated Why, that itself is a Critical finding.
+- **Supporting level — the six sections.** MECE: Changes (what the diff does), Walkthrough (E2E trace), Risk (rating), Findings (Critical/Suggestions/Nits), Verification (manual checks), Open (human decisions). `Ship trail` is a post-hoc marker, not a support.
+- **Evidence level — inside each section.** Lead with the section's conclusion in one sentence, then the evidence. Each Critical leads with the impact ("user X sees Y"), then the line reference, then the fix.
+
+### Readability rules
+
+The findings document is read by the ship stage fixing issues and by a human deciding whether to merge. Write so a skimmer re-orients in under 10 seconds — on first draft and on revision.
+
+1. **One-sentence lede per section.** Every `##` heading opens with one line stating that section's conclusion.
+2. **Tables for 3+ parallel items.** Lists of three or more items sharing the same shape (audience/path, file/change, finding/severity) become tables.
+3. **Collapse specialist findings by severity, not by source.** An Error Handling Hunter critical and a Test Coverage critical both go in `## Findings > ### Critical` — don't duplicate them in source-agent sections.
+4. **Bold the key term first** in each finding — the `file:line` or the audience name — so the scanner can locate it without reading the body.
+5. **Preserve technical content verbatim on revision.** Restructure format freely on `-rN+1`, but never drop a finding, a verification check, or an open decision.
+6. **No new content during a readability pass.** Format-only unless a finding was wrong.
 
 ## How to handle spec/plan drift
 

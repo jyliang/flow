@@ -29,57 +29,70 @@ Use parallel subagents to understand the codebase before writing anything.
 
 - **DO** search for existing implementations before assuming they don't exist.
 - **DO** use parallel subagents for all exploration (see `skills/parallel/SKILL.md`).
-- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities under `## Decisions needed` in the spec over interrupting mid-explore.
+- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
 - **DO NOT** assume features aren't implemented — study the code first.
 
 ## How to produce the spec
 
-Write the spec at `agent/workstreams/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/flow/references/protocol.md`).
+Write the spec at `agent/workstreams/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/flow/references/protocol.md`). The scaffold at `skills/flow/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
+
+`bootstrap.sh` substitutes `{{BRANCH}}`, `{{DATE}}`, and `{{AUTHOR}}` but leaves `{{STATUS}}`, `{{WHAT}}`, and `{{WHY}}` raw — you fill those in. On first draft, `{{STATUS}}` is `explore → plan`; `{{WHAT}}` is one sentence on what the spec delivers; `{{WHY}}` is one sentence on the problem it solves or value it creates.
 
 ```markdown
-# Spec: [Feature Name]
+# Spec: [branch] · explore → plan
 
-## Status
-explore → plan
+> **What:** [one sentence — what this spec delivers]  
+> **Why:** [one sentence — the problem it solves or value it creates]
 
-## What was done
-- Explored [N] files across [areas]
-- Found existing implementations of [X]
-- Identified [N] files that will need changes
+## Scope
+[One-sentence lede. What's in, what's out. Table for file lists with risk tier.]
 
-## Decisions needed
-- [ ] **Reuse vs replace**: [existing module] does something similar — extend it or build new?
-- [ ] **Scope**: The ticket mentions X but the code also affects Y — include Y?
-- [ ] **Edge case**: What should happen when [discovered edge case]?
+## Decisions
+[One-sentence lede. Questions resolved during explore — conclusions only, not deliberation.]
 
-## Verify in reality
-- [ ] Confirm [assumption about current behavior] by testing in [environment]
+## Design
+[One-sentence lede. High-level approach and the shape of the solution.]
 
-## Spec details
+## Constraints
+[One-sentence lede. Hard rules, guardrails, forbidden changes.]
 
-### Current state
-[What exists today — relevant files, patterns, data flow]
+## Verification
+[One-sentence lede. What must be confirmed after the change ships.]
 
-### Proposed change
-[What needs to happen — high level, not implementation details]
+- [ ] [thing to check]
 
-### Impact analysis
-- **Files to change**: [list with one-line reasons]
-- **Files to create**: [list]
-- **Dependencies**: [what this relies on, what relies on this]
-- **Similar modules**: [existing patterns to follow or avoid duplicating]
+## Open
+[One-sentence lede — or go straight to the list if there's only one item.]
 
-### Constraints
-[Anything discovered during exploration that constrains the approach]
+- [unresolved question to escalate to plan stage]
 ```
 
 ### Pre-spec analysis
 
-Run three checks before writing — they drive the spec body:
+Run three checks before writing — they drive the Design section:
 
 1. **Similarity check** — identify modules that look similar but differ.
 2. **Impact analysis** — list all files that will be affected.
-3. **Dependencies** — what does this rely on; what relies on this.
+3. **Dependencies** — what this relies on; what relies on this.
+
+### Structure: Pyramid Principle
+
+Organize the spec as a Minto pyramid — answer first, then support. The reader should be able to stop at any level and still have a complete thought.
+
+- **Top of the pyramid — the `What / Why` blockquote.** Two sentences. A reader who only reads the blockquote should know what ships and why it matters. This is the governing thought; every section below supports it.
+- **Supporting level — the six sections.** MECE: Scope (boundaries), Decisions (resolved questions), Design (approach), Constraints (guardrails), Verification (proof the change works), Open (unresolved questions). Don't overlap; don't leave gaps; don't add a seventh unless the work genuinely needs one.
+- **Evidence level — inside each section.** Lead with the section's conclusion in one sentence, then the evidence (tables, bullets, examples). A skimmer reading only the first line of each section should get the full argument.
+
+### Readability rules
+
+The spec is read by a human approving the plan and by the next-stage agent, often mid-context-switch. Write so a skimmer re-orients in under 10 seconds — on first draft and on revision.
+
+1. **One-sentence lede per section.** Every `##` heading opens with one line stating that section's conclusion. Ledes are the pyramid's middle layer — reading only them should give the full argument.
+2. **Tables for 3+ parallel items.** Lists of three or more items sharing the same shape (question/answer, file/risk, problem/example) become tables.
+3. **Collapse resolved decisions into conclusions.** Record the answer, not the deliberation. A question answered mid-explore becomes a one-line conclusion, not a `[x]`-prefixed checkbox.
+4. **Bold the key term first** in each rule, principle, or DO/DON'T bullet — the scanner sees the term before the explanation.
+5. **Preserve technical content verbatim on revision.** Restructure format freely on `-rN+1`, but never drop a constraint, checklist item, or file-scope row.
+6. **No new content during a readability pass.** Restructuring is format-only unless the spec is wrong.
 
 ## Conventions
 
