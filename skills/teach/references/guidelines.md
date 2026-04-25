@@ -1,47 +1,54 @@
-# Skill Design Guidelines
+# Skill design guidelines
 
-## 1. One skill per concern
+Both skill authors (human or agent) read this file when drafting or revising a skill — the principles below keep skills small, discoverable, and cheap to load.
 
-Each skill maps to exactly one library, workflow, or concept. Never bundle multiple concerns into one skill.
+## How to scope a skill
 
-## 2. Progressive disclosure (three layers)
+One skill maps to exactly one library, workflow, or concept. Never bundle multiple concerns into one skill.
+
+## How to layer content for progressive disclosure
+
+Split each skill across three layers so only what's needed loads at each moment.
 
 | Layer | Always loaded? | Target size |
 |---|---|---|
 | Frontmatter (name + description) | Yes | ~30 words |
-| SKILL.md body | When skill triggers | 100-300 lines |
-| references/ | When Claude needs them | Unlimited |
+| `SKILL.md` body | When skill triggers | 100–300 lines |
+| `references/` | When Claude needs them | Unlimited |
 
-## 3. Cookbook format
+## How to structure the body as a cookbook
 
-Structure the body as `## How to [verb]` sections. Each is a self-contained recipe:
+Structure the body as `## How to [verb]` sections. Each is a self-contained recipe: a code block followed by a rules block.
 
-```markdown
+````markdown
 ## How to do X
 
 ```lang
 code example
 ```
 
-* **DO** correct pattern
-* **DO NOT** common mistake
-```
+- **DO** correct pattern
+- **DO NOT** common mistake
+````
 
-No theory, no essays. Code examples communicate faster and cost fewer tokens.
+### Rules
 
-## 4. DO/DON'T rules catch LLM-specific mistakes
+- **DO** lead with code examples — they communicate faster and cost fewer tokens than prose.
+- **DO NOT** write theory or essays.
+
+## How to write DO / DO NOT rules
 
 Place sharp, specific anti-patterns right after code blocks. Target mistakes the LLM would make from stale training data or wrong generalizations.
 
-## 5. Reference files are terse and code-first
+## How to write reference files
 
-A reference file covering an entire topic can be ~30 lines. Just code examples and DO/DON'T rules. No prose.
+A reference file covering an entire topic can be ~30 lines. Just code examples and DO / DO NOT rules. No prose.
 
-## 6. API surface files as references
+## How to include API surface files
 
 Bundle `.swiftinterface`, `.d.ts`, OpenAPI specs, or similar API surfaces in `references/interface/`. These are the most token-dense, authoritative source of truth.
 
-## 7. Cross-reference, don't duplicate
+## How to cross-reference other skills
 
 When one skill needs knowledge from another, reference by path:
 
@@ -49,6 +56,9 @@ When one skill needs knowledge from another, reference by path:
 ALWAYS consult `other-skill/SKILL.md` for [topic].
 ```
 
-## 8. Imperative voice
+- **DO** cross-reference by path.
+- **DO NOT** duplicate the referenced content inline.
 
-Write instructions in imperative form: "Use X", "Add Y", not "You should use X".
+## How to write instructions
+
+Use imperative voice: `Use X`, `Add Y`, not `You should use X`.
