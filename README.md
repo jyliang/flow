@@ -1,187 +1,194 @@
 # Flow
 
-A skill system for Claude Code that moves work from idea to shipped PR through structured handoffs.
+A learning runtime for Claude Code. Three primitives — `ingest`, `run`, `reflect` — turn any pipeline of skills into something a human can inspect and that gets better the more you use it.
 
-This README has two readers: a **human** browsing the repo deciding whether to install, and the **agent** that installs and loads the skills. Both need the same mental model.
+Flow ships empty. You install a **pack** (a git repo of skills defining one pipeline) and start running it. As you ship work, `reflect` proposes edits to your pack via PR. The pack is yours to evolve.
 
-## The problem
+## Onboarding
 
-AI coding tools get you 80% of the way. The last 20% is where they fail — they either silently guess wrong or dump everything on you to figure out. There's no good middle ground.
+### 1. Install
 
-## The idea
+Clone this repo, then:
 
-Work moves through stages. Between each stage is a **document**. Every document serves two purposes:
+```bash
+make install
+```
 
-1. **The human** reads it to understand what happened, edits it to redirect.
-2. **The next agent** reads it to continue work.
+Installs into `~/.claude/` and `~/.flow/`.
 
-The human can intervene at any document boundary — or skip it and let the pipeline flow. Documents are the API between human and AI, and between AI and AI.
+Verify: `make doctor`.
 
-## Stages
+### 2. First `/flow`
+
+In any project:
 
 ```text
-Idea
-  ↓
- [explore]
-  ↓
-Spec              ← human: "is this what we're building?"
-  ↓
- [plan]
-  ↓
-Plan              ← human: "is this how we're building it?"
-  ↓
- [implement]
-  ↓
-Changes           ← human: normal code review
-  ↓
- [review]         ← LLM review (clear eyes re-evaluation, can trigger self-fix)
-  ↓
-Findings          ← human: "what needs my judgment?"
-  ↓
- [ship]
-  ↓
-PR                ← human review (final approval)
+/flow
 ```
 
-Document depth scales with task complexity. A one-line bug fix produces a 3-line spec and skips straight to implementation. A complex feature produces a full spec with impact analysis, a multi-step plan, and multiple review rounds. The structure is always there; the ceremony is proportional.
+Flow has no skills installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-> **Note:** "Review" appears twice and they're different. **LLM review** happens inside the pipeline (bounded, one round + one fix pass by default). **Human review** happens on the PR after the pipeline completes (unbounded, your call).
+That installs a git repo at `~/.flow/packs/code-pipeline/` and links its skills into Claude Code. `/flow` is ready.
 
-## Workstream folders
+### 3. Start a thread
 
-Each piece of work lives at `agent/workstreams/<YYYY-MM-DD>-<branch>/` with stage-ordered filenames:
+Tell flow what you want to build. It cuts a branch, opens a thread folder, and walks you through it stage by stage.
 
-- `01-spec-r1.md` — explore output.
-- `02-plan-r1.md` — plan output.
-- `03-review-r1.md` — LLM-review output.
-
-Revisions create a new file rather than editing in place: `01-spec-r2.md`, `02-plan-r3.md`, etc. The previous `-rN` is frozen; the new file's `## Revisions` section explains what changed and why.
-
-The folder is 1:1 with the branch. After a PR merges, the folder stays put — `ship` records the PR number into the spec's frontmatter comment (`<!-- ... pr: 42 -->`), and `workstreams-summary.sh` uses that marker as the filter for "shipped work".
-
-## Revisions
-
-Work isn't linear. During implementation you discover the spec was wrong. During review you realize the plan missed a step.
-
-When this happens, the system **creates `01-spec-r2.md`** (or `02-plan-r2.md`, etc.) and the new file's `## Revisions` section captures what changed:
-
-```markdown
-## Revisions
-- **implement → spec** 2026-04-16: Changed auth from JWT to session cookies
-  **Why**: Existing middleware only supports sessions. Rewriting is out of scope.
-  **Impact**: Plan steps 3-5 updated. No JWT dependency needed.
+```text
+/flow add a /standup command that summarizes my git activity
 ```
 
-This is not a bug in the process — it's a feature. The revision trail answers questions humans ask each other: "Why does the code differ from the spec?" "When did we change the approach?" "Who decided this and why?"
+You'll see the first handoff (a spec) and a Yes / Adjust / Pause prompt. Edit the spec, or move on.
+
+### 4. Through the stages
+
+Each stage emits a handoff document — spec, plan, findings — readable and editable. At every boundary flow asks:
+
+- **Yes, advance** — go to the next stage.
+- **Adjust** — edit the handoff first.
+- **Pause** — stop here; resume with `/flow` later.
+
+### 5. Ship
+
+The last stage opens a PR. Flow records the PR number in the thread's spec and exits.
+
+Review the PR like any other PR.
+
+### 6. Evolve a skill
+
+After you ship something:
+
+```text
+/reflect
+```
+
+Flow scans the thread for patterns — repeated suggestions you accepted, things you pushed back on twice — and proposes edits to the skills that ran. You see the diffs and pick which to accept. Flow opens a PR against your pack repo with the accepted edits.
+
+This is how the pack matures. Over time, explore learns your codebase quirks, plan learns your style, review learns what you actually care about.
+
+### 7. Wire your pack to a remote
+
+The pack repo is local until you give it a home:
+
+```bash
+make pack-link-remote URL=git@github.com:you/your-pack.git
+```
+
+Once linked, evolutions push on PR merge. Pull from any machine and have the same matured pack.
+
+## The model
+
+Three layers:
+
+| Layer | What it is |
+|---|---|
+| **Kernel** | Three skills that don't change: `ingest` (turn input into a skill), `run` (orchestrate a pack execution with the human in the loop at every boundary), `reflect` (propose evolutions after a thread). |
+| **Pack** | A git repo containing the stage skills for one pipeline. The starter pack `code-pipeline` ships with the kernel; `/flow` first-run installs it as a personal git repo at `~/.flow/packs/code-pipeline/`. |
+| **Thread** | One piece of work, 1:1 with a git branch. Each stage emits a handoff document that the human inspects and the next stage consumes. |
+
+## Vocabulary
+
+| Term | Meaning |
+|---|---|
+| **Pack** | A git repo of skills that defines one pipeline (e.g. code → PR, idea → blog post). |
+| **Stage** | One step in a pipeline (e.g. explore, plan, implement). |
+| **Thread** | One piece of work. 1:1 with a git branch and a folder under `agent/threads/<date>-<branch>/`. |
+| **Handoff** | The markdown document a stage emits. Two readers: the human and the next stage's agent. |
+| **Boundary** | The moment between stages. Always passes through the human via `AskUserQuestion`. |
+| **Revision** | A re-thought handoff inside one thread (`-r2`, `-r3`). |
+| **Evolution** | A matured skill at the pack level (a PR against your pack repo). |
+| **Delivery** | What the pipeline produces (PR, blog post, slack message). |
 
 ## Slash commands
 
-| Command | What it does |
-|---|---|
-| `/flow` | Single entry point. Detects current stage and advances. Empty workspace → asks for the idea. |
-| `/flow-adopt` | Adopt the current conversation into a flow — distill into the workstream's `01-spec-r1.md` and advance. For when you're mid-chat and realize this should be a flow. |
-| `/flow-config` | Configure (or reconfigure) this project's `.flow/config.sh` — template, stages, hooks. |
-| `/flow-reflect` | Scan shipped workstreams for cross-PR patterns — `CLAUDE.md` additions, `.flow/config.sh` edits, stage-skill tweaks. Explicit opt-in. |
-| `/flow-spike "<thesis>"` | Unattended **spike mode**: explore → plan → implement → 1 LLM-review round → draft PR for human review. Kick off, walk away, come back to something testable. |
-
-## Skills
-
-### User-facing
-
-| Skill | What it does |
-|---|---|
-| `flow` | Single entry point — detects current stage and advances work. |
-| `spike` | Orchestrates `/flow-spike`: runs the full pipeline unattended, opens a draft PR. |
-| `teach` | Create skills from patterns, or quick-capture a rule. |
-| `docs-style` | House style for markdown in this repo — applied when authoring or editing docs. |
-
-### Stages (invoked by flow)
-
-| Skill | Transition | Document |
+| Command | Calls | What it does |
 |---|---|---|
-| `explore` | idea → spec | `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` |
-| `plan` | spec → plan | `agent/workstreams/<date>-<branch>/02-plan-r<N>.md` |
-| `implement` | plan → changes | code on branch |
-| `review` | changes → findings | `agent/workstreams/<date>-<branch>/03-review-r<N>.md` |
-| `ship` | findings → PR | GitHub PR (records `pr:` in spec; workstream folder stays at `agent/workstreams/<date>-<branch>/`) |
+| `/flow` | `run` | Start or continue a thread. |
+| `/teach` | `ingest` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
+| `/reflect` | `reflect` | After threads ship, propose pack evolutions. |
+| `/spike` | `run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
+| `/adopt` | `run` (with seed) | Distill the current conversation into a thread spec. |
+| `/pack` | — | Pack management (list, switch, init, link remote, open PR). |
 
-### Internal (auto-triggered)
+## Make targets
 
-| Skill | Referenced by |
+| Target | Purpose |
 |---|---|
-| `tdd` | implement |
-| `commits` | implement, ship |
-| `parallel` | explore, implement, review |
-
-## Per-project configuration
-
-Flow reads `.flow/config.sh` at the repo root for per-project overrides. First run of `/flow` in a project with no config fires a 3-question scripted setup; defaults are frictionless. See `skills/flow/references/config.md` for the schema.
-
-Precedence for every setting: **environment variable > `.flow/config.sh` > built-in default**.
-
-Minimal example:
-
-```sh
-# .flow/config.sh
-FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
-```
-
-## Reflection
-
-After a few shipped PRs, `/flow-reflect` can scan `agent/workstreams/` (filtered to the ones with `pr:` set) looking for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and propose concrete changes. Every proposal goes through `AskUserQuestion`; nothing lands silently.
-
-Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. Silent when nothing qualifies. See `skills/flow/references/reflection.md`.
-
-## Install
-
-Flow ships as both a Claude Code plugin and a `skills.sh`-compatible skill pack. Pick whichever matches your agent.
-
-### Claude Code (native plugin)
-
-```text
-/plugin marketplace add jyliang/flow
-/plugin install flow
-```
-
-Updates: `/plugin update flow`. Remove: `/plugin uninstall flow`.
-
-### Any agent via `npx skills`
-
-Works for Claude Code, Cursor, Codex, Copilot, Windsurf, and [40+ others](https://github.com/vercel-labs/skills#supported-agents).
-
-```bash
-# Install globally for Claude Code
-npx skills add jyliang/flow -g -a claude-code
-
-# Install for a different agent (e.g. Cursor)
-npx skills add jyliang/flow -g -a cursor
-
-# Project-scoped (commits skills into the repo)
-npx skills add jyliang/flow -a claude-code
-
-# Pick individual skills
-npx skills add jyliang/flow --skill flow --skill review -g -a claude-code
-```
-
-Updates: `npx skills update`. Remove: `npx skills remove flow`.
-
-### Local development
-
-For iterating on flow itself, use the Makefile to copy the working tree into `~/.claude/`:
-
-```bash
-make install    # skills/ and commands/ both installed
-make list       # show installed skills and commands
-```
+| `make install` | Install kernel into `~/.claude/`, provision `~/.flow/`. |
+| `make doctor` | Sanity check the install. |
+| `make list` | Show installed kernel skills + slash commands. |
+| `make pack-init STARTER=code-pipeline NAME=<name>` | Clone a starter into `~/.flow/packs/<name>/`. |
+| `make pack-new NAME=<name>` | Empty pack scaffold. |
+| `make pack-list` | Show installed packs, mark the active one. |
+| `make pack-use NAME=<name>` | Switch active pack (re-symlinks). |
+| `make pack-status` | Git status of the active pack. |
+| `make pack-link-remote URL=...` | Add origin to the active pack. |
+| `make pack-branch BRANCH=...` | Cut an evolution branch in the active pack. |
+| `make pack-pr TITLE=... BODY=...` | Open a PR for current pack edits. |
+| `make pack-pull` / `make pack-push` | Sync the pack with its remote. |
+| `make lint-docs` | Markdown style lint across runtime + packs. |
 
 ## Philosophy
 
-**Documents are the interface.** Not CLI flags, not chat messages — documents on disk that both humans and agents can read and edit. The human's edits to a spec directly change what the agent plans. The human's edits to findings directly change what gets fixed.
+Two principles, not negotiable:
 
-**Every user-facing decision is an `AskUserQuestion`.** Free-form prose is for status, narration, and summaries only. Exception: spike mode auto-resolves and logs.
+**Inspectable.** Every artifact is markdown a human can read. Every boundary is `AskUserQuestion`. Nothing happens silently.
 
-**Human time is sacred.** The LLM-review stage auto-fixes what's mechanical and only asks about what genuinely needs judgment. Spike mode pushes this further for thesis-validation work where the human engages only at the draft PR.
+**Evolvable.** Skills aren't fixed. Packs aren't fixed. The system improves through use, and the mechanism for that improvement is first-class — same git/PR workflow you use for code.
 
-**Revisions are communication.** When work deviates from the plan, the deviation itself is valuable information. The system captures it instead of losing it.
+Three biological analogies for how the kernel primitives work:
 
-**The system evolves with you.** `teach` lets you codify patterns as you discover them. `/flow-reflect` proposes changes based on your own archive. Skills are just markdown files — readable, editable, versionable.
+- **`ingest` = digestion.** Raw input is broken into reusable nutrients (skills) and the residue is dropped. The system stores the extracted parts, not the meal.
+- **`run` = foraging.** A trained repertoire is executed in a real environment, with online feedback (the human at each boundary).
+- **`reflect` = affinity maturation.** After exposure, the underlying instructions are edited to produce better-bound variants. The next run uses the matured pack.
+
+## Layout
+
+```text
+flow-runtime/
+├── Makefile                          # User-facing CLI for kernel + packs
+├── README.md                         # This file
+├── commands/                         # Kernel slash commands
+│   ├── flow.md                       # /flow → run
+│   ├── teach.md                      # /teach → ingest
+│   ├── reflect.md                    # /reflect → reflect
+│   ├── spike.md                      # /spike → autonomous run
+│   ├── adopt.md                      # /adopt → seed a thread from conversation
+│   └── pack.md                       # /pack → pack management
+├── skills/                           # Kernel skills (don't change between packs)
+│   ├── run/
+│   ├── ingest/
+│   └── reflect/
+├── packs/                            # Bundled starter packs
+│   └── code-pipeline/
+│       ├── pack.yaml                 # Manifest
+│       ├── skills/                   # Stage skills
+│       └── templates/                # Pack-specific templates
+├── scripts/                          # Pack-mgmt internals (called by Makefile)
+└── tools/Pack.mk                     # Imported by each pack's own Makefile
+```
+
+After `make install`:
+
+```text
+~/.flow/
+├── packs/<name>/                     # Each pack as its own git repo
+├── active-pack -> packs/<active>/    # Symlink
+├── runtime-path                      # Where this runtime lives
+├── tools/Pack.mk                     # Copy of the runtime's Pack.mk
+└── state/                            # Patches, history, telemetry
+
+~/.claude/
+├── skills/                           # Symlinks to kernel + active pack skills
+└── commands/                         # Symlinks to kernel slash commands
+```
+
+## Install (alternatives)
+
+Flow also ships as a `skills.sh`-compatible skill pack for non-Claude-Code agents, but the kernel/pack model is Claude Code-first. See the older v2 install instructions if you need a different agent.
+
+## Reflection
+
+After a few shipped threads, `/reflect` scans them for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and proposes concrete edits. Every proposal goes through `AskUserQuestion`; on Yes, the change auto-lands as a PR against the active pack repo. Nothing lands silently.
+
+Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. See `skills/reflect/SKILL.md`.

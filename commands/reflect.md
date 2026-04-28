@@ -1,30 +1,31 @@
 ---
-description: Reflect on recent flow history — propose CLAUDE.md, config, or skill tweaks.
+description: Reflect across shipped threads — propose evolutions to skills, the active pack, or CLAUDE.md.
 ---
 
-You are the reflecting agent: read across shipped workstreams, spot drift in the flow system itself, and propose targeted tweaks for the human to approve.
+You are the reflecting agent: read across shipped threads, spot drift, and propose targeted evolutions. On the user's Yes, the change auto-lands as a PR against the active pack repo (or as an edit to `CLAUDE.md`/`.flow/config.sh` for non-pack targets).
 
-Workstreams summary: !`$HOME/.claude/skills/flow/scripts/workstreams-summary.sh "${ARGUMENTS:-all}"`
+Threads summary: !`$HOME/.claude/skills/run/scripts/threads-summary.sh "${ARGUMENTS:-all}"`
+Active pack: !`test -L "$HOME/.flow/active-pack" && readlink "$HOME/.flow/active-pack" | xargs basename || echo "none"`
 
 ## How to reflect
 
-Read the workstreams summary above (shipped workstreams only — those with a `pr:` field in the spec). Scope follows `$ARGUMENTS` (see `skills/flow/references/reflection.md` axis (b) for the format — `all` / `N` / `pr-6,pr-7`).
+Follow `skills/reflect/SKILL.md`. The summary above lists shipped threads (those with a delivery key in the spec's frontmatter). Scope follows `$ARGUMENTS` (`all` / `N` / `pr-6,pr-7`).
 
 ### Step 1: Check the history threshold
 
-If fewer than 2 shipped workstreams exist, say `not enough history yet — flow needs a few shipped PRs before reflection is useful` and stop.
+If fewer than 2 shipped threads exist, say `not enough history yet — flow needs a few shipped deliveries before reflection is useful` and stop.
 
-### Step 2: Read the selected workstreams
+### Step 2: Read the selected threads
 
-Read the selected workstream dirs' spec, plan, and review files. Only dive into full content for dirs where the summary hints at a pattern.
+Read the selected thread folders' spec, plan, and review files. Only dive into full content where the summary hints at a pattern.
 
-### Step 3: Read the config surfaces
+### Step 3: Read the relevant surfaces
 
-Read `.flow/config.sh` and the current project's `CLAUDE.md`.
+Read `.flow/config.sh`, the project's `CLAUDE.md`, and any pack skills that might be the target of an evolution.
 
-### Step 4: Identify cross-workstream patterns
+### Step 4: Identify cross-thread patterns
 
-Identify 2–4 cross-workstream patterns. See `skills/flow/references/reflection.md` for what qualifies.
+Identify 2–4 patterns. See `skills/reflect/SKILL.md` for what qualifies.
 
 ### Step 5: Draft one proposal per pattern
 
@@ -32,21 +33,29 @@ For each pattern, propose exactly one of:
 
 | Target | What you propose |
 |---|---|
-| `CLAUDE.md` | A new rule, with exact text. |
+| `CLAUDE.md` | A new rule, with exact text. Lands via the `ingest` skill. |
 | `.flow/config.sh` | A field plus its new value. |
-| A stage skill file | A proposed diff — do not apply unless approved. |
+| Active pack skill (`~/.flow/active-pack/skills/<name>/`) | A diff. Lands as a PR via `pack-branch.sh` + `pack-pr.sh` once approved. |
+| Active pack manifest (`pack.yaml`) | A field change. Same auto-PR path. |
 
 ### Step 6: Surface proposals for approval
 
-Surface each proposal via `AskUserQuestion`, max 4 per call. Options for each: `Apply (Recommended)` / `Skip` / `Modify first`.
+Surface each proposal via `AskUserQuestion`, max 4 per call. Show the diff inline before asking. Options: `Apply (Recommended)` / `Skip` / `Modify first`.
 
-### Step 7: Apply and summarize
+### Step 7: Auto-apply approved evolutions
 
-Apply approved changes. Summarize what changed.
+For each `Apply`:
+
+- **Pack-target proposals**: invoke `make pack-branch BRANCH=evolve/<slug>`, edit the file(s), commit, then `make pack-pr TITLE=... BODY=...`. The user does not run any extra command — the auto-apply contract from `skills/reflect/SKILL.md` requires it.
+- **Non-pack proposals** (`CLAUDE.md`, `.flow/config.sh`): edit directly.
+
+Summarize what landed, including PR URLs (or staged-patch paths if no remote was wired).
 
 ## Rules
 
+- **DO** show diffs before asking — informed consent only.
+- **DO** auto-apply on Yes; never punt back to the user with "now run X".
 - **DO NOT** reflect on one-off bugs — that is the review stage's job.
-- **DO NOT** touch `CLAUDE.md`, `.flow/config.sh`, or skill files without the user's explicit consent for that specific change.
+- **DO NOT** touch any file without the user's explicit consent for that specific change.
 
 $ARGUMENTS

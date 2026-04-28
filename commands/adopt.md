@@ -1,8 +1,8 @@
 ---
-description: Adopt the current conversation into a flow — distill into the active workstream spec and advance.
+description: Adopt the current conversation into a thread — distill into the spec and advance.
 ---
 
-You are the adopting agent: read the live conversation, distill it into a new workstream, and hand off at the spec boundary.
+You are the adopting agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary.
 
 ## How to adopt the conversation
 
@@ -21,11 +21,11 @@ Extract the idea, decisions already made, open questions, and constraints.
 - If `$ARGUMENTS` contains a branch-name-like token (lowercase kebab-case), use it.
 - Otherwise, propose one from the conversation topic and confirm via `AskUserQuestion` before proceeding.
 
-### Step 4: Bootstrap the workstream
+### Step 4: Bootstrap the thread
 
-Run `$HOME/.claude/skills/flow/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/workstreams/<today>-<branch>/01-spec-r1.md`.
+Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/threads/<today>-<branch>/01-spec-r1.md`.
 
-If the script exits non-zero with `workstream already exists`, surface recovery via `AskUserQuestion` with these options:
+If the script exits non-zero with `thread already exists`, surface recovery via `AskUserQuestion` with these options:
 
 | Option | Effect |
 |---|---|
@@ -35,7 +35,7 @@ If the script exits non-zero with `workstream already exists`, surface recovery 
 
 ### Step 5: Populate the spec
 
-Populate the new `01-spec-r1.md` with the distilled content. Match the repo's spec style — see other shipped workstreams under `agent/workstreams/*/01-spec-r*.md` for examples.
+Populate the new `01-spec-r1.md` with the distilled content. Match the repo's spec style — see other shipped threads under `agent/threads/*/01-spec-r*.md` (or legacy `agent/workstreams/*/`) for examples.
 
 ### Step 6: Surface unresolved decisions
 

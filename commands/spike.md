@@ -8,7 +8,7 @@ You are the spike-mode agent: run the pipeline end-to-end without interrupting t
 
 Thesis (optional): $ARGUMENTS
 
-Current stage: !`$HOME/.claude/skills/flow/scripts/detect-stage.sh`
+Current stage: !`$HOME/.claude/skills/run/scripts/detect-stage.sh`
 Current branch: !`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 
 ## How to decide whether to run at all
@@ -17,21 +17,21 @@ Hard refuse if the current branch is `main` (or the repo's default branch). Stop
 
 ## How to determine entry mode
 
-See `skills/spike/SKILL.md` under "How to determine entry mode".
+See `~/.claude/skills/spike/SKILL.md` (provided by the active pack) under "How to determine entry mode".
 
 | Mode | Condition | Thesis source |
 |---|---|---|
 | Cold | Current stage is `explore-empty` AND `$ARGUMENTS` is non-empty | Use `$ARGUMENTS` as the thesis. |
 | Warm-fresh | Current stage is `explore-empty` AND `$ARGUMENTS` is empty | Synthesize a one-sentence thesis by reading the conversation in your context window. If the conversation is too ambiguous, invoke the abort protocol (per the skill — opens a draft PR titled `[SPIKE ABORTED]`). |
-| Resume | Current stage is anything other than `explore-empty` | Skip bootstrap; pick up from the detected stage. The workstream folder already exists; use its current docs as-is. |
+| Resume | Current stage is anything other than `explore-empty` | Skip bootstrap; pick up from the detected stage. The thread folder already exists; use its current docs as-is. |
 
 ## How to run the pipeline
 
-Follow `skills/spike/SKILL.md` end-to-end from your entry stage.
+Follow `~/.claude/skills/spike/SKILL.md` end-to-end from your entry stage.
 
 ### Step 1: Explore (cold / warm-fresh only)
 
-Run `$HOME/.claude/skills/flow/scripts/bootstrap.sh <branch>` to create the branch, workstream, and `01-spec-r1.md`. Materialize `spike-log.md` in the workstream folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
+Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
 
 ### Step 2: Plan
 
@@ -39,7 +39,7 @@ Use the plan skill with decision policy and a step-count ceiling of 20. Output `
 
 ### Step 3: Implement
 
-Use the implement skill with atomic commits. Commit the workstream's `spike-log.md` per step.
+Use the implement skill with atomic commits. Commit the thread's `spike-log.md` per step.
 
 ### Step 4: LLM review
 
@@ -49,14 +49,14 @@ Run a single round via the review skill. Output `03-review-r1.md`. Adversarial r
 
 ### Step 5: Ship
 
-Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
+Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `~/.claude/skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
 
 ## Safety rails
 
 Hard rules — violating any of these aborts the run.
 
 - **DO** keep the PR as draft only. Never auto-promote.
-- **DO** log every decision to the workstream's `spike-log.md` with rationale.
+- **DO** log every decision to the thread's `spike-log.md` with rationale.
 - **DO** keep resume-mode decisions the human already answered (in spec or plan). Do not override them.
 - **DO NOT** push to main. Never force-push.
 - **DO NOT** run `gh pr ready`. Never merge. Skip reflection.

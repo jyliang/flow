@@ -1,73 +1,62 @@
 ---
-description: Configure or reconfigure this project's .flow/config.sh — template, stages, hooks.
+description: Manage flow packs — list, switch, init, link a remote, open PRs.
 ---
 
-You are the configuring agent: ask the four questions below and write `.flow/config.sh` at the repo root. The written file is sourced by bash at runtime.
+You are the pack-management agent. The user is asking about pack lifecycle. Route based on `$ARGUMENTS`.
 
-Current config: !`test -f .flow/config.sh && cat .flow/config.sh || echo "(no .flow/config.sh yet)"`
+Active pack: !`test -L "$HOME/.flow/active-pack" && readlink "$HOME/.flow/active-pack" | xargs basename || echo "none"`
+Installed packs: !`bash $HOME/.flow/runtime-path/scripts/pack-list.sh 2>/dev/null || cat "$HOME/.flow/runtime-path" 2>/dev/null | xargs -I {} bash {}/scripts/pack-list.sh 2>/dev/null || echo "(runtime path missing — run make install)"`
 
-## How to ask the questions
+## How to route
 
-Ask each question via `AskUserQuestion`. For each, if a value is already set in the current config, present it as the `(Recommended)` option. All questions are skippable — skip means keep the current value (or a commented default if no current value exists).
+| `$ARGUMENTS` | Action |
+|---|---|
+| empty | Show the table of subcommands below via `AskUserQuestion`; let the user pick one. |
+| `list` | Already shown above; confirm the active pack and ask if the user wants to switch. |
+| `use <name>` | Run `make pack-use NAME=<name>` and report. |
+| `init <starter> [<name>]` | Run `make pack-init STARTER=<starter> NAME=<name>`; if no name, default to starter name. |
+| `new <name>` | Run `make pack-new NAME=<name>` (empty scaffold). |
+| `remote <url>` | Run `make pack-link-remote URL=<url>` against the active pack. |
+| `status` | Run `make pack-status`. |
+| `pr <title>` | Run `make pack-pr TITLE="<title>" BODY="$(cat thread context)"`. |
+| `config` | Per-project setup — write `.flow/config.sh` (see "Per-project config" below). |
 
-### Step 1: Spec template
+### Subcommand picker
 
-- Question: `Which spec template should this project use?`
-- Header: `Template`
-- Options:
-  - Built-in default (`$HOME/.claude/skills/flow/templates/spec.md`)
-  - Custom at `.flow/templates/spec.md` (copy built-in, let user edit later)
-  - Custom at a different path (user provides)
+If `$ARGUMENTS` is empty, ask via `AskUserQuestion`:
 
-### Step 2: Test command
+- Question: `What do you want to do with packs?`
+- Header: `Pack`
+- Options: `Switch active` / `Init from starter` / `Link remote` / `Open evolution PR` / `Per-project config`
 
-- Question: `What command should ship run to exercise this project's tests?`
-- Header: `Test cmd`
-- Options:
-  - None — this project relies on manual verification (Recommended for docs-only / shell-script repos)
-  - `make test`
-  - `npm test`
-  - Custom (user provides any shell command — e.g. `pytest`, `go test ./...`, `bash scripts/run-tests.sh`)
+Then route accordingly.
 
-### Step 3: Extra stages
+## Per-project config (`pack config`)
 
-Informational in v2, acted on in v2.5+.
+Configures `.flow/config.sh` at the project repo root. Only relevant after the kernel + a pack are installed.
 
-- Question: `Declare extra stages for this project?`
-- Header: `Extra stages`
-- Options:
-  - No (Recommended)
-  - Yes — user lists stage names
+Walk these via `AskUserQuestion`:
 
-### Step 4: Hooks dir
+| Question | Header | Options |
+|---|---|---|
+| Which spec template should this project use? | Template | Built-in (active pack) / Custom at `.flow/templates/spec.md` / Custom path |
+| What command should ship run to exercise tests? | Test cmd | None / `make test` / `npm test` / Custom |
+| Declare extra stages? (informational) | Extra | No (Recommended) / Yes — user lists |
 
-Informational in v2.
-
-- Question: `Declare a hooks directory for this project?`
-- Header: `Hooks`
-- Options:
-  - No (Recommended)
-  - Yes — user provides path (typically `.flow/hooks`)
-
-## How to write the config file
-
-After collecting answers, write `.flow/config.sh` with this shape:
+Write `.flow/config.sh`:
 
 ```sh
 # .flow/config.sh — Flow per-project config
-# Managed by /flow-config. Edit carefully; this file is sourced by bash.
+# Managed by /pack config. Edit carefully; this file is sourced by bash.
 
-FLOW_TEMPLATE_SPEC="<user's answer or default>"
-FLOW_STAGES="explore plan implement review ship"
-FLOW_TEST_CMD="<user's answer, empty string if 'None'>"
-# FLOW_EXTRA_STAGES="<user's answer>"   # v2.5
-# FLOW_HOOKS_DIR="<user's answer>"      # v2.5
+FLOW_TEMPLATE_SPEC="<user's answer or default from active pack>"
+FLOW_TEST_CMD="<user's answer, empty if None>"
+# FLOW_EXTRA_STAGES="<user's answer>"
 ```
 
 ### Rules
 
-- **DO** copy the built-in template to `.flow/templates/spec.md` if the user chose that option and the file does not exist yet. Create `.flow/templates/` if needed.
-- **DO** confirm completion with a one-line summary: what was written and where.
-- **DO NOT** drop unanswered questions silently — keep their commented defaults in the file so the setup does not re-fire.
+- **DO** confirm with a one-line summary of what changed and where.
+- **DO NOT** mutate the active pack repo without going through `make pack-branch` + `make pack-pr`.
 
 $ARGUMENTS
