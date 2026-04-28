@@ -1,13 +1,17 @@
 ---
-name: teach
-description: Create or improve Claude Code skills, or quick-capture a rule. Use when the user says "create a skill", "teach this", "remember this", "capture this rule", or states a convention to persist.
+name: ingest
+description: Kernel primitive — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active pack. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
 metadata:
-  short-description: Create skills or capture rules
+  short-description: Kernel — input → skill
 ---
 
-# Teach
+# Ingest
 
-Skill read by the authoring agent when the user wants to persist a rule or spin up a new skill. Covers quick-capture for one-off rules and the full workflow for new skills.
+Kernel primitive: take any input — a conversation, a PDF, a codebase walk, a stated rule — and decompose it into reusable skills. The biological analog is digestion: raw input enters whole, gets broken into nutrients, the useful parts are absorbed, the residue dropped. The system stores extracted skills, not the raw input.
+
+User-facing slash command: `/teach`. The user *teaches*; the system *ingests*.
+
+Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active pack (`~/.flow/active-pack/skills/`) via the pack's branch + PR workflow — see `skills/reflect/SKILL.md` for the auto-apply contract.
 
 ## Quick capture
 
@@ -50,8 +54,9 @@ For workflows, patterns, or knowledge that need a proper skill.
 
 | Scope | Path | Use when |
 |---|---|---|
-| Project-level | `.claude/skills/<skill-name>/SKILL.md` | Scoped to a single repo. Default choice. |
-| User-level | `~/.claude/skills/<skill-name>/SKILL.md` | Universally useful across projects. |
+| Active pack | `~/.flow/active-pack/skills/<skill-name>/SKILL.md` | Default — the skill is part of the active pipeline. Lands via `pack-branch` + `pack-pr`. |
+| Project-level | `.claude/skills/<skill-name>/SKILL.md` | Scoped to a single repo, not part of any pack. |
+| User-level (kernel) | This runtime repo's `skills/<skill-name>/SKILL.md` | Only for kernel primitives. Don't add here from user invocations. |
 
 ### Step 1: Clarify scope
 
@@ -65,7 +70,7 @@ Scan existing skills before creating anything new.
 
 ### Step 2: Gather knowledge
 
-Ask the user for (use free-form prompts — these are open-ended, not a choice between options; see `skills/flow/references/user-interaction.md` "When NOT to use"):
+Ask the user for (use free-form prompts — these are open-ended, not a choice between options; see `skills/run/references/user-interaction.md` "When NOT to use"):
 
 - Concrete examples of the workflow or API.
 - Common mistakes or anti-patterns.
@@ -127,9 +132,11 @@ After using the skill in real tasks:
 
 Every new or edited skill must follow the house docs style — it keeps skills scannable for humans and predictable for the loader.
 
-- `skills/docs-style/SKILL.md` — the ten principles to apply whenever authoring or editing any skill in this repo. Read this before writing a new skill.
-- `references/guidelines.md` — the full set of skill-authoring rules specific to this `teach` skill (legacy filename).
+- `skills/run/references/style.md` — the ten principles to apply whenever authoring or editing any skill. Read this before writing a new skill.
+- `references/guidelines.md` — the full set of skill-authoring rules specific to ingest.
 
 ## Related skills
 
-None — this is the top-level skill for all knowledge capture.
+- `run` — the orchestrator that consumes pack skills.
+- `reflect` — the partner primitive that proposes evolutions to existing skills (vs. ingest, which creates new ones).
+

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Print one-line summary per shipped workstream: pr-N, date, title.
-# Used by /flow-reflect for orientation without reading every workstream in full.
+# Print one-line summary per shipped thread: pr-N, date, title.
+# Used by /reflect for orientation without reading every thread in full.
 #
-# Convention: agent/workstreams/<YYYY-MM-DD>-<branch-slug>/
+# Convention: agent/threads/<YYYY-MM-DD>-<branch-slug>/  (legacy: agent/workstreams/)
 #   Initial spec at 01-spec-r1.md, header comment: <!-- ... · pr: <N> · ... -->
 #   "Shipped" = header comment contains a non-blank `pr:` value.
 #
-# Usage: workstreams-summary.sh [limit]
+# Usage: threads-summary.sh [limit]
 #   limit: "all" (default), "N" for last N, or a comma-separated list like "pr-6,pr-7"
 
 set -euo pipefail
@@ -14,7 +14,7 @@ set -euo pipefail
 limit="${1:-all}"
 
 shopt -s nullglob
-dirs=(agent/workstreams/*/)
+dirs=(agent/threads/*/ agent/workstreams/*/)
 shopt -u nullglob
 
 [[ ${#dirs[@]} -eq 0 ]] && exit 0
@@ -28,7 +28,7 @@ for dir in "${dirs[@]}"; do
 
   header="$(head -1 "$spec")"
   pr="$(printf '%s' "$header" | grep -oE 'pr: *[0-9]+' | head -1 | sed 's/pr: *//' || true)"
-  # Skip unshipped workstreams (no pr: value yet).
+  # Skip unshipped threads (no pr: value yet).
   [[ -n "$pr" ]] || continue
 
   date="$(printf '%s' "$header" | grep -oE 'date: *[0-9-]+' | head -1 | sed 's/date: *//' || true)"

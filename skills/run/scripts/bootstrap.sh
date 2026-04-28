@@ -15,9 +15,11 @@ branch="${1:-}"
 [[ "$branch" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "invalid branch name '$branch' (expected lowercase kebab-case)"
 
 date_str="$(date +%Y-%m-%d)"
-workstream_dir="agent/workstreams/${date_str}-${branch}"
+thread_dir="agent/threads/${date_str}-${branch}"
+legacy_dir="agent/workstreams/${date_str}-${branch}"
 
-[[ ! -d "$workstream_dir" ]] || die "workstream already exists at $workstream_dir"
+[[ ! -d "$thread_dir" ]] || die "thread already exists at $thread_dir"
+[[ ! -d "$legacy_dir" ]] || die "legacy workstream already exists at $legacy_dir"
 
 # Inlined config precedence (env > file > legacy > default) rather than calling
 # load-config.sh to avoid subprocess + eval overhead. Kept in sync with that
@@ -31,15 +33,16 @@ fi
 if [[ -z "${FLOW_TEMPLATE_SPEC:-}" ]] && [[ -n "${FLOW_TEMPLATE_DIR:-}" ]]; then
   FLOW_TEMPLATE_SPEC="$FLOW_TEMPLATE_DIR/spec.md"
 fi
-template="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/skills/flow/templates/spec.md}"
+default_template="$HOME/.flow/active-pack/templates/spec.md"
+template="${FLOW_TEMPLATE_SPEC:-$default_template}"
 [[ -f "$template" ]] || die "template not found at $template"
 
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
 
 git checkout -b "$branch"
 
-mkdir -p "$workstream_dir"
-spec_file="$workstream_dir/01-spec-r1.md"
+mkdir -p "$thread_dir"
+spec_file="$thread_dir/01-spec-r1.md"
 author="$(git config user.name || echo 'unknown')"
 
 escape_for_sed() {

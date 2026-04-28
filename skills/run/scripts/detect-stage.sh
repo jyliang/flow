@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Detect the current flow stage. Mirrors the 6-rule logic in
-# skills/flow/SKILL.md "Detect the current stage".
+# Detect the current flow stage. Mirrors the rule logic in
+# skills/run/SKILL.md "How to detect the current stage".
 # SKILL.md is authoritative; this script is an optimization.
 #
 # stdout: one of explore-empty | plan | implement | review | ship | done
 # stderr: one-line rationale when FLOW_DEBUG=1
+#
+# v3 NOTE: this still hardcodes the code-pipeline stages. Manifest-driven
+# detection (reading ~/.flow/active-pack/pack.yaml) is a follow-up.
 
 set -euo pipefail
 
@@ -21,25 +24,26 @@ if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]] && command -v gh >/dev/null 2
   fi
 fi
 
-# Resolve the active workstream folder from the branch name.
-# Convention: agent/workstreams/<YYYY-MM-DD>-<branch>/ (1:1 branch↔workstream).
-workstream=""
+# Resolve the active thread folder from the branch name.
+# Convention: agent/threads/<YYYY-MM-DD>-<branch>/ (1:1 branch↔thread).
+# Falls back to agent/workstreams/ for backward compatibility with v2 history.
+thread=""
 if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]]; then
   shopt -s nullglob
-  candidates=(agent/workstreams/*-"$branch"/)
+  candidates=(agent/threads/*-"$branch"/ agent/workstreams/*-"$branch"/)
   shopt -u nullglob
   if [[ ${#candidates[@]} -gt 0 ]]; then
-    workstream="$(printf '%s\n' "${candidates[@]}" | sort | tail -1)"
-    workstream="${workstream%/}"
+    thread="$(printf '%s\n' "${candidates[@]}" | sort | tail -1)"
+    thread="${thread%/}"
   fi
 fi
 
 # latest <stage-prefix> — prints the highest-rN file for that prefix, or empty.
 latest() {
   local prefix="$1"
-  [[ -n "$workstream" ]] || { echo ""; return; }
+  [[ -n "$thread" ]] || { echo ""; return; }
   shopt -s nullglob
-  local files=("$workstream"/"$prefix"-r*.md)
+  local files=("$thread"/"$prefix"-r*.md)
   shopt -u nullglob
   [[ ${#files[@]} -gt 0 ]] || { echo ""; return; }
   printf '%s\n' "${files[@]}" | sort -V | tail -1
@@ -72,6 +76,6 @@ if [[ -n "$spec_file" ]]; then
   exit 0
 fi
 
-debug "no workstream for branch=$branch"
+debug "no thread for branch=$branch"
 echo "explore-empty"
 exit 0
