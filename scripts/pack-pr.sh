@@ -50,7 +50,8 @@ if git remote get-url origin >/dev/null 2>&1 && command -v gh >/dev/null 2>&1; t
 else
     patch_dir="$FLOW_HOME/state/patches"
     mkdir -p "$patch_dir"
-    out="$patch_dir/${name}-$(date +%Y%m%d-%H%M%S)-${branch}.patch"
+    safe_branch="${branch//\//-}"
+    out="$patch_dir/${name}-$(date +%Y%m%d-%H%M%S)-${safe_branch}.patch"
     git format-patch -1 --stdout > "$out"
     cat <<EOF
 No remote (or gh missing) for pack '$name'.
