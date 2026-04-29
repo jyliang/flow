@@ -10,7 +10,7 @@ SKILLS_DIR="$HOME/.claude/skills"
 COMMANDS_DIR="$HOME/.claude/commands"
 
 mkdir -p "$SKILLS_DIR" "$COMMANDS_DIR"
-mkdir -p "$FLOW_HOME/packs" "$FLOW_HOME/state" "$FLOW_HOME/tools"
+mkdir -p "$FLOW_HOME/cells" "$FLOW_HOME/state" "$FLOW_HOME/tools"
 
 echo "$RUNTIME_ROOT" > "$FLOW_HOME/runtime-path"
 
@@ -40,13 +40,13 @@ for f in "$RUNTIME_ROOT/commands"/*.md; do
     cmd_count=$((cmd_count + 1))
 done
 
-# Copy shared Pack.mk so packs can import it without depending on runtime path.
-cp "$RUNTIME_ROOT/tools/Pack.mk" "$FLOW_HOME/tools/Pack.mk" 2>/dev/null || true
+# Copy shared Cell.mk so cells can import it without depending on runtime path.
+cp "$RUNTIME_ROOT/tools/Cell.mk" "$FLOW_HOME/tools/Cell.mk" 2>/dev/null || true
 
 cat <<EOF
 ✓ Kernel installed ($skill_count skills, $cmd_count commands symlinked)
 ✓ ~/.flow/ provisioned
 ✓ No skills installed yet — flow is an empty shell.
 
-Next: run /flow in any project to set up your first pack.
+Next: run /flow in any project to set up your first cell.
 EOF

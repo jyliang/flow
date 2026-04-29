@@ -33,7 +33,7 @@ fi
 if [[ -z "${FLOW_TEMPLATE_SPEC:-}" ]] && [[ -n "${FLOW_TEMPLATE_DIR:-}" ]]; then
   FLOW_TEMPLATE_SPEC="$FLOW_TEMPLATE_DIR/spec.md"
 fi
-default_template="$HOME/.flow/active-pack/templates/spec.md"
+default_template="$HOME/.flow/active-cell/templates/spec.md"
 template="${FLOW_TEMPLATE_SPEC:-$default_template}"
 [[ -f "$template" ]] || die "template not found at $template"
 

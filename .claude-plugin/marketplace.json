@@ -5,13 +5,13 @@
     "url": "https://github.com/jyliang"
   },
   "metadata": {
-    "description": "Flow — a learning runtime for Claude Code (kernel + pluggable packs of skills)",
+    "description": "Flow — a learning runtime for Claude Code (kernel + pluggable cells of skills)",
     "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "flow",
-      "description": "Three kernel primitives (ingest, run, reflect) that move work through pluggable pipelines (packs). Code-pipeline starter ships bundled.",
+      "description": "Three kernel primitives (ingest, run, reflect) that move work through pluggable pipelines (cells). Code-pipeline starter ships bundled.",
       "author": {
         "name": "Jason Liang",
         "url": "https://github.com/jyliang"

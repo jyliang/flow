@@ -1,5 +1,5 @@
-# Pack manifest — read by the run kernel skill.
-# Stage names, file prefixes, and delivery target are pack-defined; the kernel knows none of them.
+# Cell manifest — read by the run kernel skill.
+# Stage names, file prefixes, and delivery target are cell-defined; the kernel knows none of them.
 
 name: code-pipeline
 version: 0.1.0
@@ -31,10 +31,10 @@ stages:
     input: 03-review
     output: pr              # special: detection looks for an open PR + spec frontmatter `pr:` value
 
-# What this pack delivers when the pipeline ends.
+# What this cell delivers when the pipeline ends.
 delivery: github-pr
 
-# Where this pack's templates live (relative to pack root).
+# Where this cell's templates live (relative to cell root).
 templates_dir: templates
 
 # Skills auto-triggered during runs (not stages, but referenced by the stage skills).

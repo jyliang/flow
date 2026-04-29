@@ -1,6 +1,6 @@
-# Flow runtime Makefile — user-facing CLI for kernel install + pack management.
-# All pack-* targets operate on the active pack (~/.flow/active-pack) by default;
-# pass NAME=<pack> to address a specific pack.
+# Flow runtime Makefile — user-facing CLI for kernel install + cell management.
+# All cell-* targets operate on the active cell (~/.flow/active-cell) by default;
+# pass NAME=<cell> to address a specific cell.
 
 RUNTIME_ROOT := $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
 FLOW_HOME := $(HOME)/.flow
@@ -11,11 +11,11 @@ COMMANDS_DIR := $(CLAUDE_DIR)/commands
 KERNEL_SKILLS := $(wildcard $(RUNTIME_ROOT)/skills/*)
 KERNEL_COMMANDS := $(wildcard $(RUNTIME_ROOT)/commands/*.md)
 
-LINT_DOC_PATHS := README.md skills commands packs
+LINT_DOC_PATHS := README.md skills commands cells
 
 .PHONY: help install doctor list lint-docs \
-	pack-init pack-new pack-list pack-use pack-rm \
-	pack-status pack-link-remote pack-pull pack-push pack-branch pack-pr
+	cell-init cell-new cell-list cell-use cell-rm \
+	cell-status cell-link-remote cell-pull cell-push cell-branch cell-pr
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -42,42 +42,42 @@ list: ## List installed kernel skills and slash commands
 		printf "  /%-11s %s\n" "$$name" "$$desc"; \
 	done
 
-# ----- Pack lifecycle -----
+# ----- Cell lifecycle -----
 
-pack-init: ## Clone a starter into ~/.flow/packs/<NAME>/ (vars: STARTER, NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-init.sh "$(STARTER)" "$(NAME)"
+cell-init: ## Clone a starter into ~/.flow/cells/<NAME>/ (vars: STARTER, NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-init.sh "$(STARTER)" "$(NAME)"
 
-pack-new: ## Empty pack scaffold (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-init.sh "" "$(NAME)"
+cell-new: ## Empty cell scaffold (var: NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-init.sh "" "$(NAME)"
 
-pack-list: ## Show installed packs, mark active
-	@bash $(RUNTIME_ROOT)/scripts/pack-list.sh
+cell-list: ## Show installed cells, mark active
+	@bash $(RUNTIME_ROOT)/scripts/cell-list.sh
 
-pack-use: ## Switch active pack (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-use.sh "$(NAME)"
+cell-use: ## Switch active cell (var: NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-use.sh "$(NAME)"
 
-pack-rm: ## Remove a pack (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-rm.sh "$(NAME)"
+cell-rm: ## Remove a cell (var: NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-rm.sh "$(NAME)"
 
-# ----- Per-pack git operations (default: active pack; override with NAME=) -----
+# ----- Per-cell git operations (default: active cell; override with NAME=) -----
 
-pack-status: ## git status of the pack
-	@bash $(RUNTIME_ROOT)/scripts/pack-git.sh status "$(NAME)"
+cell-status: ## git status of the cell
+	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh status "$(NAME)"
 
-pack-link-remote: ## Add origin to the pack (vars: URL, optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-git.sh link-remote "$(NAME)" "$(URL)"
+cell-link-remote: ## Add origin to the cell (vars: URL, optional NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh link-remote "$(NAME)" "$(URL)"
 
-pack-pull: ## git pull on the pack
-	@bash $(RUNTIME_ROOT)/scripts/pack-git.sh pull "$(NAME)"
+cell-pull: ## git pull on the cell
+	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh pull "$(NAME)"
 
-pack-push: ## git push on the pack
-	@bash $(RUNTIME_ROOT)/scripts/pack-git.sh push "$(NAME)"
+cell-push: ## git push on the cell
+	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh push "$(NAME)"
 
-pack-branch: ## Cut a branch in the pack for an edit (vars: BRANCH, optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-branch.sh "$(NAME)" "$(BRANCH)"
+cell-branch: ## Cut a branch in the cell for an edit (vars: BRANCH, optional NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-branch.sh "$(NAME)" "$(BRANCH)"
 
-pack-pr: ## Open a PR for current pack edits (vars: TITLE, BODY; optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/pack-pr.sh "$(NAME)" "$(TITLE)" "$(BODY)"
+cell-pr: ## Open a PR for current cell edits (vars: TITLE, BODY; optional NAME)
+	@bash $(RUNTIME_ROOT)/scripts/cell-pr.sh "$(NAME)" "$(TITLE)" "$(BODY)"
 
 # ----- Doc lint (preserved from v2) -----
 

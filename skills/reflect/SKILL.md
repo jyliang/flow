@@ -1,15 +1,15 @@
 ---
 name: reflect
-description: Kernel primitive — after a thread runs, scan for patterns and propose evolutions to skills, the pack manifest, or CLAUDE.md. On user approval, the change auto-lands via branch + commit + PR. Use when the user says "reflect", invokes `/reflect`, or finishes shipping a thread.
+description: Kernel primitive — after a thread runs, scan for patterns and propose evolutions to skills, the cell manifest, or CLAUDE.md. On user approval, the change auto-lands via branch + commit + PR. Use when the user says "reflect", invokes `/reflect`, or finishes shipping a thread.
 metadata:
-  short-description: Kernel — propose pack evolutions
+  short-description: Kernel — propose cell evolutions
 ---
 
 # Reflect
 
-Kernel primitive: after a thread runs, observe what happened, propose changes that would have made it run better, and (on consent) apply them as PRs against the active pack repo.
+Kernel primitive: after a thread runs, observe what happened, propose changes that would have made it run better, and (on consent) apply them as PRs against the active cell repo.
 
-The biological analog is **affinity maturation** — after immune exposure, B-cells edit the DNA encoding their antibodies, test variants, keep the better-binding ones. Reflect edits the markdown encoding skills, the human picks variants that bound better, and the pack matures.
+The biological analog is **affinity maturation** — after immune exposure, B-cells edit the DNA encoding their antibodies, test variants, keep the better-binding ones. Reflect edits the markdown encoding skills, the human picks variants that bound better, and the cell matures.
 
 User-facing slash command: `/reflect`.
 
@@ -19,10 +19,10 @@ The defining principle: **once the user agrees a skill should evolve, the change
 
 For each accepted proposal, reflect:
 
-1. Cuts a branch in the active pack repo via `scripts/pack-branch.sh`.
+1. Cuts a branch in the active cell repo via `scripts/cell-branch.sh`.
 2. Edits the skill markdown.
 3. Commits with a message that links back to the thread.
-4. Opens a PR via `scripts/pack-pr.sh` — to the user's remote if linked, otherwise stages the patch and reports next steps.
+4. Opens a PR via `scripts/cell-pr.sh` — to the user's remote if linked, otherwise stages the patch and reports next steps.
 
 The user gives one informed Yes (after seeing the diff). The plumbing handles the rest.
 
@@ -58,7 +58,7 @@ User invokes `/reflect [scope]` to scan across multiple shipped threads. `scope`
 |---|---|
 | Same finding in 2+ review handoffs | Edit to a stage skill that should have caught it earlier. |
 | Decisions repeatedly deferred | Schedule the deferred work, or capture the deferral rule. |
-| Stages consistently skipped | Pack manifest change (drop or merge stages). |
+| Stages consistently skipped | Cell manifest change (drop or merge stages). |
 | Same correction the user made twice | Skill evolution capturing the corrected behavior. |
 
 ## What NOT to look for
@@ -75,8 +75,8 @@ User invokes `/reflect [scope]` to scan across multiple shipped threads. `scope`
 | Proposal kind | Lands in |
 |---|---|
 | New rule | `CLAUDE.md` (project or user, prompt for scope) |
-| Pack manifest change | `~/.flow/active-pack/pack.yaml` |
-| Skill evolution | `~/.flow/active-pack/skills/<name>/SKILL.md` (or references) |
+| Cell manifest change | `~/.flow/active-cell/cell.yaml` |
+| Skill evolution | `~/.flow/active-cell/skills/<name>/SKILL.md` (or references) |
 
 Show the proposed diff inline. The user's Yes is informed consent — pre-baked plumbing applies it.
 
@@ -86,7 +86,7 @@ Show the proposed diff inline. The user's Yes is informed consent — pre-baked 
 - **DO** delegate `CLAUDE.md` writes to the `ingest` skill.
 - **DO** cap at 3 candidates per ship-stage sweep, 4 per `/reflect`.
 - **DO** exit silently when nothing qualifies.
-- **DO NOT** write to `CLAUDE.md`, the active pack, or any skill silently.
+- **DO NOT** write to `CLAUDE.md`, the active cell, or any skill silently.
 - **DO NOT** run reflection as a background scan — only at ship or explicit command.
 - **DO NOT** reflect on reflection itself.
 

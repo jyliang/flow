@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sanity check: kernel installed? ~/.flow/ provisioned? active pack resolves? git OK?
+# Sanity check: kernel installed? ~/.flow/ provisioned? active cell resolves? git OK?
 
 set -uo pipefail
 
@@ -39,22 +39,22 @@ else
     fail=$((fail + 1))
 fi
 
-# Active pack
-if [ -L "$FLOW_HOME/active-pack" ]; then
-    if [ -d "$FLOW_HOME/active-pack" ]; then
-        active=$(readlink "$FLOW_HOME/active-pack")
-        printf "  %-22s %s\n" "active pack:" "$(basename "$active")"
+# Active cell
+if [ -L "$FLOW_HOME/active-cell" ]; then
+    if [ -d "$FLOW_HOME/active-cell" ]; then
+        active=$(readlink "$FLOW_HOME/active-cell")
+        printf "  %-22s %s\n" "active cell:" "$(basename "$active")"
     else
-        printf "  %-22s DANGLING (active-pack symlink points nowhere)\n" "active pack:"
+        printf "  %-22s DANGLING (active-cell symlink points nowhere)\n" "active cell:"
         fail=$((fail + 1))
     fi
 else
-    printf "  %-22s none (run /flow to set one up)\n" "active pack:"
+    printf "  %-22s none (run /flow to set one up)\n" "active cell:"
 fi
 
-# Pack count
-pack_count=$(ls "$FLOW_HOME/packs" 2>/dev/null | wc -l | tr -d ' ')
-printf "  %-22s %s\n" "packs installed:" "$pack_count"
+# Cell count
+cell_count=$(ls "$FLOW_HOME/cells" 2>/dev/null | wc -l | tr -d ' ')
+printf "  %-22s %s\n" "cells installed:" "$cell_count"
 
 # git available
 check "git available" command -v git

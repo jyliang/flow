@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Detect the current flow stage by walking the active pack's manifest.
+# Detect the current flow stage by walking the active cell's manifest.
 # SKILL.md (skills/run/SKILL.md) is authoritative if logic drifts.
 #
-# Reads stages from ~/.flow/active-pack/pack.yaml via pack-stages.sh.
+# Reads stages from ~/.flow/active-cell/cell.yaml via cell-stages.sh.
 # A stage is "where we are now" if:
 #   - its output handoff is missing, OR
 #   - it's the consumer of the previous stage's unchecked checkboxes.
@@ -59,16 +59,16 @@ has_pr_key() {
   [[ -n "$f" ]] && grep -qE '^<!--.*pr: *[0-9]+' "$f"
 }
 
-# Locate pack-stages.sh via runtime-path. If unavailable, fall back to first-stage-empty.
+# Locate cell-stages.sh via runtime-path. If unavailable, fall back to first-stage-empty.
 runtime_path="$(cat "$FLOW_HOME/runtime-path" 2>/dev/null || true)"
-pack_stages="$runtime_path/scripts/pack-stages.sh"
-if [[ ! -x "$pack_stages" ]]; then
-  debug "pack-stages.sh not available; runtime-path=$runtime_path"
+cell_stages="$runtime_path/scripts/cell-stages.sh"
+if [[ ! -x "$cell_stages" ]]; then
+  debug "cell-stages.sh not available; runtime-path=$runtime_path"
   echo "explore-empty"
   exit 0
 fi
 
-stages_data="$(bash "$pack_stages" 2>/dev/null || true)"
+stages_data="$(bash "$cell_stages" 2>/dev/null || true)"
 if [[ -z "$stages_data" ]]; then
   debug "manifest empty or unreadable"
   echo "explore-empty"

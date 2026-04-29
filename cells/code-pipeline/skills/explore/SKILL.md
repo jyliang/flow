@@ -34,7 +34,7 @@ Use parallel subagents to understand the codebase before writing anything.
 
 ## How to produce the spec
 
-Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/run/references/protocol.md`). The scaffold at `packs/code-pipeline/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
+Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/run/references/protocol.md`). The scaffold at `cells/code-pipeline/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
 
 `bootstrap.sh` substitutes `{{BRANCH}}`, `{{DATE}}`, and `{{AUTHOR}}` but leaves `{{STATUS}}`, `{{WHAT}}`, and `{{WHY}}` raw — you fill those in. On first draft, `{{STATUS}}` is `explore → plan`; `{{WHAT}}` is one sentence on what the spec delivers; `{{WHY}}` is one sentence on the problem it solves or value it creates.
 

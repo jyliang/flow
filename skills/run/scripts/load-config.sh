@@ -31,7 +31,7 @@ if [[ -z "${FLOW_TEMPLATE_SPEC:-}" ]] && [[ -n "$legacy_dir" ]]; then
   FLOW_TEMPLATE_SPEC="$legacy_dir/spec.md"
 fi
 
-FLOW_TEMPLATE_SPEC="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/packs/code-pipeline/templates/spec.md}"
+FLOW_TEMPLATE_SPEC="${FLOW_TEMPLATE_SPEC:-$HOME/.claude/cells/code-pipeline/templates/spec.md}"
 FLOW_STAGES="${FLOW_STAGES:-explore plan implement review ship}"
 FLOW_TEST_CMD="${FLOW_TEST_CMD:-}"
 FLOW_EXTRA_STAGES="${FLOW_EXTRA_STAGES:-}"

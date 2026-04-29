@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Read the active pack's manifest and emit one line per stage:
+# Read the active cell's manifest and emit one line per stage:
 #   <name>|<output>|<next>
 #
-# Reads ~/.flow/active-pack/pack.yaml unless PACK_YAML is set.
+# Reads ~/.flow/active-cell/cell.yaml unless CELL_YAML is set.
 # Output is consumed by detect-stage.sh; keep the format stable.
 #
-# Parser is intentionally minimal: handles the constrained pack.yaml shape
+# Parser is intentionally minimal: handles the constrained cell.yaml shape
 # this runtime produces (list of "- key: value" blocks under `stages:`).
 # For richer YAML, swap this for a python or yq call.
 
 set -euo pipefail
 
 FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
-yaml="${PACK_YAML:-$FLOW_HOME/active-pack/pack.yaml}"
+yaml="${CELL_YAML:-$FLOW_HOME/active-cell/cell.yaml}"
 
 if [ ! -f "$yaml" ]; then
-    echo "pack-stages: manifest not found at $yaml" >&2
+    echo "cell-stages: manifest not found at $yaml" >&2
     exit 1
 fi
 

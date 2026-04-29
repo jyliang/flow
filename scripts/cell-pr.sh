@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Open a PR for current pack edits.
+# Open a PR for current cell edits.
 # - If origin is set and gh is available: push branch, open draft PR.
 # - Otherwise: format-patch and tell the user how to apply once a remote is wired.
-# pack-pr.sh <name|""> <title> <body>
+# cell-pr.sh <name|""> <title> <body>
 
 set -euo pipefail
 
@@ -13,26 +13,26 @@ title="${2:-}"
 body="${3:-}"
 
 if [ -z "$name" ]; then
-    if [ -L "$FLOW_HOME/active-pack" ]; then
-        target=$(readlink "$FLOW_HOME/active-pack")
+    if [ -L "$FLOW_HOME/active-cell" ]; then
+        target=$(readlink "$FLOW_HOME/active-cell")
         name=$(basename "$target")
     else
-        echo "No active pack and NAME not given." >&2
+        echo "No active cell and NAME not given." >&2
         exit 1
     fi
 else
-    target="$FLOW_HOME/packs/$name"
+    target="$FLOW_HOME/cells/$name"
 fi
 
 if [ ! -d "$target/.git" ]; then
-    echo "Not a pack repo: $target" >&2
+    echo "Not a cell repo: $target" >&2
     exit 1
 fi
 
 cd "$target"
 branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
-    echo "Refusing to open PR from $branch — cut a branch first via pack-branch.sh." >&2
+    echo "Refusing to open PR from $branch — cut a branch first via cell-branch.sh." >&2
     exit 1
 fi
 
@@ -54,11 +54,11 @@ else
     out="$patch_dir/${name}-$(date +%Y%m%d-%H%M%S)-${safe_branch}.patch"
     git format-patch -1 --stdout > "$out"
     cat <<EOF
-No remote (or gh missing) for pack '$name'.
+No remote (or gh missing) for cell '$name'.
 Patch staged: $out
 
 To finish: link a remote, then push and open the PR.
-  make pack-link-remote URL=git@github.com:you/your-pack.git
+  make cell-link-remote URL=git@github.com:you/your-cell.git
   cd ${target} && git push -u origin ${branch}
 EOF
 fi

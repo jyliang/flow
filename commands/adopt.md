@@ -9,7 +9,7 @@ You are the adopting agent: read the live conversation, distill it into a new th
 | Command | Output | Lifetime | Lands in |
 |---|---|---|---|
 | `/adopt` (here) | A **thread** (one piece of work) | Time-bound; ends when shipped | Current project (`agent/threads/<date>-<branch>/`) |
-| `/teach` | A **skill** (or CLAUDE.md rule) | Long-lived; reused across threads | Active pack repo (via branch + PR) |
+| `/teach` | A **skill** (or CLAUDE.md rule) | Long-lived; reused across threads | Active cell repo (via branch + PR) |
 
 If the user said "let's build this" / "ship this" / "kick this off as a thread" → `/adopt` (here).
 If the user said "remember this" / "create a skill" → `/teach`.

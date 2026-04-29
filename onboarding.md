@@ -22,7 +22,7 @@ In any project:
 
 Flow has no skills installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-That installs a git repo at `~/.flow/packs/code-pipeline/` and links its skills into Claude Code. `/flow` is ready.
+That installs a git repo at `~/.flow/cells/code-pipeline/` and links its skills into Claude Code. `/flow` is ready.
 
 ## 3. Start a thread
 
@@ -56,16 +56,16 @@ After you ship something:
 /reflect
 ```
 
-Flow scans the thread for patterns — repeated suggestions you accepted, things you pushed back on twice — and proposes edits to the skills that ran. You see the diffs and pick which to accept. Flow opens a PR against your pack repo with the accepted edits.
+Flow scans the thread for patterns — repeated suggestions you accepted, things you pushed back on twice — and proposes edits to the skills that ran. You see the diffs and pick which to accept. Flow opens a PR against your cell repo with the accepted edits.
 
-This is how the pack matures. Over time, explore learns your codebase quirks, plan learns your style, review learns what you actually care about.
+This is how the cell matures. Over time, explore learns your codebase quirks, plan learns your style, review learns what you actually care about.
 
-## 7. Wire your pack to a remote
+## 7. Wire your cell to a remote
 
-The pack repo is local until you give it a home:
+The cell repo is local until you give it a home:
 
 ```bash
-make pack-link-remote URL=git@github.com:you/your-pack.git
+make cell-link-remote URL=git@github.com:you/your-cell.git
 ```
 
-Once linked, evolutions push on PR merge. Pull from any machine and have the same matured pack.
+Once linked, evolutions push on PR merge. Pull from any machine and have the same matured cell.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Per-pack git operations: status, link-remote, pull, push.
-# pack-git.sh <op> <name|""> [extra args...]
+# Per-cell git operations: status, link-remote, pull, push.
+# cell-git.sh <op> <name|""> [extra args...]
 
 set -euo pipefail
 
@@ -10,19 +10,19 @@ op="${1:?op required}"
 name="${2:-}"
 
 if [ -z "$name" ]; then
-    if [ -L "$FLOW_HOME/active-pack" ]; then
-        target=$(readlink "$FLOW_HOME/active-pack")
+    if [ -L "$FLOW_HOME/active-cell" ]; then
+        target=$(readlink "$FLOW_HOME/active-cell")
         name=$(basename "$target")
     else
-        echo "No active pack and NAME not given." >&2
+        echo "No active cell and NAME not given." >&2
         exit 1
     fi
 else
-    target="$FLOW_HOME/packs/$name"
+    target="$FLOW_HOME/cells/$name"
 fi
 
 if [ ! -d "$target/.git" ]; then
-    echo "Not a pack repo: $target" >&2
+    echo "Not a cell repo: $target" >&2
     exit 1
 fi
 
@@ -38,7 +38,7 @@ case "$op" in
         else
             git -C "$target" remote add origin "$url"
         fi
-        echo "✓ origin set to $url for pack '$name'"
+        echo "✓ origin set to $url for cell '$name'"
         ;;
     pull)
         git -C "$target" pull --ff-only

@@ -17,7 +17,7 @@ Hard refuse if the current branch is `main` (or the repo's default branch). Stop
 
 ## How to determine entry mode
 
-See `~/.claude/skills/spike/SKILL.md` (provided by the active pack) under "How to determine entry mode".
+See `~/.claude/skills/spike/SKILL.md` (provided by the active cell) under "How to determine entry mode".
 
 | Mode | Condition | Thesis source |
 |---|---|---|

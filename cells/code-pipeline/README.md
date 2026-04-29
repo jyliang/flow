@@ -1,6 +1,6 @@
 # code-pipeline
 
-The starter pack. Idea → spec → plan → implement → review → PR.
+The starter cell. Idea → spec → plan → implement → review → PR.
 
 ## Stages
 
@@ -24,13 +24,13 @@ The starter pack. Idea → spec → plan → implement → review → PR.
 
 ## Lifecycle
 
-This pack is your personal git repo. After `make pack-init STARTER=code-pipeline`, it lives at `~/.flow/packs/code-pipeline/` with a fresh `git init` and no remote.
+This cell is your personal git repo. After `make cell-init STARTER=code-pipeline`, it lives at `~/.flow/cells/code-pipeline/` with a fresh `git init` and no remote.
 
 - **Revisions** to handoffs (inside threads) happen in your project repos, never here.
-- **Evolutions** to the skills here happen via `/reflect` — branch + commit + PR opened by `pack-pr`.
+- **Evolutions** to the skills here happen via `/reflect` — branch + commit + PR opened by `cell-pr`.
 
 Wire to a remote when you want sync across machines:
 
 ```bash
-make pack-link-remote URL=git@github.com:you/your-pack.git
+make cell-link-remote URL=git@github.com:you/your-cell.git
 ```

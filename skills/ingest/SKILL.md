@@ -1,6 +1,6 @@
 ---
 name: ingest
-description: Kernel primitive — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active pack. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
+description: Kernel primitive — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active cell. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
 metadata:
   short-description: Kernel — input → skill
 ---
@@ -11,7 +11,7 @@ Kernel primitive: take any input — a conversation, a PDF, a codebase walk, a s
 
 User-facing slash command: `/teach`. The user *teaches*; the system *ingests*.
 
-Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active pack (`~/.flow/active-pack/skills/`) via the pack's branch + PR workflow — see `skills/reflect/SKILL.md` for the auto-apply contract.
+Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active cell (`~/.flow/active-cell/skills/`) via the cell's branch + PR workflow — see `skills/reflect/SKILL.md` for the auto-apply contract.
 
 ## Quick capture
 
@@ -54,8 +54,8 @@ For workflows, patterns, or knowledge that need a proper skill.
 
 | Scope | Path | Use when |
 |---|---|---|
-| Active pack | `~/.flow/active-pack/skills/<skill-name>/SKILL.md` | Default — the skill is part of the active pipeline. Lands via `pack-branch` + `pack-pr`. |
-| Project-level | `.claude/skills/<skill-name>/SKILL.md` | Scoped to a single repo, not part of any pack. |
+| Active cell | `~/.flow/active-cell/skills/<skill-name>/SKILL.md` | Default — the skill is part of the active pipeline. Lands via `cell-branch` + `cell-pr`. |
+| Project-level | `.claude/skills/<skill-name>/SKILL.md` | Scoped to a single repo, not part of any cell. |
 | User-level (kernel) | This runtime repo's `skills/<skill-name>/SKILL.md` | Only for kernel primitives. Don't add here from user invocations. |
 
 ### Step 1: Clarify scope
@@ -137,6 +137,6 @@ Every new or edited skill must follow the house docs style — it keeps skills s
 
 ## Related skills
 
-- `run` — the orchestrator that consumes pack skills.
+- `run` — the orchestrator that consumes cell skills.
 - `reflect` — the partner primitive that proposes evolutions to existing skills (vs. ingest, which creates new ones).
 

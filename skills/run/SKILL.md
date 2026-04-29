@@ -1,13 +1,13 @@
 ---
 name: run
-description: Kernel primitive — orchestrate a pack execution. Detects the current stage, runs the right transition, presents the resulting handoff for human review, and advances. Used when the user says "flow", describes what they want to build, or wants to continue where they left off.
+description: Kernel primitive — orchestrate a cell execution. Detects the current stage, runs the right transition, presents the resulting handoff for human review, and advances. Used when the user says "flow", describes what they want to build, or wants to continue where they left off.
 metadata:
-  short-description: Kernel — orchestrate a pack run
+  short-description: Kernel — orchestrate a cell run
 ---
 
 # Run
 
-Kernel primitive: take a pack manifest and walk a thread from idea to delivery, with the human in the loop at every boundary.
+Kernel primitive: take a cell manifest and walk a thread from idea to delivery, with the human in the loop at every boundary.
 
 A **thread** is one piece of work — 1:1 with a git branch, a folder under `agent/threads/<YYYY-MM-DD>-<branch>/`. Each stage emits a **handoff** (a markdown document) that the human inspects and the next stage's agent consumes.
 
@@ -17,13 +17,13 @@ Two readers care about every handoff: a human reviewing and editing, and the nex
 
 ## The pipeline
 
-The active pack defines its own stages via `pack.yaml`. The `code-pipeline` starter defines:
+The active cell defines its own stages via `cell.yaml`. The `code-pipeline` starter defines:
 
 ```text
 Idea → [explore] → Spec → [plan] → Plan → [implement] → Changes → [review] → Findings → [ship] → PR
 ```
 
-Each stage reads the previous stage's handoff, performs its work, and writes the next one. Stage names, file prefixes, and delivery target all come from the active pack — `run` itself knows none of them.
+Each stage reads the previous stage's handoff, performs its work, and writes the next one. Stage names, file prefixes, and delivery target all come from the active cell — `run` itself knows none of them.
 
 | Stage | Input | Output | Path |
 |---|---|---|---|
@@ -42,11 +42,11 @@ Handoff depth scales with task complexity. A one-line fix produces a 3-line spec
 Two scales of change, both first-class:
 
 - **Revision** — a re-thought handoff inside one thread. `01-spec-r2.md` says we changed our mind during this work. Captured in the new file's `## Revisions` section.
-- **Evolution** — a matured skill at the pack level. A PR against the active pack repo, opened by `reflect`. The skill itself improves across threads.
+- **Evolution** — a matured skill at the cell level. A PR against the active cell repo, opened by `reflect`. The skill itself improves across threads.
 
 ## How to detect the current stage
 
-The active thread is `agent/threads/*-$(git branch --show-current)/`. Walk the active pack's `stages[]` in order and stop at the first stage whose output is missing:
+The active thread is `agent/threads/*-$(git branch --show-current)/`. Walk the active cell's `stages[]` in order and stop at the first stage whose output is missing:
 
 1. No `01-spec-r*.md` → first stage (e.g., **explore**).
 2. Latest stage handoff exists, next stage's output missing → next stage.
@@ -85,8 +85,8 @@ Shell helpers live under `skills/run/scripts/`. They avoid spending LLM tokens o
 
 | Script | What it does |
 |---|---|
-| `detect-stage.sh` | Mirrors the stage detection above. Reads the active pack's manifest. **SKILL.md is authoritative if the bash drifts.** |
-| `bootstrap.sh <branch>` | Creates the branch and materializes the initial spec at `agent/threads/<today>-<branch>/01-spec-r1.md` from the active pack's template. |
+| `detect-stage.sh` | Mirrors the stage detection above. Reads the active cell's manifest. **SKILL.md is authoritative if the bash drifts.** |
+| `bootstrap.sh <branch>` | Creates the branch and materializes the initial spec at `agent/threads/<today>-<branch>/01-spec-r1.md` from the active cell's template. |
 | `load-config.sh` | Sources `.flow/config.sh` (if present) and prints normalized flow env vars. See `references/config.md`. |
 | `threads-summary.sh [scope]` | One-line summary per shipped thread (those with a delivery key in spec frontmatter). Used by `reflect` for cross-thread pattern scans. |
 | `spike-branch.sh <thesis>` | Slugifies a thesis to `spike-<slug>`. Used by `/spike` for unattended runs. |
@@ -94,5 +94,5 @@ Shell helpers live under `skills/run/scripts/`. They avoid spending LLM tokens o
 ## Related skills
 
 - **Kernel primitives**: `ingest` (turn input into a skill), `reflect` (propose evolutions after a thread).
-- **Pack stage skills**: live in the active pack at `~/.flow/active-pack/skills/`. Symlinked into `~/.claude/skills/` by `make pack-use`.
-- **Spike mode**: `~/.flow/active-pack/skills/spike/SKILL.md` (pack-provided) — runs a thread end-to-end unattended.
+- **Cell stage skills**: live in the active cell at `~/.flow/active-cell/skills/`. Symlinked into `~/.claude/skills/` by `make cell-use`.
+- **Spike mode**: `~/.flow/active-cell/skills/spike/SKILL.md` (cell-provided) — runs a thread end-to-end unattended.

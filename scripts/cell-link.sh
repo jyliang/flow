@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Link the active pack's skills into ~/.claude/skills/.
-# Idempotent: removes any prior pack-symlinks first.
+# Link the active cell's skills into ~/.claude/skills/.
+# Idempotent: removes any prior cell-symlinks first.
 
 set -euo pipefail
 
@@ -8,12 +8,12 @@ FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
 SKILLS_DIR="$HOME/.claude/skills"
 RUNTIME_ROOT=$(cat "$FLOW_HOME/runtime-path" 2>/dev/null || echo "")
 
-if [ ! -L "$FLOW_HOME/active-pack" ]; then
-    echo "No active pack." >&2
+if [ ! -L "$FLOW_HOME/active-cell" ]; then
+    echo "No active cell." >&2
     exit 1
 fi
 
-active="$FLOW_HOME/active-pack"
+active="$FLOW_HOME/active-cell"
 
 # Build a set of kernel skill names to avoid clobbering them.
 kernel_names=""
@@ -24,18 +24,18 @@ if [ -n "$RUNTIME_ROOT" ] && [ -d "$RUNTIME_ROOT/skills" ]; then
     done
 fi
 
-# Unlink any existing symlinks under ~/.claude/skills/ that point into ~/.flow/packs/.
+# Unlink any existing symlinks under ~/.claude/skills/ that point into ~/.flow/cells/.
 for entry in "$SKILLS_DIR"/*; do
     [ -L "$entry" ] || continue
     target=$(readlink "$entry")
     case "$target" in
-        "$FLOW_HOME"/packs/*|"$FLOW_HOME/active-pack"/*)
+        "$FLOW_HOME"/cells/*|"$FLOW_HOME/active-cell"/*)
             rm -f "$entry"
             ;;
     esac
 done
 
-# Link each pack skill in.
+# Link each cell skill in.
 linked=0
 for dir in "$active/skills"/*; do
     [ -d "$dir" ] || continue
@@ -55,4 +55,4 @@ for dir in "$active/skills"/*; do
     linked=$((linked + 1))
 done
 
-echo "Linked $linked pack skill(s) from $(basename "$(readlink "$active")")."
+echo "Linked $linked cell skill(s) from $(basename "$(readlink "$active")")."
