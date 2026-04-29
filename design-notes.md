@@ -20,7 +20,7 @@ flow-runtime/
 ├── commands/                     # slash commands that talk to the kernel only
 │   ├── flow.md
 │   ├── flow-config.md
-│   ├── flow-adopt.md
+│   ├── flow-here.md
 │   ├── flow-reflect.md
 │   ├── flow-spike.md
 │   └── flow-cell.md              # NEW. Thin wrapper over `make cell-*`.
@@ -39,7 +39,7 @@ flow-runtime/
 │   │       ├── load-config.sh
 │   │       └── threads-summary.sh
 │   ├── flow-config/              # owns .flow/config.sh in *target projects* (still useful)
-│   ├── flow-adopt/
+│   ├── flow-here/
 │   ├── flow-reflect/
 │   ├── flow-spike/
 │   ├── teach/                    # kernel: writes/edits skills *inside the active cell*.
@@ -136,7 +136,7 @@ Pure symlinks. Two layers — kernel skills are real installs, cell skills are s
 ├── skills/
 │   ├── flow/             ← real install from flow-runtime repo
 │   ├── flow-config/      ← real
-│   ├── flow-adopt/       ← real
+│   ├── flow-here/       ← real
 │   ├── flow-reflect/     ← real
 │   ├── flow-spike/       ← real
 │   ├── teach/            ← real

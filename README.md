@@ -106,8 +106,8 @@ Three layers:
 | `/flow` | `run` | Start or continue a thread. |
 | `/teach` | `ingest` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
 | `/reflect` | `reflect` | After threads ship, propose cell evolutions. |
-| `/spike` | `run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
-| `/adopt` | `run` (with seed) | Distill the current conversation into a thread spec. |
+| `/flow-spike` | `run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
+| `/flow-here` | `run` (with seed) | Distill the current conversation into a thread spec. |
 | `/cell` | — | Cell management (list, switch, init, link remote, open PR). |
 
 ## Make targets
@@ -152,8 +152,8 @@ flow-runtime/
 │   ├── flow.md                       # /flow → run
 │   ├── teach.md                      # /teach → ingest
 │   ├── reflect.md                    # /reflect → reflect
-│   ├── spike.md                      # /spike → autonomous run
-│   ├── adopt.md                      # /adopt → seed a thread from conversation
+│   ├── flow-spike.md                 # /flow-spike → autonomous run
+│   ├── flow-here.md                  # /flow-here → seed a thread from conversation
 │   └── cell.md                       # /cell → cell management
 ├── skills/                           # Kernel skills (don't change between cells)
 │   ├── run/
