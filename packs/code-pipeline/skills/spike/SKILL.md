@@ -1,6 +1,6 @@
 ---
 name: spike
-description: Spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /flow-spike, not directly. Referenced by flow.
+description: Spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /spike, not directly. Referenced by flow.
 metadata:
   short-description: Unattended spike → draft PR
   internal: true
@@ -25,11 +25,11 @@ Two "reviews" exist in the flow system; this skill keeps them distinct.
 
 ## When to use
 
-Spike orchestrates `/flow-spike` runs. Invokable at **any conviction point**:
+Spike orchestrates `/spike` runs. Invokable at **any conviction point**:
 
 - From a clean workspace with a thesis argument.
 - Mid-conversation with no arguments (the LLM distills a thesis from context).
-- Mid-workstream, letting the rest run unattended.
+- Mid-thread, letting the rest run unattended.
 
 ### Rules
 
@@ -43,14 +43,14 @@ Spike supports three entry modes but produces one artifact: a draft PR with the 
 | Mode | Trigger | Entry action |
 |---|---|---|
 | Cold | Clean workspace, `$ARGUMENTS` = thesis | Create branch via `spike-branch.sh`, run `bootstrap.sh`, populate `01-spec-r1.md` from the thesis and conversation (if any), continue. |
-| Warm-fresh | Feature branch without a workstream folder for this branch | Synthesize a one-sentence thesis from the conversation context (or use `$ARGUMENTS` if provided). Create branch + workstream, populate `01-spec-r1.md` by distilling the conversation — the human's exploration already happened; spike formalizes it. |
-| Resume | Branch already has a workstream folder | Do NOT create a new workstream. Read the current state via `detect-stage.sh`; decision policy applies to every subsequent `AskUserQuestion`. Prior human answers already recorded in the spec/plan stay intact. |
+| Warm-fresh | Feature branch without a thread folder for this branch | Synthesize a one-sentence thesis from the conversation context (or use `$ARGUMENTS` if provided). Create branch + thread, populate `01-spec-r1.md` by distilling the conversation — the human's exploration already happened; spike formalizes it. |
+| Resume | Branch already has a thread folder | Do NOT create a new thread. Read the current state via `detect-stage.sh`; decision policy applies to every subsequent `AskUserQuestion`. Prior human answers already recorded in the spec/plan stay intact. |
 
 ### How to detect
 
 1. Check the branch — refuse if it's `main` (or the repo's default). Spike must run on a feature branch.
-2. Run `$HOME/.claude/skills/flow/scripts/detect-stage.sh`.
-3. If the detected stage is `explore-empty` and no workstream folder exists for the current branch → **cold** (if `$ARGUMENTS` present) or **warm-fresh** (no args).
+2. Run `$HOME/.claude/skills/run/scripts/detect-stage.sh`.
+3. If the detected stage is `explore-empty` and no thread folder exists for the current branch → **cold** (if `$ARGUMENTS` present) or **warm-fresh** (no args).
 4. Otherwise → **resume**. Pick up from the detected stage.
 
 All three modes end identically: a draft PR with the 7-section human-review package plus `spike-log.md` listing every auto-decision.
@@ -61,16 +61,16 @@ The first entry in `spike-log.md` records how spike entered. Template:
 
 ```text
 ### [<ISO-8601>] entry: <mode>
-- **Context**: <mode-specific — key points absorbed, existing workstream state, etc.>
+- **Context**: <mode-specific — key points absorbed, existing thread state, etc.>
 - **Thesis (synthesized)**: <LLM's one-sentence read>   <!-- warm-fresh / resume only; cold uses $ARGUMENTS verbatim -->
 - **Starting stage**: <plan | implement | review | ship>
 ```
 
 This is the only pre-seeded entry. Everything else appends as decisions are made.
 
-## Workstream layout
+## Thread layout
 
-Every spike run produces one workstream folder at `agent/workstreams/<YYYY-MM-DD>-<branch>/`:
+Every spike run produces one thread folder at `agent/threads/<YYYY-MM-DD>-<branch>/`:
 
 | File | Produced by |
 |---|---|
@@ -79,7 +79,7 @@ Every spike run produces one workstream folder at `agent/workstreams/<YYYY-MM-DD
 | `03-review-r1.md` | LLM-review stage. |
 | `spike-log.md` | Audit log, append-only; every auto-decision lands here. |
 
-The folder is 1:1 with the branch (one workstream per branch). No separate archive — after merge the folder stays put. Human review reads the workstream folder in addition to the draft PR body.
+The folder is 1:1 with the branch (one thread per branch). No separate archive — after merge the folder stays put. Human review reads the thread folder in addition to the draft PR body.
 
 ## Decision policy (replaces AskUserQuestion in spike mode)
 
@@ -87,7 +87,7 @@ Everywhere the stage skills (`explore`, `plan`, `implement`, `review`, `ship`) w
 
 1. Pick the option labeled `(Recommended)`.
 2. If no option has `(Recommended)`, pick the first option.
-3. Append an entry to the workstream's `spike-log.md` using the template at `skills/spike/templates/spike-log.md`:
+3. Append an entry to the thread's `spike-log.md` using the template at `skills/spike/templates/spike-log.md`:
    - stage, short decision label, context, full options set, chosen label, 1-sentence rationale.
 4. Continue without pausing. Do NOT narrate the decision to the user mid-pipeline.
 
@@ -100,25 +100,25 @@ Everywhere the stage skills (`explore`, `plan`, `implement`, `review`, `ship`) w
 Only runs in **cold** and **warm-fresh** entry modes. Skipped in **resume** mode because the spec already exists.
 
 - Determine the thesis: `$ARGUMENTS` wins if non-empty; otherwise the LLM distills a one-sentence thesis from the conversation context.
-- Compute a branch name via `$HOME/.claude/skills/flow/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
-- Run `$HOME/.claude/skills/flow/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the workstream folder, materializes `01-spec-r1.md` from the configured template.
-- Materialize `spike-log.md` in the workstream folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
+- Compute a branch name via `$HOME/.claude/skills/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
+- Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
+- Materialize `spike-log.md` in the thread folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
 - Run the normal `explore` skill to populate the spec. In warm-fresh mode, distill the conversation context directly into the spec body — the human's exploration is the source material. All `## Decisions needed` items auto-resolve via the decision policy.
 
 ### Step 2: Plan
 
-- Run the normal `plan` skill. Produce `02-plan-r1.md` in the workstream folder.
+- Run the normal `plan` skill. Produce `02-plan-r1.md` in the thread folder.
 - Hard step-count ceiling: **≤ 20 substeps**. If the plan would exceed 20, either compress (fewer, larger steps) or scope down the spec.
 
 ### Step 3: Implement
 
 - Run the normal `implement` skill. Commit atomically per step.
-- Commit the workstream's `spike-log.md` along with each step's implementation commit, so the decision timeline shows up in `git log`.
+- Commit the thread's `spike-log.md` along with each step's implementation commit, so the decision timeline shows up in `git log`.
 - If tests fail mid-step: fix once. If still failing, invoke the abort protocol.
 
 ### Step 4: LLM review (single round)
 
-Use the normal `review` skill; output `03-review-r1.md` in the workstream folder.
+Use the normal `review` skill; output `03-review-r1.md` in the thread folder.
 
 - Classify findings. Auto-fix mechanical + critical findings in **one pass**. Do NOT re-run LLM review after fixing — loop cap = 1.
 - Residual findings (not fixed) are flagged for human review.
@@ -133,8 +133,8 @@ Use the normal `review` skill; output `03-review-r1.md` in the workstream folder
 
 - **Draft PR only**: `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled).
 - Never `gh pr ready`. Never `gh pr merge`. Those are human-review decisions.
-- Record the PR number into the spec's frontmatter comment (same as normal ship): `<!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->`. The workstream folder stays put; no archive move.
-- After push + PR creation, report the PR URL in plain text. Do NOT invoke reflection (`/flow-reflect`) — reflection is for longitudinal flow use, not spikes.
+- Record the PR number into the spec's frontmatter comment (same as normal ship): `<!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->`. The thread folder stays put; no archive move.
+- After push + PR creation, report the PR URL in plain text. Do NOT invoke reflection (`/reflect`) — reflection is for longitudinal flow use, not spikes.
 
 ## Adversarial-review anti-pattern
 
@@ -150,7 +150,7 @@ Spike aborts when any of these hit:
 - Tests fail after one fix attempt.
 - The thesis is fundamentally unclear or self-contradictory.
 - Any tool error the LLM can't route around in one retry.
-- `bootstrap.sh` refuses because the workstream folder already exists (same-day same-thesis collision). Re-running with a modified thesis is a human call; autopilot aborts rather than picking an arbitrary new slug.
+- `bootstrap.sh` refuses because the thread folder already exists (same-day same-thesis collision). Re-running with a modified thesis is a human call; autopilot aborts rather than picking an arbitrary new slug.
 
 On abort:
 
@@ -167,13 +167,13 @@ Aborting still produces a draft PR — the partial work is valuable for the huma
 - **DO NOT** touch main — never push to main, never rebase onto main mid-run.
 - **DO NOT** force push — even if a fix pass needs rework, make a new commit.
 - **DO NOT** run reflection — skip the "twice is a pattern" ship-stage scan; spike is too ephemeral.
-- **DO NOT** override `bootstrap.sh` — if it refuses because the workstream folder exists, that's abort, not auto-retry.
+- **DO NOT** override `bootstrap.sh` — if it refuses because the thread folder exists, that's abort, not auto-retry.
 - **DO NOT** rewrite history in `spike-log.md` — append only.
 
 ## Related skills
 
-- `skills/flow/SKILL.md` — the skill spike bypasses `AskUserQuestion` for.
-- `skills/flow/references/user-interaction.md` — documents the spike exception to the AUQ default.
+- `skills/run/SKILL.md` — the skill spike bypasses `AskUserQuestion` for.
+- `skills/run/references/user-interaction.md` — documents the spike exception to the AUQ default.
 - `skills/review/SKILL.md` — the single LLM-review round consumes this skill's contract.
 - `skills/ship/SKILL.md` — spike-ship is a constrained version (draft, no reflection; still records `pr:`).
-- `skills/docs-style/SKILL.md` — house style applied to every doc, including the spike PR body and log.
+- `skills/run/references/style.md` — house style applied to every doc, including the spike PR body and log.

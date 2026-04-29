@@ -26,7 +26,7 @@ flow-runtime/
 │   └── flow-pack.md              # NEW. Thin wrapper over `make pack-*`.
 ├── skills/
 │   ├── flow/                     # kernel: stage detection, boundary protocol,
-│   │   ├── SKILL.md              #   AskUserQuestion contract, workstream
+│   │   ├── SKILL.md              #   AskUserQuestion contract, thread
 │   │   ├── references/           #   convention, glossary, doc protocol.
 │   │   │   ├── protocol.md       # KERNEL — the document schema. Every pack uses it.
 │   │   │   ├── boundaries.md     # KERNEL — the 4-beat boundary handling.
@@ -37,7 +37,7 @@ flow-runtime/
 │   │   └── scripts/
 │   │       ├── detect-stage.sh   # walks the active pack's manifest, no hardcoded names.
 │   │       ├── load-config.sh
-│   │       └── workstreams-summary.sh
+│   │       └── threads-summary.sh
 │   ├── flow-config/              # owns .flow/config.sh in *target projects* (still useful)
 │   ├── flow-adopt/
 │   ├── flow-reflect/
@@ -86,7 +86,7 @@ User's territory. Each pack is its own git repo (local-only at first; user wires
 ├── tools/
 │   └── Pack.mk                   # shared make targets every pack inherits
 └── state/
-    ├── pack-history.log          # which pack was active when, for /flow-reflect
+    ├── pack-history.log          # which pack was active when, for /reflect
     └── last-sync.json            # per-pack: last commit SHA observed (for stale-check warnings)
 ```
 
@@ -125,7 +125,7 @@ templates_dir: templates
 doc_protocol: kernel       # "kernel" = use flow-runtime's protocol.md. "custom" = use this pack's.
 ```
 
-`detect-stage.sh` reads `pack.yaml` from `~/.flow/active-pack/` and walks `stages[]`. The current 6-rule ladder becomes a generic loop: for each stage, does its `output` exist for the current branch's workstream? Stop at the first missing one.
+`detect-stage.sh` reads `pack.yaml` from `~/.flow/active-pack/` and walks `stages[]`. The current 6-rule ladder becomes a generic loop: for each stage, does its `output` exist for the current branch's thread? Stop at the first missing one.
 
 ## 3. `~/.claude/` (Claude Code discovery)
 
@@ -191,7 +191,7 @@ Two non-obvious ones:
 |---|---|---|
 | `/flow` boundary completes | flow kernel | reads active pack's manifest, dispatches to next stage's skill via symlinked path |
 | `teach` writes a new skill | user invocation | `pack-branch` cuts a branch in active pack, writes file, prompts to commit, then `pack-pr` |
-| `/flow-reflect` proposes change | user invocation | same: branch in active pack, edit, PR |
+| `/reflect` proposes change | user invocation | same: branch in active pack, edit, PR |
 | `make pack-use foo` | user via make | unlink old pack symlinks, link new ones, update `~/.flow/active-pack` |
 
 Everything that mutates skills goes through `pack-branch` → edit → `pack-pr`. There is no path that commits directly to a pack's `main`.

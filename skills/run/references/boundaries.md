@@ -13,9 +13,9 @@ A boundary either hands control back to the human or flows straight into the nex
 
 ## Revisions
 
-When a later stage discovers an earlier document is wrong, revise the earlier doc rather than silently diverging. `## Revisions` is the glossary-canonical heading — it appears inside every workstream doc and is defined in `skills/flow/references/protocol.md`.
+When a later stage discovers an earlier document is wrong, revise the earlier doc rather than silently diverging. `## Revisions` is the glossary-canonical heading — it appears inside every thread doc and is defined in `skills/run/references/protocol.md`.
 
-1. Update the earlier document with a `## Revisions` entry (see `skills/flow/references/protocol.md`).
+1. Update the earlier document with a `## Revisions` entry (see `skills/run/references/protocol.md`).
 2. Capture what changed, why, and what downstream work is impacted.
 3. Continue from the current stage — don't restart the pipeline.
 
@@ -37,6 +37,6 @@ Ship decides per-finding whether to fix silently, ask the human, or surface unco
 
 - **DO** think independently — if a finding looks wrong, skip it; if you spot something missed, add it.
 - **DO** respect human time — fix trivial things; only ask about what genuinely needs judgment.
-- **DO** use `AskUserQuestion` for every user-facing decision (see `skills/flow/references/user-interaction.md`).
+- **DO** use `AskUserQuestion` for every user-facing decision (see `skills/run/references/user-interaction.md`).
 - **DO NOT** print free-form Y/n prompts or list choices in prose and wait for a typed answer.
 - **DO NOT** silently skip a coverage gap rated 8+.

@@ -1,8 +1,8 @@
 # Findings Document Template
 
-The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the workstream file and fill the placeholders.
+The review stage fills this scaffold to produce the findings document the ship stage reads next. Copy the code block below into the thread file and fill the placeholders.
 
-Save as `./agent/workstreams/<YYYY-MM-DD>-<branch>/03-review-r<N>.md`. PR-vs-local distinction lives in the frontmatter comment, not the filename.
+Save as `./agent/threads/<YYYY-MM-DD>-<branch>/03-review-r<N>.md`. PR-vs-local distinction lives in the frontmatter comment, not the filename.
 
 ```markdown
 <!-- branch: [branch] · date: [YYYY-MM-DD] · author: [git user] · pr: [PR URL or omit for local] · base: [base branch] -->

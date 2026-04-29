@@ -2,7 +2,7 @@
 
 Every stage agent writes a document following this protocol; the next stage agent (and the human reviewer) reads it. This doc is the shared schema between them.
 
-For canonical term choices (`spec`, `plan`, `findings`, `stage`, `revision`), see `skills/flow/references/glossary.md`.
+For canonical term choices (`spec`, `plan`, `findings`, `stage`, `revision`), see `skills/run/references/glossary.md`.
 
 ## Sections
 
@@ -79,7 +79,7 @@ Spec originally said:
 
 During implementation, the agent discovers the existing middleware only supports session cookies. Rewriting middleware is out of scope. The agent:
 
-1. Writes a spec revision at `agent/workstreams/<date>-<branch>/01-spec-r2.md` (keeping `01-spec-r1.md` frozen as history):
+1. Writes a spec revision at `agent/threads/<date>-<branch>/01-spec-r2.md` (keeping `01-spec-r1.md` frozen as history):
 
    ```markdown
    ## Revisions
@@ -117,9 +117,9 @@ Each section serves a different reader.
 
 ## Document locations
 
-Every workstream — in-flight or shipped — lives in `agent/workstreams/<YYYY-MM-DD>-<branch>/` (1:1 with the git branch). Merged workstreams stay put; their spec's frontmatter comment gets a `pr: <N>` field at ship time, which marks the workstream as shipped.
+Every thread — in-flight or shipped — lives in `agent/threads/<YYYY-MM-DD>-<branch>/` (1:1 with the git branch). Merged threads stay put; their spec's frontmatter comment gets a `pr: <N>` field at ship time, which marks the thread as shipped.
 
-| Document | Path within workstream | Produced by |
+| Document | Path within thread | Produced by |
 |---|---|---|
 | spec | `01-spec-r<N>.md` | explore |
 | plan | `02-plan-r<N>.md` | plan |

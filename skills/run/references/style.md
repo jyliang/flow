@@ -9,7 +9,7 @@ metadata:
 
 Every doc in this repo has two readers: a human scanning in a terminal or on GitHub, and the next author (agent or human) editing it. This skill is the shared contract between them — scannable, consistent, and safe to restructure.
 
-When in doubt, consult `skills/flow/references/glossary.md` for canonical term choices.
+When in doubt, consult `skills/run/references/glossary.md` for canonical term choices.
 
 ## How to apply the ten principles
 
@@ -94,7 +94,7 @@ Later, check cross-references. *DO* grep for call sites.
 
 ### Principle 5: One term per concept
 
-Pick from `skills/flow/references/glossary.md`. Never mix `spec` and `Spec` and `the spec document` in the same doc.
+Pick from `skills/run/references/glossary.md`. Never mix `spec` and `Spec` and `the spec document` in the same doc.
 
 **Good:** Every mention of the specification document is "spec" (lowercase), except when referring to the literal file path `01-spec-r<N>.md`.
 
@@ -157,9 +157,9 @@ A single admonition style, used sparingly: inflation kills the signal.
 
 Every path appearing in prose gets backticks. No raw paths.
 
-**Good:** See `skills/flow/references/protocol.md` for the full schema.
+**Good:** See `skills/run/references/protocol.md` for the full schema.
 
-**Bad:** See skills/flow/references/protocol.md for the full schema.
+**Bad:** See skills/run/references/protocol.md for the full schema.
 
 ### Principle 10: Reader-of-two stance
 
@@ -173,7 +173,7 @@ Every doc opens with one sentence naming who reads it (human scanner? next-stage
 
 The glossary is the authoritative term list for this repo. Read it before you invent a new term, and extend it when you catch drift.
 
-See `skills/flow/references/glossary.md`. Extend the glossary there (not here).
+See `skills/run/references/glossary.md`. Extend the glossary there (not here).
 
 ## DO / DO NOT at a glance
 
@@ -198,5 +198,5 @@ One-glance checklist. Every item expands into a full principle above.
 
 ## Related skills
 
-- `skills/teach/SKILL.md` — create or improve skills; cross-reference this doc when authoring a new skill.
-- `skills/flow/references/glossary.md` — the canonical term list referenced by principle 5.
+- `skills/ingest/SKILL.md` — create or improve skills; cross-reference this doc when authoring a new skill.
+- `skills/run/references/glossary.md` — the canonical term list referenced by principle 5.

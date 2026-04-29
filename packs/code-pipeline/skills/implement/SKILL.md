@@ -12,15 +12,15 @@ Stage skill read by the implementing agent and by a human tracking progress. Rea
 
 ## Goal
 
-Execute `02-plan-r*.md` in the active workstream (`agent/workstreams/*-$(git branch --show-current)/`) step by step, leaving the plan and spec in sync with reality.
+Execute `02-plan-r*.md` in the active thread (`agent/threads/*-$(git branch --show-current)/`) step by step, leaving the plan and spec in sync with reality.
 
 ## How to set up
 
 Load context before touching any code:
 
 1. Study `CLAUDE.md` for project patterns and guidelines.
-2. Read the latest `01-spec-r*.md` in the active workstream for the feature spec (what we're building and why).
-3. Read the latest `02-plan-r*.md` in the active workstream for the steps to execute.
+2. Read the latest `01-spec-r*.md` in the active thread for the feature spec (what we're building and why).
+3. Read the latest `02-plan-r*.md` in the active thread for the steps to execute.
 4. Study the source code around the affected files.
 
 ## How to run the loop
@@ -38,7 +38,7 @@ Pick the single most important incomplete step from the plan, then run it throug
 
 - **DO** update the plan after every step so a fresh agent can pick up.
 - **DO** write production-ready code — no placeholders, no stubs.
-- **DO** use `AskUserQuestion` rather than guessing requirements (see `skills/flow/references/user-interaction.md`).
+- **DO** use `AskUserQuestion` rather than guessing requirements (see `skills/run/references/user-interaction.md`).
 - **DO NOT** edit files directly in the main context — delegate all edits to subagents.
 - **DO NOT** proceed to the next step with failing tests.
 
@@ -48,8 +48,8 @@ During implementation you will discover things that contradict the spec or plan 
 
 When it happens:
 
-1. **Update the earlier document.** Create a new revision of the spec or plan (`-rN+1`) in the active workstream folder with the affected section revised. The prior `-rN` stays frozen as history.
-2. **Add a Revisions entry** to the new file (see `skills/flow/references/protocol.md`):
+1. **Update the earlier document.** Create a new revision of the spec or plan (`-rN+1`) in the active thread folder with the affected section revised. The prior `-rN` stays frozen as history.
+2. **Add a Revisions entry** to the new file (see `skills/run/references/protocol.md`):
    ```markdown
    ## Revisions
    - **implement → spec** [date]: [What changed]

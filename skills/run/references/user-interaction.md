@@ -28,7 +28,7 @@ Two buckets: decisions go through the tool, narration and open-ended prompts don
 - **Irreversible-action confirmations** — `git push --force`, destructive operations. The Claude Code permission layer handles these; duplicating the confirmation in `AskUserQuestion` is noise.
 - **Purely informational output** — findings, summaries, diffs. Write these as prose or documents.
 - **Open-ended knowledge gathering** — "Give me a concrete example", "Share reference material", "Describe your use case". The tool requires 2–4 discrete options per question; there's no natural option set for open-ended answers. Use free-form prompts instead.
-- **Spike mode** — the `spike` skill overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to the workstream's `spike-log.md`). Stage skills remain unchanged; spike intercepts at the orchestration layer. See `skills/spike/SKILL.md`.
+- **Spike mode** — the `spike` skill overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to the thread's `spike-log.md`). Stage skills remain unchanged; spike intercepts at the orchestration layer. See `skills/spike/SKILL.md`.
 
 ## Tool contract
 

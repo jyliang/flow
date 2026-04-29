@@ -2,9 +2,9 @@
 # Generate a branch name for a spike from a thesis string.
 # Output: spike-<slug>
 #
-# bootstrap.sh adds the date prefix when creating the workstream folder
-# (agent/workstreams/<YYYY-MM-DD>-<branch>/), so no timestamp needed here.
-# Same-day same-slug collisions surface via bootstrap.sh's "workstream
+# bootstrap.sh adds the date prefix when creating the thread folder
+# (agent/threads/<YYYY-MM-DD>-<branch>/), so no timestamp needed here.
+# Same-day same-slug collisions surface via bootstrap.sh's "thread
 # already exists" refuse, which spike's abort protocol then handles.
 #
 # Usage: spike-branch.sh "<thesis>"

@@ -8,13 +8,13 @@ metadata:
 
 # Explore
 
-Stage skill read by the next-stage agent (plan) and by a human scanning the spec before approving it. Turns an idea into a spec at `agent/workstreams/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md`.
+Stage skill read by the next-stage agent (plan) and by a human scanning the spec before approving it. Turns an idea into a spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md`.
 
 ## Goal
 
 Capture what exists, what needs to change, and what decisions the human must make before planning can start.
 
-Before writing, check for an existing workstream folder for this branch (`agent/workstreams/*-$(git branch --show-current)/`). If none exists, `bootstrap.sh` creates one; otherwise, write a revision (`-rN+1`) with a `## Revisions` section explaining what changed.
+Before writing, check for an existing thread folder for this branch (`agent/threads/*-$(git branch --show-current)/`). If none exists, `bootstrap.sh` creates one; otherwise, write a revision (`-rN+1`) with a `## Revisions` section explaining what changed.
 
 ## How to explore
 
@@ -29,12 +29,12 @@ Use parallel subagents to understand the codebase before writing anything.
 
 - **DO** search for existing implementations before assuming they don't exist.
 - **DO** use parallel subagents for all exploration (see `skills/parallel/SKILL.md`).
-- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
+- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `skills/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
 - **DO NOT** assume features aren't implemented — study the code first.
 
 ## How to produce the spec
 
-Write the spec at `agent/workstreams/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/flow/references/protocol.md`). The scaffold at `skills/flow/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
+Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`skills/run/references/protocol.md`). The scaffold at `packs/code-pipeline/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
 
 `bootstrap.sh` substitutes `{{BRANCH}}`, `{{DATE}}`, and `{{AUTHOR}}` but leaves `{{STATUS}}`, `{{WHAT}}`, and `{{WHY}}` raw — you fill those in. On first draft, `{{STATUS}}` is `explore → plan`; `{{WHAT}}` is one sentence on what the spec delivers; `{{WHY}}` is one sentence on the problem it solves or value it creates.
 
@@ -98,7 +98,7 @@ The spec is read by a human approving the plan and by the next-stage agent, ofte
 
 Where things live and how they're named:
 
-- `agent/workstreams/<date>-<branch>/01-spec-r<N>.md` — the spec. A new workstream starts at `r1`; revisions create `r2`, `r3`, … with the prior file frozen and a `## Revisions` section explaining the delta.
+- `agent/threads/<date>-<branch>/01-spec-r<N>.md` — the spec. A new thread starts at `r1`; revisions create `r2`, `r3`, … with the prior file frozen and a `## Revisions` section explaining the delta.
 - `roadmap.md` — product vision (read-only reference).
 
 ### Rules

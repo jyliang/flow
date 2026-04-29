@@ -12,7 +12,7 @@ Every configurable knob is listed below; unlisted `FLOW_*` variables are not con
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `FLOW_TEMPLATE_SPEC` | `$HOME/.claude/skills/flow/templates/spec.md` | Path to the spec template used by `bootstrap.sh`. |
+| `FLOW_TEMPLATE_SPEC` | `$HOME/.claude/packs/code-pipeline/templates/spec.md` | Path to the spec template used by `bootstrap.sh`. |
 | `FLOW_STAGES` | `explore plan implement review ship` | Declared stage order. Read-only in v2 (informational). |
 | `FLOW_TEST_CMD` | `""` | Shell command ship runs in Steps 2 and 11 (before fixes + after push). Empty means no automated tests; ship notes "no test command configured" and continues. Example: `make test`, `npm test`, `bash scripts/run-tests.sh`. |
 | `FLOW_EXTRA_STAGES` | `""` | Reserved for v2.5 (custom stage insertion). The LLM surfaces if set, but `detect-stage.sh` ignores it in v2. |
@@ -26,11 +26,11 @@ Every configurable knob is listed below; unlisted `FLOW_*` variables are not con
 
 ## Example `.flow/config.sh`
 
-A starter file written by `/flow-config`; edit values as needed.
+A starter file written by `/pack config`; edit values as needed.
 
 ```sh
 # .flow/config.sh — Flow per-project config
-# Managed by /flow-config. Edit carefully; this file is sourced by bash.
+# Managed by /pack config. Edit carefully; this file is sourced by bash.
 
 FLOW_TEMPLATE_SPEC=".flow/templates/spec.md"
 FLOW_STAGES="explore plan implement review ship"
@@ -47,4 +47,4 @@ The config file is executable code, not data — treat it that way.
 
 ## Run first-time setup
 
-On `/flow` in an empty workspace with no `.flow/config.sh`, the LLM runs a 3-question scripted setup via `AskUserQuestion` and writes the file. All questions are skippable; skipping writes commented defaults (marks the project as set up, prevents the setup from re-firing). Re-run explicitly any time with `/flow-config`.
+On `/flow` in an empty workspace with no `.flow/config.sh`, the LLM runs a 3-question scripted setup via `AskUserQuestion` and writes the file. All questions are skippable; skipping writes commented defaults (marks the project as set up, prevents the setup from re-firing). Re-run explicitly any time with `/pack config`.

@@ -1,6 +1,6 @@
 # Reflection
 
-Ship-stage agents and the human invoking `/flow-reflect` read this doc — it defines how flow learns from its own history without silently mutating config or skills.
+Ship-stage agents and the human invoking `/reflect` read this doc — it defines how flow learns from its own history without silently mutating config or skills.
 
 Reflection has two axes and two triggers — both gated on user consent.
 
@@ -35,17 +35,17 @@ One `AskUserQuestion` per candidate:
 
 ## Axis (b): flow-system drift
 
-Runs only on explicit `/flow-reflect` invocation, looking across shipped workstreams for cross-workstream patterns.
+Runs only on explicit `/reflect` invocation, looking across shipped threads for cross-thread patterns.
 
 ### Scope
 
-`$ARGUMENTS` selects which workstreams to examine:
+`$ARGUMENTS` selects which threads to examine:
 
 | Argument | Meaning |
 |---|---|
-| `all` (default) | Every shipped workstream under `agent/workstreams/` (those whose spec has a `pr:` value). |
-| `N` | Last N shipped workstreams. |
-| `pr-6,pr-7` | Specific subset (matches the `pr:` number in each workstream's `01-spec-r*.md` frontmatter). |
+| `all` (default) | Every shipped thread under `agent/threads/` (those whose spec has a `pr:` value). |
+| `N` | Last N shipped threads. |
+| `pr-6,pr-7` | Specific subset (matches the `pr:` number in each thread's `01-spec-r*.md` frontmatter). |
 
 ### What to look for
 
@@ -69,7 +69,7 @@ Runs only on explicit `/flow-reflect` invocation, looking across shipped workstr
 - Edit to `.flow/config.sh` (template, stages, hooks).
 - Tweak to a stage skill file (show proposed diff; user decides).
 
-> **Note:** If fewer than 2 workstreams under `agent/workstreams/` have a `pr:` value, say "not enough history yet" and exit. Reflection needs data.
+> **Note:** If fewer than 2 threads under `agent/threads/` have a `pr:` value, say "not enough history yet" and exit. Reflection needs data.
 
 ## Rules
 

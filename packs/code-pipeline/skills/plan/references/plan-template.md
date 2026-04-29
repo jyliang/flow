@@ -1,8 +1,8 @@
 # Implementation Plan Template
 
-The plan stage fills this scaffold to produce the plan document the implement stage reads next. Copy the code block below into the workstream file and fill the placeholders.
+The plan stage fills this scaffold to produce the plan document the implement stage reads next. Copy the code block below into the thread file and fill the placeholders.
 
-Save as `./agent/workstreams/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-plan-r1.md` for a new plan; use the next `-rN` for revisions and include a `## Revisions` section).
+Save as `./agent/threads/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-plan-r1.md` for a new plan; use the next `-rN` for revisions and include a `## Revisions` section).
 
 ```markdown
 <!-- branch: [branch] · date: [YYYY-MM-DD] · author: [git user] · pr: -->

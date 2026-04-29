@@ -41,4 +41,4 @@ Draft with:
 
 ### Step 4: Confirm the outline
 
-Use `AskUserQuestion` to confirm the outline before writing the skill file. See `skills/flow/references/user-interaction.md`.
+Use `AskUserQuestion` to confirm the outline before writing the skill file. See `skills/run/references/user-interaction.md`.

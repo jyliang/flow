@@ -35,7 +35,7 @@ Write the minimum code to make the tests pass.
 #### Rules
 
 - **DO** study existing source code before implementing — don't assume features aren't already implemented.
-- **DO NOT** guess requirements — use `AskUserQuestion` if unsure (see `skills/flow/references/user-interaction.md`).
+- **DO NOT** guess requirements — use `AskUserQuestion` if unsure (see `skills/run/references/user-interaction.md`).
 
 ### Step 3: Run tests and verify
 

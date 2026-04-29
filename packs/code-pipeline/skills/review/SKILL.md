@@ -9,7 +9,7 @@ metadata:
 
 # Review
 
-Stage skill read by the next-stage agent (ship) and by a human deciding whether the PR is safe to merge. Produces `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/*-$(git branch --show-current)/`).
+Stage skill read by the next-stage agent (ship) and by a human deciding whether the PR is safe to merge. Produces `03-review-r<N>.md` in the active thread folder (`agent/threads/*-$(git branch --show-current)/`).
 
 ## Goal
 
@@ -44,7 +44,7 @@ For every changed file, read the full file — not just the diff hunks. Use para
 
 #### Rules
 
-- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `skills/flow/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
+- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `skills/run/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
 - **DO NOT** review based only on diff hunks — this is the #1 source of false claims.
 
 > **Warning:** Don't assume code is unused. Grep the codebase for all call sites before claiming anything is dead code.
@@ -85,7 +85,7 @@ Keep the walkthrough brief (a few lines per audience) but explicit.
 
 ### Step 5: Write findings
 
-Write to `03-review-r<N>.md` in the active workstream folder (`agent/workstreams/<date>-<branch>/`) following the document protocol (`skills/flow/references/protocol.md`) and the scaffold in `references/findings-template.md`. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the workstream is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
+Write to `03-review-r<N>.md` in the active thread folder (`agent/threads/<date>-<branch>/`) following the document protocol (`skills/run/references/protocol.md`) and the scaffold in `references/findings-template.md`. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the thread is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
 
 ```markdown
 <!-- branch: [branch] · date: [date] · author: [git user] · pr: [URL or omit] · base: [base] -->
@@ -146,7 +146,7 @@ The findings document is read by the ship stage fixing issues and by a human dec
 
 ## How to handle spec/plan drift
 
-After synthesizing findings, compare the implementation against the latest `01-spec-r*.md` and `02-plan-r*.md` in the active workstream:
+After synthesizing findings, compare the implementation against the latest `01-spec-r*.md` and `02-plan-r*.md` in the active thread:
 
 - If the code does something the spec doesn't describe → flag as a goal gap in findings AND write a spec revision (`01-spec-rN+1.md`) with a Revisions entry noting the drift.
 - If the code skips a plan step or does it differently → write a plan revision (`02-plan-rN+1.md`) with a Revisions entry.
