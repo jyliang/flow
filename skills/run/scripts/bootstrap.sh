@@ -16,10 +16,8 @@ branch="${1:-}"
 
 date_str="$(date +%Y-%m-%d)"
 thread_dir="agent/threads/${date_str}-${branch}"
-legacy_dir="agent/workstreams/${date_str}-${branch}"
 
 [[ ! -d "$thread_dir" ]] || die "thread already exists at $thread_dir"
-[[ ! -d "$legacy_dir" ]] || die "legacy workstream already exists at $legacy_dir"
 
 # Inlined config precedence (env > file > legacy > default) rather than calling
 # load-config.sh to avoid subprocess + eval overhead. Kept in sync with that

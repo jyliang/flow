@@ -31,11 +31,11 @@ if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]] && command -v gh >/dev/null 2
   fi
 fi
 
-# Resolve thread folder (1:1 with branch). agent/threads/ canonical, agent/workstreams/ legacy.
+# Resolve thread folder (1:1 with branch).
 thread=""
 if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]]; then
   shopt -s nullglob
-  candidates=(agent/threads/*-"$branch"/ agent/workstreams/*-"$branch"/)
+  candidates=(agent/threads/*-"$branch"/)
   shopt -u nullglob
   if [[ ${#candidates[@]} -gt 0 ]]; then
     thread="$(printf '%s\n' "${candidates[@]}" | sort | tail -1)"

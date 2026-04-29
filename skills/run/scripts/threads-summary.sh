@@ -2,7 +2,7 @@
 # Print one-line summary per shipped thread: pr-N, date, title.
 # Used by /reflect for orientation without reading every thread in full.
 #
-# Convention: agent/threads/<YYYY-MM-DD>-<branch-slug>/  (legacy: agent/workstreams/)
+# Convention: agent/threads/<YYYY-MM-DD>-<branch-slug>/
 #   Initial spec at 01-spec-r1.md, header comment: <!-- ... · pr: <N> · ... -->
 #   "Shipped" = header comment contains a non-blank `pr:` value.
 #
@@ -14,7 +14,7 @@ set -euo pipefail
 limit="${1:-all}"
 
 shopt -s nullglob
-dirs=(agent/threads/*/ agent/workstreams/*/)
+dirs=(agent/threads/*/)
 shopt -u nullglob
 
 [[ ${#dirs[@]} -eq 0 ]] && exit 0
