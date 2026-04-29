@@ -1,32 +1,37 @@
 #!/usr/bin/env bash
-# Detect the current flow stage. Mirrors the rule logic in
-# skills/run/SKILL.md "How to detect the current stage".
-# SKILL.md is authoritative; this script is an optimization.
+# Detect the current flow stage by walking the active pack's manifest.
+# SKILL.md (skills/run/SKILL.md) is authoritative if logic drifts.
 #
-# stdout: one of explore-empty | plan | implement | review | ship | done
+# Reads stages from ~/.flow/active-pack/pack.yaml via pack-stages.sh.
+# A stage is "where we are now" if:
+#   - its output handoff is missing, OR
+#   - it's the consumer of the previous stage's unchecked checkboxes.
+#
+# Outputs:
+#   <first-stage>-empty    no thread for current branch
+#   <stage-name>           stage in progress
+#   done                   PR open/merged or delivery key in spec frontmatter
+#
 # stderr: one-line rationale when FLOW_DEBUG=1
-#
-# v3 NOTE: this still hardcodes the code-pipeline stages. Manifest-driven
-# detection (reading ~/.flow/active-pack/pack.yaml) is a follow-up.
 
 set -euo pipefail
 
 debug() { [[ "${FLOW_DEBUG:-0}" = "1" ]] && echo "detect-stage: $*" >&2 || true; }
 
+FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
 branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 
+# PR check fires before manifest walk: a delivered branch is "done" regardless of state.
 if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]] && command -v gh >/dev/null 2>&1; then
   pr_state="$(gh pr view "$branch" --json state --jq .state 2>/dev/null || true)"
-  if [[ "$pr_state" = "OPEN" ]]; then
-    debug "open PR on branch=$branch"
+  if [[ "$pr_state" = "OPEN" ]] || [[ "$pr_state" = "MERGED" ]]; then
+    debug "PR state=$pr_state on branch=$branch"
     echo "done"
     exit 0
   fi
 fi
 
-# Resolve the active thread folder from the branch name.
-# Convention: agent/threads/<YYYY-MM-DD>-<branch>/ (1:1 branch↔thread).
-# Falls back to agent/workstreams/ for backward compatibility with v2 history.
+# Resolve thread folder (1:1 with branch). agent/threads/ canonical, agent/workstreams/ legacy.
 thread=""
 if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]]; then
   shopt -s nullglob
@@ -38,7 +43,6 @@ if [[ -n "$branch" ]] && [[ "$branch" != "HEAD" ]]; then
   fi
 fi
 
-# latest <stage-prefix> — prints the highest-rN file for that prefix, or empty.
 latest() {
   local prefix="$1"
   [[ -n "$thread" ]] || { echo ""; return; }
@@ -49,33 +53,73 @@ latest() {
   printf '%s\n' "${files[@]}" | sort -V | tail -1
 }
 
-review_file="$(latest 03-review)"
-plan_file="$(latest 02-plan)"
-spec_file="$(latest 01-spec)"
+has_pr_key() {
+  local f
+  f="$(latest "$1")"
+  [[ -n "$f" ]] && grep -qE '^<!--.*pr: *[0-9]+' "$f"
+}
 
-if [[ -n "$review_file" ]] && grep -qE '^- \[ \]' "$review_file"; then
-  debug "unchecked items in $review_file"
-  echo "ship"
+# Locate pack-stages.sh via runtime-path. If unavailable, fall back to first-stage-empty.
+runtime_path="$(cat "$FLOW_HOME/runtime-path" 2>/dev/null || true)"
+pack_stages="$runtime_path/scripts/pack-stages.sh"
+if [[ ! -x "$pack_stages" ]]; then
+  debug "pack-stages.sh not available; runtime-path=$runtime_path"
+  echo "explore-empty"
   exit 0
 fi
 
-if [[ -n "$plan_file" ]]; then
-  if grep -qE '^- \[ \]' "$plan_file"; then
-    debug "unchecked items in $plan_file"
-    echo "implement"
-    exit 0
-  fi
-  debug "plan complete at $plan_file, no unchecked items"
-  echo "review"
+stages_data="$(bash "$pack_stages" 2>/dev/null || true)"
+if [[ -z "$stages_data" ]]; then
+  debug "manifest empty or unreadable"
+  echo "explore-empty"
   exit 0
 fi
 
-if [[ -n "$spec_file" ]]; then
-  debug "spec at $spec_file, no plan"
-  echo "plan"
+# No thread for this branch yet → first-stage-empty.
+if [[ -z "$thread" ]]; then
+  first_name="$(printf '%s\n' "$stages_data" | head -1 | cut -d'|' -f1)"
+  debug "no thread for branch=$branch; first=$first_name"
+  echo "${first_name:-explore}-empty"
   exit 0
 fi
 
-debug "no thread for branch=$branch"
-echo "explore-empty"
-exit 0
+# Walk stages. First stage whose output is missing OR whose handoff has unchecked items wins.
+while IFS='|' read -r name output nxt; do
+  [[ -n "$name" ]] || continue
+  case "$output" in
+    pr)
+      # Final delivery stage. Spec-frontmatter pr: counts as done; PR-open already returned above.
+      if has_pr_key 01-spec; then
+        debug "delivery key set"
+        echo "done"
+        exit 0
+      fi
+      debug "ship in progress"
+      echo "$name"
+      exit 0
+      ;;
+    branch|"")
+      # Stage with no file handoff (e.g. implement). Detection happens via prior stage's boxes;
+      # if we walked here, the prior stage was complete, so this stage's output is satisfied too.
+      continue
+      ;;
+    *)
+      f="$(latest "$output")"
+      if [[ -z "$f" ]]; then
+        debug "missing $output handoff"
+        echo "$name"
+        exit 0
+      fi
+      if grep -qE '^- \[ \]' "$f"; then
+        # Unchecked items in S's handoff = the consumer (S.next) is working through them.
+        debug "unchecked in $f → $nxt"
+        echo "${nxt:-$name}"
+        exit 0
+      fi
+      # Handoff exists, fully checked → continue past.
+      ;;
+  esac
+done <<< "$stages_data"
+
+# Walked off the end of the manifest with everything complete.
+echo "done"
