@@ -89,7 +89,7 @@ Shell helpers live under `skills/run/scripts/`. They avoid spending LLM tokens o
 | `bootstrap.sh <branch>` | Creates the branch and materializes the initial spec at `agent/threads/<today>-<branch>/01-spec-r1.md` from the active cell's template. |
 | `load-config.sh` | Sources `.flow/config.sh` (if present) and prints normalized flow env vars. See `references/config.md`. |
 | `threads-summary.sh [scope]` | One-line summary per shipped thread (those with a delivery key in spec frontmatter). Used by `reflect` for cross-thread pattern scans. |
-| `spike-branch.sh <thesis>` | Slugifies a thesis to `spike-<slug>`. Used by `/spike` for unattended runs. |
+| `spike-branch.sh <thesis>` | Slugifies a thesis to `spike-<slug>`. Used by `/flow-spike` for unattended runs. |
 
 ## Related skills
 

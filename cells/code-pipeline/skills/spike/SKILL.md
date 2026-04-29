@@ -1,6 +1,6 @@
 ---
 name: spike
-description: Spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /spike, not directly. Referenced by flow.
+description: Spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /flow-spike, not directly. Referenced by flow.
 metadata:
   short-description: Unattended spike → draft PR
   internal: true
@@ -25,7 +25,7 @@ Two "reviews" exist in the flow system; this skill keeps them distinct.
 
 ## When to use
 
-Spike orchestrates `/spike` runs. Invokable at **any conviction point**:
+Spike orchestrates `/flow-spike` runs. Invokable at **any conviction point**:
 
 - From a clean workspace with a thesis argument.
 - Mid-conversation with no arguments (the LLM distills a thesis from context).
@@ -34,7 +34,7 @@ Spike orchestrates `/spike` runs. Invokable at **any conviction point**:
 ### Rules
 
 - **DO** use spike for thesis-validation work where you want to come back to something testable.
-- **DO NOT** use spike for work that requires judgment calls the user wants to make themselves — use regular `/flow`.
+- **DO NOT** use spike for work that requires judgment calls the user wants to make themselves — use regular `/flow` (or `/flow-here` to seed from the current conversation).
 
 ## How to determine entry mode
 

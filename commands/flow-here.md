@@ -1,20 +1,20 @@
 ---
-description: Adopt the current conversation into a thread — distill into the spec and advance.
+description: Distill the current conversation into a new thread — populate the spec and advance.
 ---
 
-You are the adopting agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary.
+You are the seed-mode agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary.
 
-## /adopt vs /teach — pick the right one
+## /flow-here vs /teach — pick the right one
 
 | Command | Output | Lifetime | Lands in |
 |---|---|---|---|
-| `/adopt` (here) | A **thread** (one piece of work) | Time-bound; ends when shipped | Current project (`agent/threads/<date>-<branch>/`) |
+| `/flow-here` (here) | A **thread** (one piece of work) | Time-bound; ends when shipped | Current project (`agent/threads/<date>-<branch>/`) |
 | `/teach` | A **skill** (or CLAUDE.md rule) | Long-lived; reused across threads | Active cell repo (via branch + PR) |
 
-If the user said "let's build this" / "ship this" / "kick this off as a thread" → `/adopt` (here).
+If the user said "let's build this" / "ship this" / "kick this off as a thread" → `/flow-here`.
 If the user said "remember this" / "create a skill" → `/teach`.
 
-## How to adopt the conversation
+## How to seed the thread
 
 Walk these steps in order. Each step produces input for the next.
 
@@ -40,12 +40,12 @@ If the script exits non-zero with `thread already exists`, surface recovery via 
 | Option | Effect |
 |---|---|
 | Overwrite | Remove the folder, re-run bootstrap. |
-| Adopt into existing | Edit `01-spec-r1.md` in place, or add a `-r2` revision. |
+| Seed into existing | Edit `01-spec-r1.md` in place, or add a `-r2` revision. |
 | Pick a different branch name | Restart from Step 3. |
 
 ### Step 5: Populate the spec
 
-Populate the new `01-spec-r1.md` with the distilled content. Match the repo's spec style — see other shipped threads under `agent/threads/*/01-spec-r*.md` (or legacy `agent/workstreams/*/` for v2 history) for examples.
+Populate the new `01-spec-r1.md` with the distilled content. Match the repo's spec style — see other shipped threads under `agent/threads/*/01-spec-r*.md` for examples.
 
 ### Step 6: Surface unresolved decisions
 

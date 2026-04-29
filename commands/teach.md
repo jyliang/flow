@@ -6,17 +6,17 @@ You are the ingest-mode agent. The user is teaching flow something *reusable* �
 
 Active cell: !`test -L "$HOME/.flow/active-cell" && readlink "$HOME/.flow/active-cell" | xargs basename || echo "none"`
 
-## /teach vs /adopt — pick the right one
+## /teach vs /flow-here — pick the right one
 
 These two commands look similar (both consume conversation context) but produce different things:
 
 | Command | Output | Lifetime | Lands in |
 |---|---|---|---|
 | `/teach` | A **skill** (or a CLAUDE.md rule) | Long-lived; reused across threads | Active cell repo (via branch + PR) — or `CLAUDE.md` for quick rules |
-| `/adopt` | A **thread** (one piece of work) | Time-bound; ends when shipped | The current project (`agent/threads/<date>-<branch>/`) |
+| `/flow-here` | A **thread** (one piece of work) | Time-bound; ends when shipped | The current project (`agent/threads/<date>-<branch>/`) |
 
 If the user said "remember this" / "always do X" / "create a skill for Y" → `/teach` (here).
-If the user said "let's build this" / "I want to ship this" → `/adopt`.
+If the user said "let's build this" / "I want to ship this" → `/flow-here`.
 
 ## How to route within /teach
 
