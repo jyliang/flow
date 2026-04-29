@@ -1,0 +1,44 @@
+# Cell manifest — read by the run kernel skill.
+# Stage names, file prefixes, and delivery target are cell-defined; the kernel knows none of them.
+
+name: code-pipeline
+version: 0.1.0
+description: Idea → spec → plan → implement → review → PR. The starter pipeline.
+
+# Stages run in order. detect-stage.sh walks this list and stops at the first stage whose output is missing.
+stages:
+  - name: explore
+    skill: explore
+    output: 01-spec
+    next: plan
+  - name: plan
+    skill: plan
+    input: 01-spec
+    output: 02-plan
+    next: implement
+  - name: implement
+    skill: implement
+    input: 02-plan
+    output: branch          # special: detection inspects git diff, not a file
+    next: review
+  - name: review
+    skill: review
+    input: branch
+    output: 03-review
+    next: ship
+  - name: ship
+    skill: ship
+    input: 03-review
+    output: pr              # special: detection looks for an open PR + spec frontmatter `pr:` value
+
+# What this cell delivers when the pipeline ends.
+delivery: github-pr
+
+# Where this cell's templates live (relative to cell root).
+templates_dir: templates
+
+# Skills auto-triggered during runs (not stages, but referenced by the stage skills).
+support_skills:
+  - tdd
+  - commits
+  - parallel

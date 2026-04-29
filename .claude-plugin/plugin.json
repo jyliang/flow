@@ -1,7 +1,7 @@
 {
   "name": "flow",
-  "version": "0.1.0",
-  "description": "A skill system for Claude Code that moves work from idea to shipped PR through structured document handoffs.",
+  "version": "0.2.0",
+  "description": "A learning runtime for Claude Code. Three kernel primitives — ingest, run, reflect — that turn any pipeline of skills (a 'cell') into something a human can inspect and that gets better with use.",
   "author": {
     "name": "Jason Liang",
     "url": "https://github.com/jyliang"
@@ -11,9 +11,9 @@
   "license": "MIT",
   "keywords": [
     "workflow",
-    "code-review",
-    "planning",
-    "implementation",
-    "tdd"
+    "kernel",
+    "learning",
+    "cell",
+    "evolution"
   ]
 }
