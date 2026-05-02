@@ -1,8 +1,8 @@
 ---
 name: reflect
-description: Kernel primitive — after a thread runs, scan for patterns and propose evolutions to skills, the cell manifest, or CLAUDE.md. On user approval, the change auto-lands via branch + commit + PR. Use when the user says "reflect", invokes `/reflect`, or finishes shipping a thread.
+description: Flow kernel — after a thread runs, scan for patterns and propose evolutions to skills, the cell manifest, or CLAUDE.md. On user approval, the change auto-lands via branch + commit + PR. Use when the user says "reflect", invokes `/flow:reflect`, or finishes shipping a thread.
 metadata:
-  short-description: Kernel — propose cell evolutions
+  short-description: Flow kernel — propose cell evolutions
 ---
 
 # Reflect
@@ -11,7 +11,7 @@ Kernel primitive: after a thread runs, observe what happened, propose changes th
 
 The biological analog is **affinity maturation** — after immune exposure, B-cells edit the DNA encoding their antibodies, test variants, keep the better-binding ones. Reflect edits the markdown encoding skills, the human picks variants that bound better, and the cell matures.
 
-User-facing slash command: `/reflect`.
+User-facing slash command: `/flow:reflect`.
 
 ## The auto-apply contract
 
@@ -42,9 +42,9 @@ Runs as the last step of the ship stage on every thread. Catches patterns that s
 
 One `AskUserQuestion` per candidate. Cap at 3 per ship.
 
-### Trigger 2: explicit `/reflect`
+### Trigger 2: explicit `/flow:reflect`
 
-User invokes `/reflect [scope]` to scan across multiple shipped threads. `scope` selects which:
+User invokes `/flow:reflect [scope]` to scan across multiple shipped threads. `scope` selects which:
 
 | Argument | Meaning |
 |---|---|
@@ -70,7 +70,7 @@ User invokes `/reflect [scope]` to scan across multiple shipped threads. `scope`
 
 ## Surface shape
 
-2–4 proposals max per `/reflect` invocation, each via `AskUserQuestion`. Each proposal is one of:
+2–4 proposals max per `/flow:reflect` invocation, each via `AskUserQuestion`. Each proposal is one of:
 
 | Proposal kind | Lands in |
 |---|---|
@@ -84,7 +84,7 @@ Show the proposed diff inline. The user's Yes is informed consent — pre-baked 
 
 - **DO** show diffs before asking. The user's Yes must be informed.
 - **DO** delegate `CLAUDE.md` writes to the `ingest` skill.
-- **DO** cap at 3 candidates per ship-stage sweep, 4 per `/reflect`.
+- **DO** cap at 3 candidates per ship-stage sweep, 4 per `/flow:reflect`.
 - **DO** exit silently when nothing qualifies.
 - **DO NOT** write to `CLAUDE.md`, the active cell, or any skill silently.
 - **DO NOT** run reflection as a background scan — only at ship or explicit command.

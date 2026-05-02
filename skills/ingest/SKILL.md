@@ -1,8 +1,8 @@
 ---
 name: ingest
-description: Kernel primitive — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active cell. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
+description: Flow kernel — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active cell. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
 metadata:
-  short-description: Kernel — input → skill
+  short-description: Flow kernel — input → skill
 ---
 
 # Ingest
@@ -11,7 +11,7 @@ Kernel primitive: take any input — a conversation, a PDF, a codebase walk, a s
 
 User-facing slash command: `/teach`. The user *teaches*; the system *ingests*.
 
-Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active cell (`~/.flow/active-cell/skills/`) via the cell's branch + PR workflow — see `skills/reflect/SKILL.md` for the auto-apply contract.
+Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active cell (`~/.flow/active-cell/skills/`) via the cell's branch + PR workflow — see the `flow:reflect` skill for the auto-apply contract.
 
 ## Quick capture
 

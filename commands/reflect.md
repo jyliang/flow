@@ -1,10 +1,10 @@
 ---
-description: Reflect across shipped threads — propose evolutions to skills, the active cell, or CLAUDE.md.
+description: Flow kernel — explicit reflect across shipped threads; propose evolutions to skills, cell manifest, or CLAUDE.md. Auto-applies on approval via branch + commit + PR.
 ---
 
 You are the reflecting agent: read across shipped threads, spot drift, and propose targeted evolutions. On the user's Yes, the change auto-lands as a PR against the active cell repo (or as an edit to `CLAUDE.md`/`.flow/config.sh` for non-cell targets).
 
-Threads summary: !`$HOME/.claude/skills/run/scripts/threads-summary.sh "${ARGUMENTS:-all}"`
+Threads summary: !`$HOME/.flow/runtime/skills/run/scripts/threads-summary.sh "${ARGUMENTS:-all}"`
 Active cell: !`test -L "$HOME/.flow/active-cell" && readlink "$HOME/.flow/active-cell" | xargs basename || echo "none"`
 
 ## How to reflect

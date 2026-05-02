@@ -1,6 +1,6 @@
 # Reflection
 
-Ship-stage agents and the human invoking `/reflect` read this doc — it defines how flow learns from its own history without silently mutating config or skills.
+Ship-stage agents and the human invoking `/flow:reflect` read this doc — it defines how flow learns from its own history without silently mutating config or skills.
 
 Reflection has two axes and two triggers — both gated on user consent.
 
@@ -35,7 +35,7 @@ One `AskUserQuestion` per candidate:
 
 ## Axis (b): flow-system drift
 
-Runs only on explicit `/reflect` invocation, looking across shipped threads for cross-thread patterns.
+Runs only on explicit `/flow:reflect` invocation, looking across shipped threads for cross-thread patterns.
 
 ### Scope
 

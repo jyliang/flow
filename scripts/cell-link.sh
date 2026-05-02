@@ -1,58 +1,111 @@
 #!/usr/bin/env bash
-# Link the active cell's skills into ~/.claude/skills/.
-# Idempotent: removes any prior cell-symlinks first.
+# Install the active cell as a Claude Code plugin (dev mode).
+#
+# Cell skills appear in the picker namespaced as <cell-name>:<skill-name>
+# (e.g. code-pipeline:explore). Same end state as a marketplace install —
+# but pointed at the live cell repo so edits flow through.
+#
+# If the cell lacks a .claude-plugin/plugin.json, this script auto-generates
+# one from cell.yaml so the cell can be loaded as a plugin.
+#
+# Idempotent: removes any prior plugin registration for cells under
+# ~/.flow/cells/ that no longer match the active cell.
 
 set -euo pipefail
 
 FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
-SKILLS_DIR="$HOME/.claude/skills"
-RUNTIME_ROOT=$(cat "$FLOW_HOME/runtime-path" 2>/dev/null || echo "")
+CLAUDE_DIR="$HOME/.claude"
+PLUGINS_DIR="$CLAUDE_DIR/plugins"
+INSTALLED_JSON="$PLUGINS_DIR/installed_plugins.json"
+LEGACY_SKILLS_DIR="$CLAUDE_DIR/skills"
 
 if [ ! -L "$FLOW_HOME/active-cell" ]; then
     echo "No active cell." >&2
     exit 1
 fi
 
-active="$FLOW_HOME/active-cell"
+active_path=$(readlink "$FLOW_HOME/active-cell")
+cell_name=$(basename "$active_path")
 
-# Build a set of kernel skill names to avoid clobbering them.
-kernel_names=""
-if [ -n "$RUNTIME_ROOT" ] && [ -d "$RUNTIME_ROOT/skills" ]; then
-    for d in "$RUNTIME_ROOT/skills"/*; do
-        [ -d "$d" ] || continue
-        kernel_names="$kernel_names $(basename "$d")"
+# Legacy cleanup: remove bare-name symlinks under ~/.claude/skills/ that point
+# into ~/.flow/cells/ or ~/.flow/active-cell/. Predates namespacing.
+legacy_cleaned=0
+if [ -d "$LEGACY_SKILLS_DIR" ]; then
+    for entry in "$LEGACY_SKILLS_DIR"/*; do
+        [ -L "$entry" ] || continue
+        target=$(readlink "$entry")
+        case "$target" in
+            "$FLOW_HOME"/cells/*|"$FLOW_HOME/active-cell"/*)
+                rm -f "$entry"
+                legacy_cleaned=$((legacy_cleaned + 1))
+                ;;
+        esac
     done
 fi
 
-# Unlink any existing symlinks under ~/.claude/skills/ that point into ~/.flow/cells/.
-for entry in "$SKILLS_DIR"/*; do
-    [ -L "$entry" ] || continue
-    target=$(readlink "$entry")
-    case "$target" in
-        "$FLOW_HOME"/cells/*|"$FLOW_HOME/active-cell"/*)
-            rm -f "$entry"
-            ;;
-    esac
-done
+# Ensure the cell has a plugin manifest. Auto-generate from cell.yaml if missing.
+manifest_dir="$active_path/.claude-plugin"
+manifest="$manifest_dir/plugin.json"
+if [ ! -f "$manifest" ]; then
+    mkdir -p "$manifest_dir"
+    cell_version=$(grep '^version:' "$active_path/cell.yaml" 2>/dev/null | head -1 | sed 's/version:[[:space:]]*//' | tr -d '"' || echo "0.1.0")
+    cell_desc=$(grep '^description:' "$active_path/cell.yaml" 2>/dev/null | head -1 | sed 's/description:[[:space:]]*//' | tr -d '"' || echo "Flow cell")
+    cat > "$manifest" <<EOF
+{
+  "name": "$cell_name",
+  "version": "${cell_version:-0.1.0}",
+  "description": "${cell_desc:-Flow cell}"
+}
+EOF
+    echo "  generated $manifest"
+fi
 
-# Link each cell skill in.
-linked=0
-for dir in "$active/skills"/*; do
-    [ -d "$dir" ] || continue
-    name=$(basename "$dir")
-    # Skip if a kernel skill with this name exists.
-    if echo " $kernel_names " | grep -q " $name "; then
-        echo "  skip $name (kernel skill exists)" >&2
-        continue
-    fi
-    target="$SKILLS_DIR/$name"
-    if [ -e "$target" ] && [ ! -L "$target" ]; then
-        echo "  skip $name (real file/dir exists at $target)" >&2
-        continue
-    fi
-    rm -f "$target"
-    ln -s "$dir" "$target"
-    linked=$((linked + 1))
-done
+# Make sure installed_plugins.json exists.
+mkdir -p "$PLUGINS_DIR"
+if [ ! -f "$INSTALLED_JSON" ]; then
+    echo '{"version": 2, "plugins": {}}' > "$INSTALLED_JSON"
+fi
 
-echo "Linked $linked cell skill(s) from $(basename "$(readlink "$active")")."
+now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+plugin_id="${cell_name}@local-dev"
+
+# Remove any other cell plugin entries under @local-dev that point into ~/.flow/cells/
+# (so switching cells doesn't leave stale entries). Then upsert the active one.
+tmp_json=$(mktemp)
+jq --arg keep "$plugin_id" \
+   --arg flow_cells "$FLOW_HOME/cells" \
+   '.plugins = (
+       .plugins | with_entries(
+           if (.key | endswith("@local-dev")) and (.key != $keep) and (.key != "flow@local-dev")
+              and ((.value[0].installPath // "") | startswith($flow_cells))
+           then empty else . end
+       )
+   )' "$INSTALLED_JSON" > "$tmp_json"
+mv "$tmp_json" "$INSTALLED_JSON"
+
+tmp_json=$(mktemp)
+jq --arg id "$plugin_id" \
+   --arg path "$active_path" \
+   --arg ts  "$now_iso" \
+   '.plugins[$id] = [{
+       scope: "user",
+       installPath: $path,
+       version: "dev",
+       installedAt: (.plugins[$id][0].installedAt // $ts),
+       lastUpdated: $ts
+   }]' "$INSTALLED_JSON" > "$tmp_json"
+mv "$tmp_json" "$INSTALLED_JSON"
+
+# Count cell skills for the summary.
+skill_count=0
+if [ -d "$active_path/skills" ]; then
+    for d in "$active_path/skills"/*; do
+        [ -d "$d" ] || continue
+        skill_count=$((skill_count + 1))
+    done
+fi
+
+echo "✓ Active cell '$cell_name' installed as plugin '$plugin_id' ($skill_count skills, namespaced as ${cell_name}:*)"
+if [ "$legacy_cleaned" -gt 0 ]; then
+    echo "✓ Removed $legacy_cleaned legacy bare-name symlink(s) from ~/.claude/skills/"
+fi

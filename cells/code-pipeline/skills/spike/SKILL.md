@@ -1,6 +1,6 @@
 ---
 name: spike
-description: Spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /flow-spike, not directly. Referenced by flow.
+description: Flow stage — spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /flow:spike, not directly. Invoked by the flow:run kernel.
 metadata:
   short-description: Unattended spike → draft PR
   internal: true
@@ -25,7 +25,7 @@ Two "reviews" exist in the flow system; this skill keeps them distinct.
 
 ## When to use
 
-Spike orchestrates `/flow-spike` runs. Invokable at **any conviction point**:
+Spike orchestrates `/flow:spike` runs. Invokable at **any conviction point**:
 
 - From a clean workspace with a thesis argument.
 - Mid-conversation with no arguments (the LLM distills a thesis from context).
@@ -34,7 +34,7 @@ Spike orchestrates `/flow-spike` runs. Invokable at **any conviction point**:
 ### Rules
 
 - **DO** use spike for thesis-validation work where you want to come back to something testable.
-- **DO NOT** use spike for work that requires judgment calls the user wants to make themselves — use regular `/flow` (or `/flow-here` to seed from the current conversation).
+- **DO NOT** use spike for work that requires judgment calls the user wants to make themselves — use regular `/flow:flow` (or `/flow:here` to seed from the current conversation).
 
 ## How to determine entry mode
 
@@ -49,7 +49,7 @@ Spike supports three entry modes but produces one artifact: a draft PR with the 
 ### How to detect
 
 1. Check the branch — refuse if it's `main` (or the repo's default). Spike must run on a feature branch.
-2. Run `$HOME/.claude/skills/run/scripts/detect-stage.sh`.
+2. Run `$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh`.
 3. If the detected stage is `explore-empty` and no thread folder exists for the current branch → **cold** (if `$ARGUMENTS` present) or **warm-fresh** (no args).
 4. Otherwise → **resume**. Pick up from the detected stage.
 
@@ -100,8 +100,8 @@ Everywhere the stage skills (`explore`, `plan`, `implement`, `review`, `ship`) w
 Only runs in **cold** and **warm-fresh** entry modes. Skipped in **resume** mode because the spec already exists.
 
 - Determine the thesis: `$ARGUMENTS` wins if non-empty; otherwise the LLM distills a one-sentence thesis from the conversation context.
-- Compute a branch name via `$HOME/.claude/skills/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
-- Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
+- Compute a branch name via `$HOME/.flow/runtime/skills/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
+- Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
 - Materialize `spike-log.md` in the thread folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
 - Run the normal `explore` skill to populate the spec. In warm-fresh mode, distill the conversation context directly into the spec body — the human's exploration is the source material. All `## Decisions needed` items auto-resolve via the decision policy.
 
@@ -134,7 +134,7 @@ Use the normal `review` skill; output `03-review-r1.md` in the thread folder.
 - **Draft PR only**: `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled).
 - Never `gh pr ready`. Never `gh pr merge`. Those are human-review decisions.
 - Record the PR number into the spec's frontmatter comment (same as normal ship): `<!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->`. The thread folder stays put; no archive move.
-- After push + PR creation, report the PR URL in plain text. Do NOT invoke reflection (`/reflect`) — reflection is for longitudinal flow use, not spikes.
+- After push + PR creation, report the PR URL in plain text. Do NOT invoke reflection (`/flow:reflect`) — reflection is for longitudinal flow use, not spikes.
 
 ## Adversarial-review anti-pattern
 

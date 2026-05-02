@@ -52,7 +52,7 @@ flow-runtime/
 │       └── templates/            # spec.md, etc.
 ├── scripts/                      # cell-mgmt internals called by Makefile
 │   ├── cell-init.sh              # copy starter → ~/.flow/cells/<name>/, git init
-│   ├── cell-link.sh              # symlink cell/skills/* → ~/.claude/skills/
+│   ├── cell-link.sh              # register active cell as a Claude Code plugin (<cell-name>:* namespace)
 │   ├── cell-unlink.sh
 │   ├── cell-use.sh               # switch active cell
 │   ├── cell-status.sh
@@ -86,7 +86,7 @@ User's territory. Each cell is its own git repo (local-only at first; user wires
 ├── tools/
 │   └── Cell.mk                   # shared make targets every cell inherits
 └── state/
-    ├── cell-history.log          # which cell was active when, for /reflect
+    ├── cell-history.log          # which cell was active when, for /flow:reflect
     └── last-sync.json            # per-cell: last commit SHA observed (for stale-check warnings)
 ```
 
@@ -129,38 +129,28 @@ doc_protocol: kernel       # "kernel" = use flow-runtime's protocol.md. "custom"
 
 ## 3. `~/.claude/` (Claude Code discovery)
 
-Pure symlinks. Two layers — kernel skills are real installs, cell skills are symlinks into zone 2.
+The kernel and each active cell are registered as Claude Code plugins via `~/.claude/plugins/installed_plugins.json`. The plugin loader follows each entry's `installPath` to find skills and commands, and namespaces them by the plugin's `name` field.
 
 ```text
-~/.claude/
-├── skills/
-│   ├── flow/             ← real install from flow-runtime repo
-│   ├── flow-config/      ← real
-│   ├── flow-here/       ← real
-│   ├── flow-reflect/     ← real
-│   ├── flow-spike/       ← real
-│   ├── teach/            ← real
-│   ├── docs-style/       ← real
-│   ├── explore     →  ~/.flow/active-cell/skills/explore       (symlink)
-│   ├── plan        →  ~/.flow/active-cell/skills/plan          (symlink)
-│   ├── implement   →  ~/.flow/active-cell/skills/implement     (symlink)
-│   ├── review      →  ~/.flow/active-cell/skills/review        (symlink)
-│   ├── ship        →  ~/.flow/active-cell/skills/ship          (symlink)
-│   ├── tdd         →  ~/.flow/active-cell/skills/tdd           (symlink)
-│   ├── commits     →  ~/.flow/active-cell/skills/commits       (symlink)
-│   └── parallel    →  ~/.flow/active-cell/skills/parallel      (symlink)
-└── commands/
-    └── flow*.md          ← real
+~/.claude/plugins/installed_plugins.json
+   ├── flow@local-dev              → /path/to/flow-runtime          (kernel: skills, commands)
+   └── <active-cell>@local-dev     → ~/.flow/cells/<active-cell>    (cell: stage skills)
+
+→ surfaces in pickers as:
+   flow:run, flow:ingest, flow:reflect, /flow:flow, /flow:reflect, …
+   code-pipeline:explore, code-pipeline:plan, code-pipeline:implement, …
 ```
 
-Switching cells is one `cell-use.sh` call: unlink the old cell's symlinks, walk the new cell's `skills/` directory and link each into `~/.claude/skills/<name>`.
+Switching cells is one `cell-use.sh` call: rewrite `installed_plugins.json` to drop the old cell's `@local-dev` entry and add the new one. No symlink shuffling in `~/.claude/skills/`.
+
+End-user marketplace installs use the same mechanism — `claude plugin install` writes the same JSON shape, just under a different marketplace key. `make install` produces an identical end state pointed at the live repo for dev iteration.
 
 ## Make targets (user-facing)
 
 ```text
 make                        # help
-make install                # install kernel into ~/.claude/ (one-time after clone)
-make doctor                 # sanity: kernel installed? active-cell set? symlinks resolve? git OK?
+make install                # register kernel as flow@local-dev plugin (one-time after clone)
+make doctor                 # sanity: kernel + active-cell plugins registered, paths resolve, git/gh/jq present
 
 # Cell lifecycle
 make cell-list              # all cells in ~/.flow/cells/, marks the active one
@@ -169,7 +159,7 @@ make cell-init STARTER=code-pipeline  NAME=my-code
                             # runs `git init`, makes initial commit on `main`
 make cell-new NAME=writing-pipeline
                             # empty cell scaffold (just cell.yaml + skills/ + templates/)
-make cell-use NAME=my-code  # switch active cell — re-symlink ~/.claude/skills/
+make cell-use NAME=my-code  # switch active cell — re-register as <my-code>@local-dev plugin
 make cell-rm NAME=…         # delete cell (confirms first; preserves git history)
 
 # Per-cell git operations (operate on the active cell by default; CELL= overrides)
@@ -189,19 +179,19 @@ Two non-obvious ones:
 
 | Action | Who triggers | What happens |
 |---|---|---|
-| `/flow` boundary completes | flow kernel | reads active cell's manifest, dispatches to next stage's skill via symlinked path |
+| `/flow:flow` boundary completes | flow kernel | reads active cell's manifest, dispatches to next stage's skill via the cell's namespace (e.g. `code-pipeline:plan`) |
 | `teach` writes a new skill | user invocation | `cell-branch` cuts a branch in active cell, writes file, prompts to commit, then `cell-pr` |
-| `/reflect` proposes change | user invocation | same: branch in active cell, edit, PR |
-| `make cell-use foo` | user via make | unlink old cell symlinks, link new ones, update `~/.flow/active-cell` |
+| `/flow:reflect` proposes change | user invocation | same: branch in active cell, edit, PR |
+| `make cell-use foo` | user via make | drop old cell's plugin entry, register new one, update `~/.flow/active-cell` |
 
 Everything that mutates skills goes through `cell-branch` → edit → `cell-pr`. There is no path that commits directly to a cell's `main`.
 
 ## Open questions for the next iteration
 
-1. **Branch in target project vs. branch in cell** — the user is in project `myapp/` running `/flow`. teach edits a skill, which creates a branch in `~/.flow/cells/code-pipeline/`. That's a *different* git repo than the project. Is the mental model clear, or do we need a UI signal (e.g. `cell-pr` always prints "this PR is in your code-pipeline repo, not myapp")?
+1. **Branch in target project vs. branch in cell** — the user is in project `myapp/` running `/flow:flow`. teach edits a skill, which creates a branch in `~/.flow/cells/code-pipeline/`. That's a *different* git repo than the project. Is the mental model clear, or do we need a UI signal (e.g. `cell-pr` always prints "this PR is in your code-pipeline repo, not myapp")?
 2. **Multiple cells active at once** — explicitly out of scope for v3? Or do we want `make cell-stack` to layer two cells (e.g. code-pipeline + a `security-review-stage` cell)? My read: out of scope. Confirm.
 3. **`cell.yaml` ownership** — is the manifest part of the kernel's contract (kernel reads it, stage skills don't care) or do stage skills also read it (e.g. ship reading `ship_target`)? Clean answer: kernel-only; ship is just whatever skill the manifest names.
-4. **Empty-shell first run** — `/flow` with no active cell: what does it do? Three options: (a) refuse and print `make cell-init`, (b) auto-init `code-pipeline` as the personal cell on first run, (c) AskUserQuestion which starter to init from. (b) is the lowest-friction; (c) is the most discoverable.
+4. **Empty-shell first run** — `/flow:flow` with no active cell: what does it do? Three options: (a) refuse and print `make cell-init`, (b) auto-init `code-pipeline` as the personal cell on first run, (c) AskUserQuestion which starter to init from. (b) is the lowest-friction; (c) is the most discoverable.
 5. **Doc protocol pluggability** — `cell.yaml` has `doc_protocol: kernel | custom`. Is that worth shipping in v3, or YAGNI until someone has a real need to deviate from the kernel protocol?
 6. **Where the bundled starter lives** — inside `flow-runtime/cells/code-pipeline/` (one repo, simpler) or in its own GitHub repo (`jyliang/flow-cell-code`, more honest about it being "just another cell")? I lean toward the former for v3 since you said no community contribution yet.
 

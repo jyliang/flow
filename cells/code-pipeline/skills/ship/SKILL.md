@@ -30,7 +30,7 @@ Read the latest `03-review-r*.md` in the active thread (`agent/threads/*-$(git b
 Load the project's test command from config and run it before touching any fixes.
 
 ```bash
-eval "$($HOME/.claude/skills/run/scripts/load-config.sh)"
+eval "$($HOME/.flow/runtime/skills/run/scripts/load-config.sh)"
 ```
 
 If `FLOW_TEST_CMD` is non-empty, run it via a subagent. If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.

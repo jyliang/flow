@@ -37,4 +37,13 @@ fi
 read -r -p "Remove cell '$name' permanently? (y/N) " ans
 [ "$ans" = "y" ] || [ "$ans" = "Y" ] || { echo "aborted"; exit 1; }
 rm -rf "$target"
+
+# Drop the plugin registration if present.
+INSTALLED_JSON="$HOME/.claude/plugins/installed_plugins.json"
+plugin_id="${name}@local-dev"
+if [ -f "$INSTALLED_JSON" ] && command -v jq >/dev/null 2>&1; then
+    tmp=$(mktemp)
+    jq --arg id "$plugin_id" 'del(.plugins[$id])' "$INSTALLED_JSON" > "$tmp" && mv "$tmp" "$INSTALLED_JSON"
+fi
+
 echo "✓ Cell '$name' removed."

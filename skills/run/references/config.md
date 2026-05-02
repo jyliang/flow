@@ -47,4 +47,4 @@ The config file is executable code, not data — treat it that way.
 
 ## Run first-time setup
 
-On `/flow` in an empty workspace with no `.flow/config.sh`, the LLM runs a 3-question scripted setup via `AskUserQuestion` and writes the file. All questions are skippable; skipping writes commented defaults (marks the project as set up, prevents the setup from re-firing). Re-run explicitly any time with `/cell config`.
+On `/flow:flow` in an empty workspace with no `.flow/config.sh`, the LLM runs a 3-question scripted setup via `AskUserQuestion` and writes the file. All questions are skippable; skipping writes commented defaults (marks the project as set up, prevents the setup from re-firing). Re-run explicitly any time with `/flow:cell config`.

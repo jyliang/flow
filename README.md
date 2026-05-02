@@ -8,34 +8,37 @@ Flow ships empty. You install a **cell** (a git repo of skills defining one pipe
 
 ### 1. Install
 
-Clone this repo, then:
+**End users — marketplace install (recommended):**
 
 ```bash
-make install
+claude plugin marketplace add jyliang/flow
+claude plugin install flow@flow
 ```
 
-Installs into `~/.claude/` and `~/.flow/`.
+Skills and commands appear under the `flow:` namespace (`flow:run`, `/flow:flow`, etc.).
 
-Verify: `make doctor`.
+**Local development:** clone this repo and run `make install`. Registers the live repo as the `flow@local-dev` plugin so edits flow through without re-installing. Same `flow:` namespace as the marketplace install.
 
-### 2. First `/flow`
+Verify either install with: `make doctor`.
+
+### 2. First `/flow:flow`
 
 In any project:
 
 ```text
-/flow
+/flow:flow
 ```
 
-Flow has no skills installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
+Flow has no cell installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-That installs a git repo at `~/.flow/cells/code-pipeline/` and links its skills into Claude Code. `/flow` is ready.
+That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@local-dev` plugin. Stage skills appear as `code-pipeline:explore`, `code-pipeline:plan`, etc. `/flow:flow` is ready.
 
 ### 3. Start a thread
 
 Tell flow what you want to build. It cuts a branch, opens a thread folder, and walks you through it stage by stage.
 
 ```text
-/flow add a /standup command that summarizes my git activity
+/flow:flow add a /standup command that summarizes my git activity
 ```
 
 You'll see the first handoff (a spec) and a Yes / Adjust / Pause prompt. Edit the spec, or move on.
@@ -46,7 +49,7 @@ Each stage emits a handoff document — spec, plan, findings — readable and ed
 
 - **Yes, advance** — go to the next stage.
 - **Adjust** — edit the handoff first.
-- **Pause** — stop here; resume with `/flow` later.
+- **Pause** — stop here; resume with `/flow:flow` later.
 
 ### 5. Ship
 
@@ -59,7 +62,7 @@ Review the PR like any other PR.
 After you ship something:
 
 ```text
-/reflect
+/flow:reflect
 ```
 
 Flow scans the thread for patterns — repeated suggestions you accepted, things you pushed back on twice — and proposes edits to the skills that ran. You see the diffs and pick which to accept. Flow opens a PR against your cell repo with the accepted edits.
@@ -101,26 +104,28 @@ Three layers:
 
 ## Slash commands
 
+All commands are namespaced under the `flow` plugin.
+
 | Command | Calls | What it does |
 |---|---|---|
-| `/flow` | `run` | Start or continue a thread. |
-| `/teach` | `ingest` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
-| `/reflect` | `reflect` | After threads ship, propose cell evolutions. |
-| `/flow-spike` | `run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
-| `/flow-here` | `run` (with seed) | Distill the current conversation into a thread spec. |
-| `/cell` | — | Cell management (list, switch, init, link remote, open PR). |
+| `/flow:flow` | `flow:run` | Start or continue a thread. |
+| `/flow:teach` | `flow:ingest` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
+| `/flow:reflect` | `flow:reflect` | After threads ship, propose cell evolutions. |
+| `/flow:spike` | `flow:run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
+| `/flow:here` | `flow:run` (with seed) | Distill the current conversation into a thread spec. |
+| `/flow:cell` | — | Cell management (list, switch, init, link remote, open PR). |
 
 ## Make targets
 
 | Target | Purpose |
 |---|---|
-| `make install` | Install kernel into `~/.claude/`, provision `~/.flow/`. |
+| `make install` | Install kernel as the `flow@local-dev` plugin, provision `~/.flow/`. Dev mode — points at the live repo. |
 | `make doctor` | Sanity check the install. |
 | `make list` | Show installed kernel skills + slash commands. |
 | `make cell-init STARTER=code-pipeline NAME=<name>` | Clone a starter into `~/.flow/cells/<name>/`. |
 | `make cell-new NAME=<name>` | Empty cell scaffold. |
 | `make cell-list` | Show installed cells, mark the active one. |
-| `make cell-use NAME=<name>` | Switch active cell (re-symlinks). |
+| `make cell-use NAME=<name>` | Switch active cell (re-registers as `<name>@local-dev` plugin). |
 | `make cell-status` | Git status of the active cell. |
 | `make cell-link-remote URL=...` | Add origin to the active cell. |
 | `make cell-branch BRANCH=...` | Cut an evolution branch in the active cell. |
@@ -148,13 +153,14 @@ Three biological analogies for how the kernel primitives work:
 flow-runtime/
 ├── Makefile                          # User-facing CLI for kernel + cells
 ├── README.md                         # This file
-├── commands/                         # Kernel slash commands
-│   ├── flow.md                       # /flow → run
-│   ├── teach.md                      # /teach → ingest
-│   ├── reflect.md                    # /reflect → reflect
-│   ├── flow-spike.md                 # /flow-spike → autonomous run
-│   ├── flow-here.md                  # /flow-here → seed a thread from conversation
-│   └── cell.md                       # /cell → cell management
+├── .claude-plugin/plugin.json        # Plugin manifest — name: flow
+├── commands/                         # Kernel slash commands (auto-namespaced as /flow:*)
+│   ├── flow.md                       # /flow:flow → run
+│   ├── teach.md                      # /flow:teach → ingest
+│   ├── reflect.md                    # /flow:reflect → reflect
+│   ├── spike.md                      # /flow:spike → autonomous run
+│   ├── here.md                       # /flow:here → seed a thread from conversation
+│   └── cell.md                       # /flow:cell → cell management
 ├── skills/                           # Kernel skills (don't change between cells)
 │   ├── run/
 │   ├── ingest/
@@ -172,23 +178,21 @@ After `make install`:
 
 ```text
 ~/.flow/
-├── cells/<name>/                     # Each cell as its own git repo
+├── cells/<name>/                     # Each cell as its own git repo (and plugin)
 ├── active-cell -> cells/<active>/    # Symlink
 ├── runtime-path                      # Where this runtime lives
 ├── tools/Cell.mk                     # Copy of the runtime's Cell.mk
 └── state/                            # Patches, history, telemetry
 
-~/.claude/
-├── skills/                           # Symlinks to kernel + active cell skills
-└── commands/                         # Symlinks to kernel slash commands
+~/.claude/plugins/installed_plugins.json
+   ├── flow@local-dev          → /path/to/this/repo            (kernel)
+   └── <cell-name>@local-dev   → ~/.flow/cells/<cell-name>     (active cell)
 ```
 
-## Install (alternatives)
-
-Flow also ships as a `skills.sh`-compatible skill cell for non-Claude-Code agents, but the kernel/cell model is Claude Code-first. See the older v2 install instructions if you need a different agent.
+Skills and commands appear in pickers under their plugin namespace: `flow:run`, `flow:ingest`, `flow:reflect`, `code-pipeline:explore`, etc. End-user marketplace installs produce the same namespacing — `make install` is dev-mode only.
 
 ## Reflection
 
-After a few shipped threads, `/reflect` scans them for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and proposes concrete edits. Every proposal goes through `AskUserQuestion`; on Yes, the change auto-lands as a PR against the active cell repo. Nothing lands silently.
+After a few shipped threads, `/flow:reflect` scans them for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and proposes concrete edits. Every proposal goes through `AskUserQuestion`; on Yes, the change auto-lands as a PR against the active cell repo. Nothing lands silently.
 
 Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. See `skills/reflect/SKILL.md`.

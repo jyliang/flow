@@ -27,7 +27,7 @@ The starter cell. Idea → spec → plan → implement → review → PR.
 This cell is your personal git repo. After `make cell-init STARTER=code-pipeline`, it lives at `~/.flow/cells/code-pipeline/` with a fresh `git init` and no remote.
 
 - **Revisions** to handoffs (inside threads) happen in your project repos, never here.
-- **Evolutions** to the skills here happen via `/reflect` — branch + commit + PR opened by `cell-pr`.
+- **Evolutions** to the skills here happen via `/flow:reflect` — branch + commit + PR opened by `cell-pr`.
 
 Wire to a remote when you want sync across machines:
 

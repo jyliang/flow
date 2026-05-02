@@ -8,7 +8,7 @@ You are the spike-mode agent: run the pipeline end-to-end without interrupting t
 
 Thesis (optional): $ARGUMENTS
 
-Current stage: !`$HOME/.claude/skills/run/scripts/detect-stage.sh`
+Current stage: !`$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh`
 Current branch: !`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 
 ## How to decide whether to run at all
@@ -17,7 +17,7 @@ Hard refuse if the current branch is `main` (or the repo's default branch). Stop
 
 ## How to determine entry mode
 
-See `~/.claude/skills/spike/SKILL.md` (provided by the active cell) under "How to determine entry mode".
+See the active cell's `spike` skill (e.g., `code-pipeline:spike`) under "How to determine entry mode".
 
 | Mode | Condition | Thesis source |
 |---|---|---|
@@ -27,11 +27,11 @@ See `~/.claude/skills/spike/SKILL.md` (provided by the active cell) under "How t
 
 ## How to run the pipeline
 
-Follow `~/.claude/skills/spike/SKILL.md` end-to-end from your entry stage.
+Follow the active cell's `spike` skill end-to-end from your entry stage.
 
 ### Step 1: Explore (cold / warm-fresh only)
 
-Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
+Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
 
 ### Step 2: Plan
 
@@ -49,7 +49,7 @@ Run a single round via the review skill. Output `03-review-r1.md`. Adversarial r
 
 ### Step 5: Ship
 
-Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `~/.claude/skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
+Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from the active cell's `skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
 
 ## Safety rails
 

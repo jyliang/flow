@@ -5,7 +5,7 @@ description: Move work forward from idea to delivery — detect stage, advance.
 This slash command is parsed by Claude Code and read by the `run` kernel skill — both need the detected stage and cell state below to decide what to do next.
 
 Active cell: !`test -L "$HOME/.flow/active-cell" && readlink "$HOME/.flow/active-cell" | xargs basename || echo "none"`
-Detected stage: !`$HOME/.claude/skills/run/scripts/detect-stage.sh 2>/dev/null || echo "kernel-not-installed"`
+Detected stage: !`$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh 2>/dev/null || echo "kernel-not-installed"`
 Config state: !`test -f .flow/config.sh && echo configured || echo unconfigured`
 
 ## How to route this invocation
