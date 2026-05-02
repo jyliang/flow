@@ -43,7 +43,11 @@ if [ -d "$LEGACY_SKILLS_DIR" ]; then
     done
 fi
 
-# Ensure the cell has a plugin manifest. Auto-generate from cell.yaml if missing.
+# Ensure the cell has a plugin manifest with `name` matching the cell directory.
+# Auto-generate from cell.yaml if missing; rewrite the `name` field if stale
+# (e.g. cell was forked from a starter and inherited the starter's name —
+# leaving it would namespace this cell's skills under the starter's name and
+# collide with the starter cell).
 manifest_dir="$active_path/.claude-plugin"
 manifest="$manifest_dir/plugin.json"
 if [ ! -f "$manifest" ]; then
@@ -58,6 +62,13 @@ if [ ! -f "$manifest" ]; then
 }
 EOF
     echo "  generated $manifest"
+elif command -v jq >/dev/null 2>&1; then
+    manifest_name=$(jq -r '.name // empty' "$manifest" 2>/dev/null || echo "")
+    if [ -n "$manifest_name" ] && [ "$manifest_name" != "$cell_name" ]; then
+        tmp=$(mktemp)
+        jq --arg n "$cell_name" '.name = $n' "$manifest" > "$tmp" && mv "$tmp" "$manifest"
+        echo "  fixed $manifest (name: $manifest_name → $cell_name)"
+    fi
 fi
 
 # Make sure installed_plugins.json exists.

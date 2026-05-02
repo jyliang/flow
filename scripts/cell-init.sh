@@ -34,6 +34,19 @@ if [ -n "$starter" ]; then
         exit 1
     fi
     cp -R "$src" "$dest"
+
+    # If the new cell's name differs from the starter, rewrite the cell name
+    # in both cell.yaml and .claude-plugin/plugin.json so Claude Code namespaces
+    # this cell's skills as <name>:* (not <starter>:*, which would collide).
+    if [ "$name" != "$starter" ]; then
+        if [ -f "$dest/cell.yaml" ]; then
+            sed -i.bak "s/^name: $starter\$/name: $name/" "$dest/cell.yaml" && rm -f "$dest/cell.yaml.bak"
+        fi
+        if [ -f "$dest/.claude-plugin/plugin.json" ] && command -v jq >/dev/null 2>&1; then
+            tmp=$(mktemp)
+            jq --arg n "$name" '.name = $n' "$dest/.claude-plugin/plugin.json" > "$tmp" && mv "$tmp" "$dest/.claude-plugin/plugin.json"
+        fi
+    fi
 else
     mkdir -p "$dest/skills" "$dest/templates"
     cat > "$dest/cell.yaml" <<EOF

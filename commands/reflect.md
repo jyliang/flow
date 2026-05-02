@@ -46,7 +46,7 @@ Surface each proposal via `AskUserQuestion`, max 4 per call. Show the diff inlin
 
 For each `Apply`:
 
-- **Cell-target proposals**: invoke `make cell-branch BRANCH=evolve/<slug>`, edit the file(s), commit, then `make cell-pr TITLE=... BODY=...`. The user does not run any extra command — the auto-apply contract from `skills/reflect/SKILL.md` requires it.
+- **Cell-target proposals**: invoke `bash $HOME/.flow/runtime/scripts/cell-branch.sh "" evolve/<slug>`, edit the file(s), commit, then `bash $HOME/.flow/runtime/scripts/cell-pr.sh "" "<title>" "<body>"`. The user does not run any extra command — the auto-apply contract from `skills/reflect/SKILL.md` requires it.
 - **Non-cell proposals** (`CLAUDE.md`, `.flow/config.sh`): edit directly.
 
 Summarize what landed, including PR URLs (or staged-patch paths if no remote was wired).
