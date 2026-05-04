@@ -131,25 +131,33 @@ doc_protocol: kernel       # "kernel" = use flow-runtime's protocol.md. "custom"
 
 The kernel and each active cell are registered as Claude Code plugins via `~/.claude/plugins/installed_plugins.json`. The plugin loader follows each entry's `installPath` to find skills and commands, and namespaces them by the plugin's `name` field.
 
+The `@<suffix>` of each plugin key must match a registered marketplace in `~/.claude/plugins/known_marketplaces.json` — otherwise the loader silently skips the entry. Dev mode hooks into the real `flow` marketplace by symlinking its install location at the live repo. Both kernel and cells share that one marketplace.
+
 ```text
+~/.claude/plugins/known_marketplaces.json
+   └── flow                  → ~/.claude/plugins/marketplaces/flow → /path/to/flow-runtime  (symlink in dev)
+
 ~/.claude/plugins/installed_plugins.json
-   ├── flow@local-dev              → /path/to/flow-runtime          (kernel: skills, commands)
-   └── <active-cell>@local-dev     → ~/.flow/cells/<active-cell>    (cell: stage skills)
+   ├── flow@flow             → /path/to/flow-runtime          (kernel: skills, commands)
+   └── <active-cell>@flow    → ~/.flow/cells/<active-cell>    (cell: stage skills)
+
+~/.claude/settings.json
+   └── enabledPlugins: { flow@flow: true, <active-cell>@flow: true }  # registration alone isn't enough — plugins default to disabled
 
 → surfaces in pickers as:
    flow:run, flow:ingest, flow:reflect, /flow:flow, /flow:reflect, …
    code-pipeline:explore, code-pipeline:plan, code-pipeline:implement, …
 ```
 
-Switching cells is one `cell-use.sh` call: rewrite `installed_plugins.json` to drop the old cell's `@local-dev` entry and add the new one. No symlink shuffling in `~/.claude/skills/`.
+Switching cells is one `cell-use.sh` call: rewrite `installed_plugins.json` to drop the old cell's `@flow` entry and add the new one (plus toggle `enabledPlugins`). No symlink shuffling in `~/.claude/skills/`.
 
-End-user marketplace installs use the same mechanism — `claude plugin install` writes the same JSON shape, just under a different marketplace key. `make install` produces an identical end state pointed at the live repo for dev iteration.
+End-user marketplace installs use the same mechanism — `claude plugin install` writes the same JSON shape with `installPath` pointed at a cache directory. `make install` produces an identical end state pointed at the live repo for dev iteration.
 
 ## Make targets (user-facing)
 
 ```text
 make                        # help
-make install                # register kernel as flow@local-dev plugin (one-time after clone)
+make install                # register kernel as flow@flow plugin and enable in settings.json (one-time after clone)
 make doctor                 # sanity: kernel + active-cell plugins registered, paths resolve, git/gh/jq present
 
 # Cell lifecycle
@@ -159,7 +167,7 @@ make cell-init STARTER=code-pipeline  NAME=my-code
                             # runs `git init`, makes initial commit on `main`
 make cell-new NAME=writing-pipeline
                             # empty cell scaffold (just cell.yaml + skills/ + templates/)
-make cell-use NAME=my-code  # switch active cell — re-register as <my-code>@local-dev plugin
+make cell-use NAME=my-code  # switch active cell — re-register as <my-code>@flow plugin
 make cell-rm NAME=…         # delete cell (confirms first; preserves git history)
 
 # Per-cell git operations (operate on the active cell by default; CELL= overrides)

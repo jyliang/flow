@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 # Install the flow kernel as a Claude Code plugin (dev mode).
 #
-# Registers the live repo as an installed plugin in ~/.claude/plugins/installed_plugins.json
-# under the synthetic marketplace `local-dev`. Claude Code discovers the plugin via
-# the manifest at .claude-plugin/plugin.json and namespaces its skills/commands as
-# `flow:*` — identical end state to a marketplace install, but pointed at the live
-# repo so dev edits flow through without re-running install.
-#
-# End users should install via marketplace instead:
-#   claude plugin marketplace add jyliang/flow
-#   claude plugin install flow@flow
+# Claude Code only loads plugins whose `@<marketplace>` suffix matches a registered
+# marketplace in ~/.claude/plugins/known_marketplaces.json. So we hook into the
+# real `flow` marketplace (github.com/jyliang/flow): symlink its install location
+# to the live dev repo, register `flow@flow` in installed_plugins.json. Dev edits
+# flow through; same end state as `claude plugin install flow@flow`.
 
 set -euo pipefail
 
@@ -18,16 +14,54 @@ FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
 CLAUDE_DIR="$HOME/.claude"
 PLUGINS_DIR="$CLAUDE_DIR/plugins"
 INSTALLED_JSON="$PLUGINS_DIR/installed_plugins.json"
+KNOWN_MARKETPLACES_JSON="$PLUGINS_DIR/known_marketplaces.json"
+MARKETPLACES_DIR="$PLUGINS_DIR/marketplaces"
+FLOW_MARKETPLACE_DIR="$MARKETPLACES_DIR/flow"
 LEGACY_SKILLS_DIR="$CLAUDE_DIR/skills"
 LEGACY_COMMANDS_DIR="$CLAUDE_DIR/commands"
 
-PLUGIN_ID="flow@local-dev"
+PLUGIN_ID="flow@flow"
 PLUGIN_VERSION="dev"
 
-mkdir -p "$PLUGINS_DIR"
+mkdir -p "$PLUGINS_DIR" "$MARKETPLACES_DIR"
 mkdir -p "$FLOW_HOME/cells" "$FLOW_HOME/state" "$FLOW_HOME/tools"
 
 echo "$RUNTIME_ROOT" > "$FLOW_HOME/runtime-path"
+
+# Point the `flow` marketplace install location at the live dev repo. If a stale
+# clone is present (from a prior `claude plugin marketplace add jyliang/flow`),
+# move it aside so we don't overwrite user state.
+now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+if [ -L "$FLOW_MARKETPLACE_DIR" ]; then
+    current=$(readlink "$FLOW_MARKETPLACE_DIR")
+    if [ "$current" != "$RUNTIME_ROOT" ]; then
+        rm -f "$FLOW_MARKETPLACE_DIR"
+        ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
+        echo "  re-pointed marketplace symlink: $current → $RUNTIME_ROOT"
+    fi
+elif [ -d "$FLOW_MARKETPLACE_DIR" ]; then
+    backup="$FLOW_MARKETPLACE_DIR.bak.$(date +%s)"
+    mv "$FLOW_MARKETPLACE_DIR" "$backup"
+    ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
+    echo "  moved stale marketplace clone aside: $backup"
+else
+    ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
+fi
+
+# Ensure the marketplace is registered in known_marketplaces.json so Claude Code
+# accepts `flow@flow` (and `<cell>@flow`) plugin keys.
+if [ ! -f "$KNOWN_MARKETPLACES_JSON" ]; then
+    echo '{}' > "$KNOWN_MARKETPLACES_JSON"
+fi
+tmp_km=$(mktemp)
+jq --arg loc "$FLOW_MARKETPLACE_DIR" \
+   --arg ts  "$now_iso" \
+   '.flow = {
+       source: { source: "github", repo: "jyliang/flow" },
+       installLocation: $loc,
+       lastUpdated: $ts
+   }' "$KNOWN_MARKETPLACES_JSON" > "$tmp_km"
+mv "$tmp_km" "$KNOWN_MARKETPLACES_JSON"
 
 # Stable symlink to the runtime so command bodies and stage skills can reference
 # scripts/templates by a fixed path: $HOME/.flow/runtime/skills/run/scripts/...
@@ -84,10 +118,17 @@ fi
 
 # Register (or update) the plugin entry in installed_plugins.json.
 # Schema mirrors what `claude plugin install` writes for marketplace plugins.
-now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 if [ ! -f "$INSTALLED_JSON" ]; then
     echo '{"version": 2, "plugins": {}}' > "$INSTALLED_JSON"
 fi
+
+# Migration: if a prior install used the synthetic `@local-dev` marketplace,
+# drop those entries — they never loaded (Claude Code skips unknown marketplaces).
+tmp_json=$(mktemp)
+jq '.plugins = (.plugins | with_entries(
+       if (.key | endswith("@local-dev")) then empty else . end
+   ))' "$INSTALLED_JSON" > "$tmp_json"
+mv "$tmp_json" "$INSTALLED_JSON"
 
 tmp_json=$(mktemp)
 jq --arg id "$PLUGIN_ID" \
@@ -102,6 +143,15 @@ jq --arg id "$PLUGIN_ID" \
        lastUpdated: $ts
    }]' "$INSTALLED_JSON" > "$tmp_json"
 mv "$tmp_json" "$INSTALLED_JSON"
+
+# Enable the plugin in user settings. Plugins default to disabled — without
+# this, `claude plugin list` shows the entry but the picker hides it.
+SETTINGS_JSON="$CLAUDE_DIR/settings.json"
+if [ -f "$SETTINGS_JSON" ]; then
+    tmp_settings=$(mktemp)
+    jq --arg id "$PLUGIN_ID" '.enabledPlugins[$id] = true' "$SETTINGS_JSON" > "$tmp_settings"
+    mv "$tmp_settings" "$SETTINGS_JSON"
+fi
 
 # Copy shared Cell.mk so cells can import it without depending on runtime path.
 cp "$RUNTIME_ROOT/tools/Cell.mk" "$FLOW_HOME/tools/Cell.mk" 2>/dev/null || true

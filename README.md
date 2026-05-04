@@ -17,7 +17,7 @@ claude plugin install flow@flow
 
 Skills and commands appear under the `flow:` namespace (`flow:run`, `/flow:flow`, etc.).
 
-**Local development:** clone this repo and run `make install`. Registers the live repo as the `flow@local-dev` plugin so edits flow through without re-installing. Same `flow:` namespace as the marketplace install.
+**Local development:** clone this repo and run `make install`. Hooks into the `flow` marketplace registration with the install location pointed at the live repo, then registers + enables the `flow@flow` plugin so edits flow through without re-installing. Same `flow:` namespace as the marketplace install.
 
 Verify either install with: `make doctor`.
 
@@ -31,7 +31,7 @@ In any project:
 
 Flow has no cell installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@local-dev` plugin. Stage skills appear as `code-pipeline:explore`, `code-pipeline:plan`, etc. `/flow:flow` is ready.
+That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage skills appear as `code-pipeline:explore`, `code-pipeline:plan`, etc. `/flow:flow` is ready.
 
 ### 3. Start a thread
 
@@ -119,13 +119,13 @@ All commands are namespaced under the `flow` plugin.
 
 | Target | Purpose |
 |---|---|
-| `make install` | Install kernel as the `flow@local-dev` plugin, provision `~/.flow/`. Dev mode — points at the live repo. |
+| `make install` | Install kernel as the `flow@flow` plugin (under the `flow` marketplace pointed at this repo), provision `~/.flow/`. Dev mode. |
 | `make doctor` | Sanity check the install. |
 | `make list` | Show installed kernel skills + slash commands. |
 | `make cell-init STARTER=code-pipeline NAME=<name>` | Clone a starter into `~/.flow/cells/<name>/`. |
 | `make cell-new NAME=<name>` | Empty cell scaffold. |
 | `make cell-list` | Show installed cells, mark the active one. |
-| `make cell-use NAME=<name>` | Switch active cell (re-registers as `<name>@local-dev` plugin). |
+| `make cell-use NAME=<name>` | Switch active cell (re-registers as `<name>@flow` plugin). |
 | `make cell-status` | Git status of the active cell. |
 | `make cell-link-remote URL=...` | Add origin to the active cell. |
 | `make cell-branch BRANCH=...` | Cut an evolution branch in the active cell. |
@@ -185,8 +185,12 @@ After `make install`:
 └── state/                            # Patches, history, telemetry
 
 ~/.claude/plugins/installed_plugins.json
-   ├── flow@local-dev          → /path/to/this/repo            (kernel)
-   └── <cell-name>@local-dev   → ~/.flow/cells/<cell-name>     (active cell)
+   ├── flow@flow              → /path/to/this/repo            (kernel)
+   └── <cell-name>@flow       → ~/.flow/cells/<cell-name>     (active cell)
+
+~/.claude/plugins/marketplaces/flow -> /path/to/this/repo     # symlink, dev mode
+~/.claude/settings.json
+   └── enabledPlugins: { flow@flow: true, <cell>@flow: true }  # written by make install
 ```
 
 Skills and commands appear in pickers under their plugin namespace: `flow:run`, `flow:ingest`, `flow:reflect`, `code-pipeline:explore`, etc. End-user marketplace installs produce the same namespacing — `make install` is dev-mode only.

@@ -24,6 +24,22 @@
         "evolution"
       ],
       "source": "./"
+    },
+    {
+      "name": "code-pipeline",
+      "description": "Bundled starter cell — explore, plan, implement, review, ship stages for code work.",
+      "author": {
+        "name": "Jason Liang",
+        "url": "https://github.com/jyliang"
+      },
+      "homepage": "https://github.com/jyliang/flow",
+      "tags": [
+        "workflow",
+        "cell",
+        "code",
+        "tdd"
+      ],
+      "source": "./cells/code-pipeline"
     }
   ]
 }

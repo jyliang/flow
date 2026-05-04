@@ -78,16 +78,19 @@ if [ ! -f "$INSTALLED_JSON" ]; then
 fi
 
 now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-plugin_id="${cell_name}@local-dev"
+plugin_id="${cell_name}@flow"
 
-# Remove any other cell plugin entries under @local-dev that point into ~/.flow/cells/
-# (so switching cells doesn't leave stale entries). Then upsert the active one.
+# Remove any other cell plugin entries under @flow / @local-dev that point into
+# ~/.flow/cells/ (so switching cells doesn't leave stale entries). Also strips
+# legacy @local-dev entries from the prior design — those never loaded since
+# Claude Code only honors marketplace suffixes registered in known_marketplaces.
 tmp_json=$(mktemp)
 jq --arg keep "$plugin_id" \
    --arg flow_cells "$FLOW_HOME/cells" \
    '.plugins = (
        .plugins | with_entries(
-           if (.key | endswith("@local-dev")) and (.key != $keep) and (.key != "flow@local-dev")
+           if ((.key | endswith("@flow")) or (.key | endswith("@local-dev")))
+              and (.key != $keep) and (.key != "flow@flow") and (.key != "flow@local-dev")
               and ((.value[0].installPath // "") | startswith($flow_cells))
            then empty else . end
        )
@@ -106,6 +109,15 @@ jq --arg id "$plugin_id" \
        lastUpdated: $ts
    }]' "$INSTALLED_JSON" > "$tmp_json"
 mv "$tmp_json" "$INSTALLED_JSON"
+
+# Enable the plugin in user settings. Plugins default to disabled — without
+# this, the cell's skills/commands won't appear in the picker.
+SETTINGS_JSON="$CLAUDE_DIR/settings.json"
+if [ -f "$SETTINGS_JSON" ]; then
+    tmp_settings=$(mktemp)
+    jq --arg id "$plugin_id" '.enabledPlugins[$id] = true' "$SETTINGS_JSON" > "$tmp_settings"
+    mv "$tmp_settings" "$SETTINGS_JSON"
+fi
 
 # Count cell skills for the summary.
 skill_count=0
