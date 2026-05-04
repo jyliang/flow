@@ -3,7 +3,7 @@
 # Precedence: environment > .flow/config.sh > built-in defaults.
 # Honors the v1 legacy FLOW_TEMPLATE_DIR if FLOW_TEMPLATE_SPEC is unset.
 #
-# Usage: eval "$($HOME/.claude/skills/run/scripts/load-config.sh)"
+# Usage: eval "$($HOME/.flow/runtime/skills/run/scripts/load-config.sh)"
 #        or capture stdout KEY=VALUE lines directly.
 # Exits: 0 success; non-zero if .flow/config.sh is malformed.
 

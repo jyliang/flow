@@ -28,18 +28,18 @@ doctor: ## Sanity check the install
 	@bash $(RUNTIME_ROOT)/scripts/doctor.sh
 
 list: ## List installed kernel skills and slash commands
-	@echo "Kernel skills:"
+	@echo "Kernel skills (namespaced as flow:*):"
 	@for dir in $(KERNEL_SKILLS); do \
 		name=$$(basename $$dir); \
 		desc=$$(grep '^  short-description:' $$dir/SKILL.md 2>/dev/null | sed 's/.*: //'); \
-		printf "  %-12s %s\n" "$$name" "$$desc"; \
+		printf "  flow:%-10s %s\n" "$$name" "$$desc"; \
 	done
 	@echo ""
-	@echo "Slash commands:"
+	@echo "Slash commands (namespaced as /flow:*):"
 	@for f in $(KERNEL_COMMANDS); do \
 		name=$$(basename $$f .md); \
 		desc=$$(grep '^description:' $$f 2>/dev/null | head -1 | sed 's/description: //'); \
-		printf "  /%-11s %s\n" "$$name" "$$desc"; \
+		printf "  /flow:%-9s %s\n" "$$name" "$$desc"; \
 	done
 
 # ----- Cell lifecycle -----

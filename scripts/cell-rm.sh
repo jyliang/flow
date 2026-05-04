@@ -37,4 +37,22 @@ fi
 read -r -p "Remove cell '$name' permanently? (y/N) " ans
 [ "$ans" = "y" ] || [ "$ans" = "Y" ] || { echo "aborted"; exit 1; }
 rm -rf "$target"
+
+# Drop the plugin registration if present (clean up both the current @flow
+# suffix and the legacy @local-dev suffix from prior installs).
+INSTALLED_JSON="$HOME/.claude/plugins/installed_plugins.json"
+SETTINGS_JSON="$HOME/.claude/settings.json"
+if [ -f "$INSTALLED_JSON" ] && command -v jq >/dev/null 2>&1; then
+    tmp=$(mktemp)
+    jq --arg flow "${name}@flow" --arg local "${name}@local-dev" \
+       'del(.plugins[$flow]) | del(.plugins[$local])' \
+       "$INSTALLED_JSON" > "$tmp" && mv "$tmp" "$INSTALLED_JSON"
+fi
+if [ -f "$SETTINGS_JSON" ] && command -v jq >/dev/null 2>&1; then
+    tmp=$(mktemp)
+    jq --arg flow "${name}@flow" --arg local "${name}@local-dev" \
+       'del(.enabledPlugins[$flow]) | del(.enabledPlugins[$local])' \
+       "$SETTINGS_JSON" > "$tmp" && mv "$tmp" "$SETTINGS_JSON"
+fi
+
 echo "✓ Cell '$name' removed."

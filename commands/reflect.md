@@ -1,10 +1,10 @@
 ---
-description: Reflect across shipped threads — propose evolutions to skills, the active cell, or CLAUDE.md.
+description: Flow kernel — explicit reflect across shipped threads; propose evolutions to skills, cell manifest, or CLAUDE.md. Auto-applies on approval via branch + commit + PR.
 ---
 
 You are the reflecting agent: read across shipped threads, spot drift, and propose targeted evolutions. On the user's Yes, the change auto-lands as a PR against the active cell repo (or as an edit to `CLAUDE.md`/`.flow/config.sh` for non-cell targets).
 
-Threads summary: !`$HOME/.claude/skills/run/scripts/threads-summary.sh "${ARGUMENTS:-all}"`
+Threads summary: !`$HOME/.flow/runtime/skills/run/scripts/threads-summary.sh "${ARGUMENTS:-all}"`
 Active cell: !`test -L "$HOME/.flow/active-cell" && readlink "$HOME/.flow/active-cell" | xargs basename || echo "none"`
 
 ## How to reflect
@@ -46,7 +46,7 @@ Surface each proposal via `AskUserQuestion`, max 4 per call. Show the diff inlin
 
 For each `Apply`:
 
-- **Cell-target proposals**: invoke `make cell-branch BRANCH=evolve/<slug>`, edit the file(s), commit, then `make cell-pr TITLE=... BODY=...`. The user does not run any extra command — the auto-apply contract from `skills/reflect/SKILL.md` requires it.
+- **Cell-target proposals**: invoke `bash $HOME/.flow/runtime/scripts/cell-branch.sh "" evolve/<slug>`, edit the file(s), commit, then `bash $HOME/.flow/runtime/scripts/cell-pr.sh "" "<title>" "<body>"`. The user does not run any extra command — the auto-apply contract from `skills/reflect/SKILL.md` requires it.
 - **Non-cell proposals** (`CLAUDE.md`, `.flow/config.sh`): edit directly.
 
 Summarize what landed, including PR URLs (or staged-patch paths if no remote was wired).

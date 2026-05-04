@@ -1,0 +1,15 @@
+{
+  "name": "code-pipeline",
+  "version": "0.1.0",
+  "description": "Flow cell — idea → spec → plan → implement → review → PR. Stage skills consumed by the flow:run kernel orchestrator.",
+  "author": {
+    "name": "Jason Liang",
+    "url": "https://github.com/jyliang"
+  },
+  "homepage": "https://github.com/jyliang/flow",
+  "license": "MIT",
+  "keywords": [
+    "flow-cell",
+    "code-pipeline"
+  ]
+}

@@ -4,15 +4,15 @@ description: Distill the current conversation into a new thread — populate the
 
 You are the seed-mode agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary.
 
-## /flow-here vs /teach — pick the right one
+## /flow:here vs /flow:teach — pick the right one
 
 | Command | Output | Lifetime | Lands in |
 |---|---|---|---|
-| `/flow-here` (here) | A **thread** (one piece of work) | Time-bound; ends when shipped | Current project (`agent/threads/<date>-<branch>/`) |
-| `/teach` | A **skill** (or CLAUDE.md rule) | Long-lived; reused across threads | Active cell repo (via branch + PR) |
+| `/flow:here` | A **thread** (one piece of work) | Time-bound; ends when shipped | Current project (`agent/threads/<date>-<branch>/`) |
+| `/flow:teach` | A **skill** (or CLAUDE.md rule) | Long-lived; reused across threads | Active cell repo (via branch + PR) |
 
-If the user said "let's build this" / "ship this" / "kick this off as a thread" → `/flow-here`.
-If the user said "remember this" / "create a skill" → `/teach`.
+If the user said "let's build this" / "ship this" / "kick this off as a thread" → `/flow:here`.
+If the user said "remember this" / "create a skill" → `/flow:teach`.
 
 ## How to seed the thread
 
@@ -33,7 +33,7 @@ Extract the idea, decisions already made, open questions, and constraints.
 
 ### Step 4: Bootstrap the thread
 
-Run `$HOME/.claude/skills/run/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/threads/<today>-<branch>/01-spec-r1.md`.
+Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/threads/<today>-<branch>/01-spec-r1.md`.
 
 If the script exits non-zero with `thread already exists`, surface recovery via `AskUserQuestion` with these options:
 
