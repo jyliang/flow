@@ -12,7 +12,7 @@ The starter cell. Idea → spec → plan → implement → review → PR.
 | review | `stages/review/review.md` | `03-review-r<N>.md` |
 | ship | `stages/ship/ship.md` | GitHub PR (recorded as `pr:` in spec frontmatter) |
 
-Stage docs are **not** Claude Code skills — the `flow:run` kernel `Read`s them on demand, driven by `cell.yaml`'s `path:` field. This keeps stages out of the skill picker so they only run via the kernel and cannot be auto-invoked out of context.
+Stage docs are **not** Claude Code skills — the kernel `Read`s them on demand when `/flow:flow` runs, driven by `cell.yaml`'s `path:` field. This keeps stages out of the picker so they only run via `/flow:*` commands and cannot be auto-invoked out of context.
 
 `stages/spike/spike.md` is the spike-mode variant, driven by `/flow:spike` and read by it directly.
 

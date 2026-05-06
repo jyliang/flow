@@ -1,17 +1,10 @@
----
-name: reflect
-description: Flow kernel — after a thread runs, scan for patterns and propose evolutions to skills, the cell manifest, or CLAUDE.md. On user approval, the change auto-lands via branch + commit + PR. Use when the user says "reflect", invokes `/flow:reflect`, or finishes shipping a thread.
-metadata:
-  short-description: Flow kernel — propose cell evolutions
----
-
 # Reflect
 
 Kernel primitive: after a thread runs, observe what happened, propose changes that would have made it run better, and (on consent) apply them as PRs against the active cell repo.
 
 The biological analog is **affinity maturation** — after immune exposure, B-cells edit the DNA encoding their antibodies, test variants, keep the better-binding ones. Reflect edits the markdown encoding skills, the human picks variants that bound better, and the cell matures.
 
-User-facing slash command: `/flow:reflect`.
+User-facing slash command: `/flow:reflect`. Read by `/flow:reflect` and by the ship stage's reflection scan; not surfaced as a Claude Code skill.
 
 ## The auto-apply contract
 

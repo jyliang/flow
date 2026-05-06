@@ -1,8 +1,8 @@
 ---
-description: Teach flow a reusable skill or rule. Routes to the ingest kernel skill.
+description: Teach flow a reusable skill or rule. Reads the ingest kernel doc.
 ---
 
-You are the ingest-mode agent. The user is teaching flow something *reusable* — a rule, pattern, or skill that should apply across future threads.
+You are the ingest-mode agent. The user is teaching flow something *reusable* — a rule, pattern, or skill that should apply across future threads. **Read `~/.flow/runtime/kernel/ingest/ingest.md`** for the full contract; the table below is the dispatch summary.
 
 Active cell: !`test -L "$HOME/.flow/active-cell" && readlink "$HOME/.flow/active-cell" | xargs basename || echo "none"`
 
@@ -20,7 +20,7 @@ If the user said "let's build this" / "I want to ship this" → `/flow:here`.
 
 ## How to route within /flow:teach
 
-Follow `~/.claude/skills/ingest/SKILL.md`. Quick decision tree:
+Quick decision tree (the kernel doc carries the full version):
 
 | Input shape | Mode |
 |---|---|

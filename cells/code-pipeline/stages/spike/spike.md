@@ -41,7 +41,7 @@ Spike supports three entry modes but produces one artifact: a draft PR with the 
 ### How to detect
 
 1. Check the branch — refuse if it's `main` (or the repo's default). Spike must run on a feature branch.
-2. Run `$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh`.
+2. Run `$HOME/.flow/runtime/kernel/run/scripts/detect-stage.sh`.
 3. If the detected stage is `explore-empty` and no thread folder exists for the current branch → **cold** (if `$ARGUMENTS` present) or **warm-fresh** (no args).
 4. Otherwise → **resume**. Pick up from the detected stage.
 
@@ -92,8 +92,8 @@ Everywhere the stage docs (`explore`, `plan`, `implement`, `review`, `ship`) wou
 Only runs in **cold** and **warm-fresh** entry modes. Skipped in **resume** mode because the spec already exists.
 
 - Determine the thesis: `$ARGUMENTS` wins if non-empty; otherwise the LLM distills a one-sentence thesis from the conversation context.
-- Compute a branch name via `$HOME/.flow/runtime/skills/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
-- Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
+- Compute a branch name via `$HOME/.flow/runtime/kernel/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
+- Run `$HOME/.flow/runtime/kernel/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
 - Materialize `spike-log.md` in the thread folder from `spike-log.md` next to this doc, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
 - Read `~/.flow/active-cell/stages/explore/explore.md` and follow it to populate the spec. In warm-fresh mode, distill the conversation context directly into the spec body — the human's exploration is the source material. All `## Decisions needed` items auto-resolve via the decision policy.
 
@@ -164,8 +164,8 @@ Aborting still produces a draft PR — the partial work is valuable for the huma
 
 ## Related docs
 
-- `~/.flow/runtime/skills/run/SKILL.md` — the kernel spike bypasses `AskUserQuestion` for.
-- `~/.flow/runtime/skills/run/references/user-interaction.md` — documents the spike exception to the AUQ default.
+- `~/.flow/runtime/kernel/run/SKILL.md` — the kernel spike bypasses `AskUserQuestion` for.
+- `~/.flow/runtime/kernel/run/references/user-interaction.md` — documents the spike exception to the AUQ default.
 - `stages/review/review.md` — the single LLM-review round consumes this doc's contract.
 - `stages/ship/ship.md` — spike-ship is a constrained version (draft, no reflection; still records `pr:`).
-- `~/.flow/runtime/skills/run/references/style.md` — house style applied to every doc, including the spike PR body and log.
+- `~/.flow/runtime/kernel/run/references/style.md` — house style applied to every doc, including the spike PR body and log.

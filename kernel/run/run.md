@@ -1,13 +1,6 @@
----
-name: run
-description: Flow kernel — orchestrate a cell execution. Detects the current stage, runs the right transition, presents the resulting handoff for human review, and advances. Used when the user says "flow", describes what they want to build, or wants to continue where they left off.
-metadata:
-  short-description: Flow kernel — orchestrate a cell run
----
-
 # Run
 
-Kernel primitive: take a cell manifest and walk a thread from idea to delivery, with the human in the loop at every boundary.
+Kernel primitive: take a cell manifest and walk a thread from idea to delivery, with the human in the loop at every boundary. Read by `/flow:flow`, `/flow:here`, and `/flow:spike` (which layer their own contracts on top); not surfaced as a Claude Code skill.
 
 A **thread** is one piece of work — 1:1 with a git branch, a folder under `agent/threads/<YYYY-MM-DD>-<branch>/`. Each stage emits a **handoff** (a markdown document) that the human inspects and the next stage's agent consumes.
 
@@ -87,7 +80,7 @@ See `references/boundaries.md` for auto-advance vs. pause rules, revision handli
 
 ## Scripts
 
-Shell helpers live under `skills/run/scripts/`. They avoid spending LLM tokens on mechanical work.
+Shell helpers live under `kernel/run/scripts/`. They avoid spending LLM tokens on mechanical work.
 
 | Script | What it does |
 |---|---|

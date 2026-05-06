@@ -14,7 +14,7 @@ A three-step loop: read the spec, design the approach, write the plan.
 
 Read the latest `01-spec-r*.md` in the active thread folder (highest `-rN` = current). Check for:
 
-- Unresolved decisions — if any exist, stop and surface them to the user via `AskUserQuestion` (see `~/.flow/runtime/skills/run/references/user-interaction.md`) before proceeding.
+- Unresolved decisions — if any exist, stop and surface them to the user via `AskUserQuestion` (see `~/.flow/runtime/kernel/run/references/user-interaction.md`) before proceeding.
 - Resolved decisions — incorporate them into the plan.
 - Constraints — respect them.
 
@@ -29,7 +29,7 @@ Based on the spec's impact analysis and current state:
 
 ### Step 3: Write the plan
 
-Write to `02-plan-r<N>.md` in the active thread folder following the document protocol (`~/.flow/runtime/skills/run/references/protocol.md`) and the scaffold in `plan-template.md` next to this doc. The scaffold seeds the structure; break from it only when the work has a natural shape that scans better. A new thread starts at `r1`; a revision creates `r2`, `r3`, … with a `## Revisions` section explaining the delta.
+Write to `02-plan-r<N>.md` in the active thread folder following the document protocol (`~/.flow/runtime/kernel/run/references/protocol.md`) and the scaffold in `plan-template.md` next to this doc. The scaffold seeds the structure; break from it only when the work has a natural shape that scans better. A new thread starts at `r1`; a revision creates `r2`, `r3`, … with a `## Revisions` section explaining the delta.
 
 ### Structure: Pyramid Principle
 
@@ -57,7 +57,7 @@ The plan is read by the implement stage and by a human checking scope before cod
 - **DO** include test criteria for every step.
 - **DO** collapse architecture decisions into one-liner conclusions in the Approach section — rationale inline, not as its own paragraph.
 - **DO NOT** include steps without corresponding tests.
-- **DO NOT** leave ambiguities — use `AskUserQuestion` rather than guessing (see `~/.flow/runtime/skills/run/references/user-interaction.md`).
+- **DO NOT** leave ambiguities — use `AskUserQuestion` rather than guessing (see `~/.flow/runtime/kernel/run/references/user-interaction.md`).
 
 ## Conventions
 

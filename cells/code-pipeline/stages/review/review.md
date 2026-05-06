@@ -35,7 +35,7 @@ For every changed file, read the full file — not just the diff hunks. Use para
 
 #### Rules
 
-- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `~/.flow/runtime/skills/run/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
+- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
 - **DO NOT** review based only on diff hunks — this is the #1 source of false claims.
 
 > **Warning:** Don't assume code is unused. Grep the codebase for all call sites before claiming anything is dead code.
@@ -76,7 +76,7 @@ Keep the walkthrough brief (a few lines per audience) but explicit.
 
 ### Step 5: Write findings
 
-Write to `03-review-r<N>.md` in the active thread folder (`agent/threads/<date>-<branch>/`) following the document protocol (`~/.flow/runtime/skills/run/references/protocol.md`) and the scaffold in `findings-template.md` next to this doc. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the thread is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
+Write to `03-review-r<N>.md` in the active thread folder (`agent/threads/<date>-<branch>/`) following the document protocol (`~/.flow/runtime/kernel/run/references/protocol.md`) and the scaffold in `findings-template.md` next to this doc. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the thread is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
 
 ```markdown
 <!-- branch: [branch] · date: [date] · author: [git user] · pr: [URL or omit] · base: [base] -->

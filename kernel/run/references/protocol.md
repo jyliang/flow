@@ -2,7 +2,7 @@
 
 Every stage agent writes a document following this protocol; the next stage agent (and the human reviewer) reads it. This doc is the shared schema between them.
 
-For canonical term choices (`spec`, `plan`, `findings`, `stage`, `revision`), see `skills/run/references/glossary.md`.
+For canonical term choices (`spec`, `plan`, `findings`, `stage`, `revision`), see `kernel/run/references/glossary.md`.
 
 ## Sections
 

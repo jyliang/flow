@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Detect the current flow stage by walking the active cell's manifest.
-# SKILL.md (skills/run/SKILL.md) is authoritative if logic drifts.
+# kernel/run/run.md is authoritative if logic drifts.
 #
 # Reads stages from ~/.flow/active-cell/cell.yaml via cell-stages.sh.
 # A stage is "where we are now" if:

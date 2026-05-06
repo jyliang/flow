@@ -30,7 +30,7 @@ Pick the single most important incomplete step from the plan, then run it throug
 
 - **DO** update the plan after every step so a fresh agent can pick up.
 - **DO** write production-ready code — no placeholders, no stubs.
-- **DO** use `AskUserQuestion` rather than guessing requirements (see `~/.flow/runtime/skills/run/references/user-interaction.md`).
+- **DO** use `AskUserQuestion` rather than guessing requirements (see `~/.flow/runtime/kernel/run/references/user-interaction.md`).
 - **DO NOT** edit files directly in the main context — delegate all edits to subagents.
 - **DO NOT** proceed to the next step with failing tests.
 
@@ -41,7 +41,7 @@ During implementation you will discover things that contradict the spec or plan 
 When it happens:
 
 1. **Update the earlier document.** Create a new revision of the spec or plan (`-rN+1`) in the active thread folder with the affected section revised. The prior `-rN` stays frozen as history.
-2. **Add a Revisions entry** to the new file (see `~/.flow/runtime/skills/run/references/protocol.md`):
+2. **Add a Revisions entry** to the new file (see `~/.flow/runtime/kernel/run/references/protocol.md`):
    ```markdown
    ## Revisions
    - **implement → spec** [date]: [What changed]

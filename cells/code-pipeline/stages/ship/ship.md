@@ -15,14 +15,14 @@ A twelve-step pipeline from findings read through reflection scan.
 Read the latest `03-review-r*.md` in the active thread (`agent/threads/*-$(git branch --show-current)/`). Check for:
 
 - Resolved decisions (human already edited the document) — apply them.
-- Unresolved decisions — present to human via `AskUserQuestion` (see `~/.flow/runtime/skills/run/references/user-interaction.md`).
+- Unresolved decisions — present to human via `AskUserQuestion` (see `~/.flow/runtime/kernel/run/references/user-interaction.md`).
 
 ### Step 2: Run the tests
 
 Load the project's test command from config and run it before touching any fixes.
 
 ```bash
-eval "$($HOME/.flow/runtime/skills/run/scripts/load-config.sh)"
+eval "$($HOME/.flow/runtime/kernel/run/scripts/load-config.sh)"
 ```
 
 If `FLOW_TEST_CMD` is non-empty, run it via a subagent. If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.
@@ -63,7 +63,7 @@ A finding requires asking when **any** are true:
 - Trade-offs involved.
 - Not confident the fix is correct.
 
-Present via `AskUserQuestion` with concrete options, batched 1–4 per call (see `~/.flow/runtime/skills/run/references/user-interaction.md`). Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
+Present via `AskUserQuestion` with concrete options, batched 1–4 per call (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
 
 **Group related findings.** If 3 findings are all about the same architectural concern, present them as one question — don't spam the user with repetitive prompts.
 
@@ -169,7 +169,7 @@ If `FLOW_TEST_CMD` is set (see Step 2), re-run it to verify nothing broke. Other
 
 ### Step 12: Reflection scan (silent when empty)
 
-Before returning control, scan this session's conversation for facts stated ≥ 2 times that aren't already in `CLAUDE.md`. See `~/.flow/runtime/skills/run/references/reflection.md` for qualifying observations and the 3-candidate cap.
+Before returning control, scan this session's conversation for facts stated ≥ 2 times that aren't already in `CLAUDE.md`. See `~/.flow/runtime/kernel/run/references/reflection.md` for qualifying observations and the 3-candidate cap.
 
 If there are candidates, surface each via `AskUserQuestion` (at most 3). If there are none, say nothing — reflection is silent when empty.
 
@@ -177,4 +177,4 @@ If there are candidates, surface each via `AskUserQuestion` (at most 3). If ther
 
 - `stages/review/review.md` — produces the findings this stage consumes.
 - `disciplines/commits.md` — commit practices. Read it before Step 6.
-- `~/.flow/runtime/skills/run/references/reflection.md` — the "twice is a pattern" rule used in Step 12.
+- `~/.flow/runtime/kernel/run/references/reflection.md` — the "twice is a pattern" rule used in Step 12.

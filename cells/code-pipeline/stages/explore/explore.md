@@ -21,12 +21,12 @@ Use parallel subagents to understand the codebase before writing anything.
 
 - **DO** search for existing implementations before assuming they don't exist.
 - **DO** use parallel subagents for all exploration (see `disciplines/parallel.md`).
-- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `~/.flow/runtime/skills/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
+- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
 - **DO NOT** assume features aren't implemented — study the code first.
 
 ## How to produce the spec
 
-Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`~/.flow/runtime/skills/run/references/protocol.md`). The scaffold at `~/.flow/active-cell/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
+Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`~/.flow/runtime/kernel/run/references/protocol.md`). The scaffold at `~/.flow/active-cell/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
 
 `bootstrap.sh` substitutes `{{BRANCH}}`, `{{DATE}}`, and `{{AUTHOR}}` but leaves `{{STATUS}}`, `{{WHAT}}`, and `{{WHY}}` raw — you fill those in. On first draft, `{{STATUS}}` is `explore → plan`; `{{WHAT}}` is one sentence on what the spec delivers; `{{WHY}}` is one sentence on the problem it solves or value it creates.
 

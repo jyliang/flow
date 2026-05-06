@@ -15,9 +15,9 @@ claude plugin marketplace add jyliang/flow
 claude plugin install flow@flow
 ```
 
-Skills and commands appear under the `flow:` namespace (`flow:run`, `/flow:flow`, etc.).
+Slash commands appear under the `/flow:` namespace (`/flow:flow`, `/flow:teach`, etc.). The kernel itself ships **no Claude Code skills** — its three primitives (`run`, `ingest`, `reflect`) are docs at `kernel/<name>/<name>.md` that the slash commands `Read` on demand. This keeps the picker clean and routes every invocation through a `/flow:*` entry.
 
-**Local development:** clone this repo and run `make install`. Hooks into the `flow` marketplace registration with the install location pointed at the live repo, then registers + enables the `flow@flow` plugin so edits flow through without re-installing. Same `flow:` namespace as the marketplace install.
+**Local development:** clone this repo and run `make install`. Hooks into the `flow` marketplace registration with the install location pointed at the live repo, then registers + enables the `flow@flow` plugin so edits flow through without re-installing. Same `/flow:` namespace as the marketplace install.
 
 Verify either install with: `make doctor`.
 
@@ -31,7 +31,7 @@ In any project:
 
 Flow has no cell installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage docs live under `stages/<name>/<name>.md` inside the cell — they are not surfaced as skills; the `flow:run` kernel reads them on demand. `/flow:flow` is ready.
+That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage docs live under `stages/<name>/<name>.md` inside the cell — they are not surfaced as skills; the kernel reads them on demand when `/flow:flow` runs. `/flow:flow` is ready.
 
 ### 3. Start a thread
 
@@ -85,8 +85,8 @@ Three layers:
 
 | Layer | What it is |
 |---|---|
-| **Kernel** | Three skills that don't change: `ingest` (turn input into a skill), `run` (orchestrate a cell execution with the human in the loop at every boundary), `reflect` (propose evolutions after a thread). |
-| **Cell** | A git repo containing the stage skills for one pipeline. The starter cell `code-pipeline` ships with the kernel; `/flow` first-run installs it as a personal git repo at `~/.flow/cells/code-pipeline/`. |
+| **Kernel** | Three primitives that don't change: `ingest` (turn input into a skill), `run` (orchestrate a cell execution with the human in the loop at every boundary), `reflect` (propose evolutions after a thread). They live as docs at `kernel/<name>/<name>.md` and are Read by the `/flow:*` commands — not surfaced as Claude Code skills. |
+| **Cell** | A git repo containing the stage docs for one pipeline. The starter cell `code-pipeline` ships with the kernel; `/flow` first-run installs it as a personal git repo at `~/.flow/cells/code-pipeline/`. |
 | **Thread** | One piece of work, 1:1 with a git branch. Each stage emits a handoff document that the human inspects and the next stage consumes. |
 
 ## Vocabulary
@@ -106,13 +106,13 @@ Three layers:
 
 All commands are namespaced under the `flow` plugin.
 
-| Command | Calls | What it does |
+| Command | Reads | What it does |
 |---|---|---|
-| `/flow:flow` | `flow:run` | Start or continue a thread. |
-| `/flow:teach` | `flow:ingest` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
-| `/flow:reflect` | `flow:reflect` | After threads ship, propose cell evolutions. |
-| `/flow:spike` | `flow:run` (autonomous) | Run a thread end-to-end unattended; opens a draft PR. |
-| `/flow:here` | `flow:run` (with seed) | Distill the current conversation into a thread spec. |
+| `/flow:flow` | `kernel/run/run.md` | Start or continue a thread. |
+| `/flow:teach` | `kernel/ingest/ingest.md` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
+| `/flow:reflect` | `kernel/reflect/reflect.md` | After threads ship, propose cell evolutions. |
+| `/flow:spike` | `kernel/run/run.md` + cell's spike doc | Run a thread end-to-end unattended; opens a draft PR. |
+| `/flow:here` | `kernel/run/run.md` (with seed) | Distill the current conversation into a thread spec. |
 | `/flow:cell` | — | Cell management (list, switch, init, link remote, open PR). |
 
 ## Make targets
@@ -121,7 +121,7 @@ All commands are namespaced under the `flow` plugin.
 |---|---|
 | `make install` | Install kernel as the `flow@flow` plugin (under the `flow` marketplace pointed at this repo), provision `~/.flow/`. Dev mode. |
 | `make doctor` | Sanity check the install. |
-| `make list` | Show installed kernel skills + slash commands. |
+| `make list` | Show kernel docs + slash commands. |
 | `make cell-init STARTER=code-pipeline NAME=<name>` | Clone a starter into `~/.flow/cells/<name>/`. |
 | `make cell-new NAME=<name>` | Empty cell scaffold. |
 | `make cell-list` | Show installed cells, mark the active one. |
@@ -161,14 +161,15 @@ flow-runtime/
 │   ├── spike.md                      # /flow:spike → autonomous run
 │   ├── here.md                       # /flow:here → seed a thread from conversation
 │   └── cell.md                       # /flow:cell → cell management
-├── skills/                           # Kernel skills (don't change between cells)
-│   ├── run/
-│   ├── ingest/
-│   └── reflect/
+├── kernel/                           # Kernel docs — read by /flow:* commands; NOT skills
+│   ├── run/run.md
+│   ├── ingest/ingest.md
+│   └── reflect/reflect.md
 ├── cells/                            # Bundled starter cells
 │   └── code-pipeline/
 │       ├── cell.yaml                 # Manifest
-│       ├── skills/                   # Stage skills
+│       ├── stages/<name>/<name>.md   # Stage docs (internal — read by kernel)
+│       ├── disciplines/<name>.md     # Cross-cutting docs (internal)
 │       └── templates/                # Cell-specific templates
 ├── scripts/                          # Cell-mgmt internals (called by Makefile)
 └── tools/Cell.mk                     # Imported by each cell's own Makefile
@@ -193,10 +194,10 @@ After `make install`:
    └── enabledPlugins: { flow@flow: true, <cell>@flow: true }  # written by make install
 ```
 
-Skills and commands appear in pickers under their plugin namespace: `flow:run`, `flow:ingest`, `flow:reflect`, plus `/flow:*` slash commands. Cell stage and discipline docs deliberately live outside `skills/` so they don't show up in the picker — the kernel reads them on demand. End-user marketplace installs produce the same namespacing — `make install` is dev-mode only.
+Only the `/flow:*` slash commands appear in the picker. Kernel primitives (`kernel/<name>/<name>.md`) and cell stage/discipline docs deliberately live outside `skills/` so they don't show up — the slash commands `Read` them on demand. End-user marketplace installs produce the same layout — `make install` is dev-mode only.
 
 ## Reflection
 
 After a few shipped threads, `/flow:reflect` scans them for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and proposes concrete edits. Every proposal goes through `AskUserQuestion`; on Yes, the change auto-lands as a PR against the active cell repo. Nothing lands silently.
 
-Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. See `skills/reflect/SKILL.md`.
+Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. See `kernel/reflect/reflect.md`.

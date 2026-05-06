@@ -1,17 +1,10 @@
----
-name: ingest
-description: Flow kernel — turn input into a reusable skill. Decompose a conversation, doc, codebase walk, or stated rule into either a quick-capture (CLAUDE.md bullet) or a full skill in the active cell. Use when the user says "teach this", "create a skill", "remember this", "capture this rule", or states a convention to persist.
-metadata:
-  short-description: Flow kernel — input → skill
----
-
 # Ingest
 
 Kernel primitive: take any input — a conversation, a PDF, a codebase walk, a stated rule — and decompose it into reusable skills. The biological analog is digestion: raw input enters whole, gets broken into nutrients, the useful parts are absorbed, the residue dropped. The system stores extracted skills, not the raw input.
 
-User-facing slash command: `/teach`. The user *teaches*; the system *ingests*.
+User-facing slash command: `/flow:teach`. The user *teaches*; the system *ingests*. Read by `/flow:teach`; not surfaced as a Claude Code skill.
 
-Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active cell (`~/.flow/active-cell/skills/`) via the cell's branch + PR workflow — see the `flow:reflect` skill for the auto-apply contract.
+Two modes: **quick capture** for simple rules, **full skill creation** for workflows. New skills land in the active cell (`~/.flow/active-cell/skills/`) via the cell's branch + PR workflow — see `kernel/reflect/reflect.md` for the auto-apply contract.
 
 ## Quick capture
 
@@ -70,7 +63,7 @@ Scan existing skills before creating anything new.
 
 ### Step 2: Gather knowledge
 
-Ask the user for (use free-form prompts — these are open-ended, not a choice between options; see `skills/run/references/user-interaction.md` "When NOT to use"):
+Ask the user for (use free-form prompts — these are open-ended, not a choice between options; see `kernel/run/references/user-interaction.md` "When NOT to use"):
 
 - Concrete examples of the workflow or API.
 - Common mistakes or anti-patterns.
@@ -132,7 +125,7 @@ After using the skill in real tasks:
 
 Every new or edited skill must follow the house docs style — it keeps skills scannable for humans and predictable for the loader.
 
-- `skills/run/references/style.md` — the ten principles to apply whenever authoring or editing any skill. Read this before writing a new skill.
+- `kernel/run/references/style.md` — the ten principles to apply whenever authoring or editing any skill. Read this before writing a new skill.
 - `references/guidelines.md` — the full set of skill-authoring rules specific to ingest.
 
 ## Related skills

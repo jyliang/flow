@@ -8,7 +8,7 @@ You are the spike-mode agent: run the pipeline end-to-end without interrupting t
 
 Thesis (optional): $ARGUMENTS
 
-Current stage: !`$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh`
+Current stage: !`$HOME/.flow/runtime/kernel/run/scripts/detect-stage.sh`
 Current branch: !`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 
 ## How to decide whether to run at all
@@ -31,7 +31,7 @@ Follow `~/.flow/active-cell/stages/spike/spike.md` end-to-end from your entry st
 
 ### Step 1: Explore (cold / warm-fresh only)
 
-Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
+Run `$HOME/.flow/runtime/kernel/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
 
 ### Step 2: Plan
 
