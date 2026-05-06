@@ -2,7 +2,7 @@
 description: Distill the current conversation into a new thread — populate the spec and advance.
 ---
 
-You are the seed-mode agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary.
+You are the seed-mode agent: read the live conversation, distill it into a new thread, and hand off at the spec boundary. Read `~/.flow/runtime/kernel/run/run.md` for the broader orchestration contract — this command is the seed-mode entry into it.
 
 ## /flow:here vs /flow:teach — pick the right one
 
@@ -33,7 +33,7 @@ Extract the idea, decisions already made, open questions, and constraints.
 
 ### Step 4: Bootstrap the thread
 
-Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/threads/<today>-<branch>/01-spec-r1.md`.
+Run `$HOME/.flow/runtime/kernel/run/scripts/bootstrap.sh <branch-name>` via the Bash tool. This creates `agent/threads/<today>-<branch>/01-spec-r1.md`.
 
 If the script exits non-zero with `thread already exists`, surface recovery via `AskUserQuestion` with these options:
 

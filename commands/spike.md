@@ -8,7 +8,7 @@ You are the spike-mode agent: run the pipeline end-to-end without interrupting t
 
 Thesis (optional): $ARGUMENTS
 
-Current stage: !`$HOME/.flow/runtime/skills/run/scripts/detect-stage.sh`
+Current stage: !`$HOME/.flow/runtime/kernel/run/scripts/detect-stage.sh`
 Current branch: !`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 
 ## How to decide whether to run at all
@@ -17,7 +17,7 @@ Hard refuse if the current branch is `main` (or the repo's default branch). Stop
 
 ## How to determine entry mode
 
-See the active cell's `spike` skill (e.g., `code-pipeline:spike`) under "How to determine entry mode".
+**Read the spike doc** at `~/.flow/active-cell/stages/spike/spike.md` — it carries the full decision policy, audit-log format, abort protocol, and adversarial-read contract. The summary below is the dispatch table; the doc is authoritative.
 
 | Mode | Condition | Thesis source |
 |---|---|---|
@@ -27,29 +27,29 @@ See the active cell's `spike` skill (e.g., `code-pipeline:spike`) under "How to 
 
 ## How to run the pipeline
 
-Follow the active cell's `spike` skill end-to-end from your entry stage.
+Follow `~/.flow/active-cell/stages/spike/spike.md` end-to-end from your entry stage. Each numbered step below names a stage doc to Read at that point — the spike doc layers the spike-specific contract (decision policy, single-LLM-review cap, adversarial read, draft-PR-only) on top.
 
 ### Step 1: Explore (cold / warm-fresh only)
 
-Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
+Run `$HOME/.flow/runtime/kernel/run/scripts/bootstrap.sh <branch>` to create the branch, thread folder, and `01-spec-r1.md`. Materialize `spike-log.md` in the thread folder with the seeding entry (entry mode, absorbed context, synthesized thesis if warm-fresh, starting stage). Populate `01-spec-r1.md` — in warm-fresh mode, distill the conversation into the spec body.
 
 ### Step 2: Plan
 
-Use the plan skill with decision policy and a step-count ceiling of 20. Output `02-plan-r1.md` (or `-r2` if resuming and revising).
+Read `~/.flow/active-cell/stages/plan/plan.md` and follow it under the spike decision policy with a step-count ceiling of 20. Output `02-plan-r1.md` (or `-r2` if resuming and revising).
 
 ### Step 3: Implement
 
-Use the implement skill with atomic commits. Commit the thread's `spike-log.md` per step.
+Read `~/.flow/active-cell/stages/implement/implement.md` and follow it with atomic commits. Commit the thread's `spike-log.md` per step.
 
 ### Step 4: LLM review
 
-Run a single round via the review skill. Output `03-review-r1.md`. Adversarial read required. Fix auto-fixable issues once; flag residuals. Produce 3–5 quiz questions.
+Run a single round per `~/.flow/active-cell/stages/review/review.md`. Output `03-review-r1.md`. Adversarial read required. Fix auto-fixable issues once; flag residuals. Produce 3–5 quiz questions.
 
 > **Note:** Always run LLM review in resume mode too — one LLM-review round is the contract. Don't trust prior reviews without re-running adversarially.
 
 ### Step 5: Ship
 
-Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from the active cell's `skills/spike/templates/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per ship Step 10.
+Run `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `~/.flow/active-cell/stages/spike/pr-body.md` (all 7 sections filled). Record the PR number into the spec's frontmatter comment per the ship doc's PR-recording step.
 
 ## Safety rails
 

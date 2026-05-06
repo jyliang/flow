@@ -63,18 +63,20 @@ jq --arg loc "$FLOW_MARKETPLACE_DIR" \
    }' "$KNOWN_MARKETPLACES_JSON" > "$tmp_km"
 mv "$tmp_km" "$KNOWN_MARKETPLACES_JSON"
 
-# Stable symlink to the runtime so command bodies and stage skills can reference
-# scripts/templates by a fixed path: $HOME/.flow/runtime/skills/run/scripts/...
+# Stable symlink to the runtime so command bodies and stage docs can reference
+# scripts/templates by a fixed path: $HOME/.flow/runtime/kernel/run/scripts/...
 # (Pre-namespacing, these used $HOME/.claude/skills/run/... — no longer valid
 # now that the kernel is installed as a plugin, not symlinked into ~/.claude/.)
 rm -f "$FLOW_HOME/runtime"
 ln -s "$RUNTIME_ROOT" "$FLOW_HOME/runtime"
 
-# Read kernel skill + command names for legacy cleanup.
-kernel_skills=()
-for dir in "$RUNTIME_ROOT/skills"/*; do
+# Read kernel doc + command names for legacy cleanup. Kernel docs live under
+# kernel/<name>/<name>.md — they are not Claude Code skills (the slash commands
+# Read them directly), so they don't show up in the picker.
+kernel_docs=()
+for dir in "$RUNTIME_ROOT/kernel"/*; do
     [ -d "$dir" ] || continue
-    kernel_skills+=("$(basename "$dir")")
+    kernel_docs+=("$(basename "$dir")")
 done
 
 kernel_commands=()
@@ -84,14 +86,15 @@ for f in "$RUNTIME_ROOT/commands"/*.md; do
 done
 
 # Legacy cleanup: remove bare-name symlinks in ~/.claude/skills/ and ~/.claude/commands/
-# that point into this repo. Pre-namespacing installs put them there.
+# that point into this repo. Pre-namespacing installs put them there. Also covers
+# pre-relocation installs that pointed into ./skills/ before the kernel moved to ./kernel/.
 legacy_cleaned=0
 if [ -d "$LEGACY_SKILLS_DIR" ]; then
     for entry in "$LEGACY_SKILLS_DIR"/*; do
         [ -L "$entry" ] || continue
         target=$(readlink "$entry")
         case "$target" in
-            "$RUNTIME_ROOT"/skills/*)
+            "$RUNTIME_ROOT"/skills/*|"$RUNTIME_ROOT"/kernel/*)
                 rm -f "$entry"
                 legacy_cleaned=$((legacy_cleaned + 1))
                 ;;
@@ -156,13 +159,13 @@ fi
 # Copy shared Cell.mk so cells can import it without depending on runtime path.
 cp "$RUNTIME_ROOT/tools/Cell.mk" "$FLOW_HOME/tools/Cell.mk" 2>/dev/null || true
 
-skill_count=${#kernel_skills[@]}
+doc_count=${#kernel_docs[@]}
 cmd_count=${#kernel_commands[@]}
 
 cat <<EOF
 ✓ Kernel installed as plugin '$PLUGIN_ID'
   → installPath: $RUNTIME_ROOT
-  → $skill_count skills, $cmd_count commands (namespaced as flow:*)
+  → $doc_count kernel docs (read by commands; not in picker), $cmd_count commands (namespaced as /flow:*)
   → live edits flow through — no re-install needed for kernel changes
 ✓ ~/.flow/ provisioned
 EOF

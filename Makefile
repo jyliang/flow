@@ -8,10 +8,10 @@ CLAUDE_DIR := $(HOME)/.claude
 SKILLS_DIR := $(CLAUDE_DIR)/skills
 COMMANDS_DIR := $(CLAUDE_DIR)/commands
 
-KERNEL_SKILLS := $(wildcard $(RUNTIME_ROOT)/skills/*)
+KERNEL_DOCS := $(wildcard $(RUNTIME_ROOT)/kernel/*)
 KERNEL_COMMANDS := $(wildcard $(RUNTIME_ROOT)/commands/*.md)
 
-LINT_DOC_PATHS := README.md skills commands cells
+LINT_DOC_PATHS := README.md kernel commands cells
 
 .PHONY: help install doctor list lint-docs \
 	cell-init cell-new cell-list cell-use cell-rm \
@@ -27,12 +27,11 @@ install: ## Install kernel into ~/.claude/, provision ~/.flow/
 doctor: ## Sanity check the install
 	@bash $(RUNTIME_ROOT)/scripts/doctor.sh
 
-list: ## List installed kernel skills and slash commands
-	@echo "Kernel skills (namespaced as flow:*):"
-	@for dir in $(KERNEL_SKILLS); do \
+list: ## List kernel docs (internal, read by commands) and slash commands
+	@echo "Kernel docs (internal — Read by /flow:* commands; not in the picker):"
+	@for dir in $(KERNEL_DOCS); do \
 		name=$$(basename $$dir); \
-		desc=$$(grep '^  short-description:' $$dir/SKILL.md 2>/dev/null | sed 's/.*: //'); \
-		printf "  flow:%-10s %s\n" "$$name" "$$desc"; \
+		printf "  kernel/%-10s %s\n" "$$name" "→ kernel/$$name/$$name.md"; \
 	done
 	@echo ""
 	@echo "Slash commands (namespaced as /flow:*):"
