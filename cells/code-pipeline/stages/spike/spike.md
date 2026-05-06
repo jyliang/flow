@@ -1,16 +1,8 @@
----
-name: spike
-description: Flow stage — spike-mode orchestration. Runs the full flow pipeline unattended and opens a draft PR for human review. Used via /flow:spike, not directly. Invoked by the flow:run kernel.
-metadata:
-  short-description: Unattended spike → draft PR
-  internal: true
----
-
 # Spike
 
 Run the full flow pipeline (`explore` → `plan` → `implement` → LLM-review → draft PR) unattended, so a human can kick off a thesis-validation spike and come back to something testable.
 
-This skill has two readers: the **spike-mode agent** orchestrating the run (primary), and the **human reviewer** picking up the resulting draft PR. The single human touchpoint is the draft PR; the pipeline itself is LLM-only.
+This doc has two readers: the **spike-mode agent** orchestrating the run (primary, driven by `/flow:spike`), and the **human reviewer** picking up the resulting draft PR. The single human touchpoint is the draft PR; the pipeline itself is LLM-only.
 
 ## Vocabulary
 
@@ -21,7 +13,7 @@ Two "reviews" exist in the flow system; this skill keeps them distinct.
 | LLM review | Inside this pipeline, once | Clear-eyes re-evaluation. Can trigger one self-fix pass. Bounded. |
 | Human review | On the draft PR after the pipeline completes | Final approval. Outside the pipeline. Unbounded. |
 
-> **Warning:** Anywhere this skill says bare "review", it's ambiguous and should be rewritten. Always qualify as LLM review or human review.
+> **Warning:** Anywhere this doc says bare "review", it's ambiguous and should be rewritten. Always qualify as LLM review or human review.
 
 ## When to use
 
@@ -83,11 +75,11 @@ The folder is 1:1 with the branch (one thread per branch). No separate archive �
 
 ## Decision policy (replaces AskUserQuestion in spike mode)
 
-Everywhere the stage skills (`explore`, `plan`, `implement`, `review`, `ship`) would call `AskUserQuestion`, apply this policy instead:
+Everywhere the stage docs (`explore`, `plan`, `implement`, `review`, `ship`) would call `AskUserQuestion`, apply this policy instead:
 
 1. Pick the option labeled `(Recommended)`.
 2. If no option has `(Recommended)`, pick the first option.
-3. Append an entry to the thread's `spike-log.md` using the template at `skills/spike/templates/spike-log.md`:
+3. Append an entry to the thread's `spike-log.md` using the template `spike-log.md` next to this doc:
    - stage, short decision label, context, full options set, chosen label, 1-sentence rationale.
 4. Continue without pausing. Do NOT narrate the decision to the user mid-pipeline.
 
@@ -102,23 +94,23 @@ Only runs in **cold** and **warm-fresh** entry modes. Skipped in **resume** mode
 - Determine the thesis: `$ARGUMENTS` wins if non-empty; otherwise the LLM distills a one-sentence thesis from the conversation context.
 - Compute a branch name via `$HOME/.flow/runtime/skills/run/scripts/spike-branch.sh "<thesis>"` — produces `spike-<slug>`. If already on a feature branch in warm-fresh mode, keep the current branch name; don't switch.
 - Run `$HOME/.flow/runtime/skills/run/scripts/bootstrap.sh <branch>` — creates the branch (if not already on it) and the thread folder, materializes `01-spec-r1.md` from the configured template.
-- Materialize `spike-log.md` in the thread folder from `skills/spike/templates/spike-log.md`, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
-- Run the normal `explore` skill to populate the spec. In warm-fresh mode, distill the conversation context directly into the spec body — the human's exploration is the source material. All `## Decisions needed` items auto-resolve via the decision policy.
+- Materialize `spike-log.md` in the thread folder from `spike-log.md` next to this doc, substituting `{{BRANCH}}`, `{{THESIS}}`, `{{STARTED}}` (ISO 8601). Add the seeding entry described in "How to seed the audit log" above.
+- Read `~/.flow/active-cell/stages/explore/explore.md` and follow it to populate the spec. In warm-fresh mode, distill the conversation context directly into the spec body — the human's exploration is the source material. All `## Decisions needed` items auto-resolve via the decision policy.
 
 ### Step 2: Plan
 
-- Run the normal `plan` skill. Produce `02-plan-r1.md` in the thread folder.
+- Read `~/.flow/active-cell/stages/plan/plan.md` and follow it. Produce `02-plan-r1.md` in the thread folder.
 - Hard step-count ceiling: **≤ 20 substeps**. If the plan would exceed 20, either compress (fewer, larger steps) or scope down the spec.
 
 ### Step 3: Implement
 
-- Run the normal `implement` skill. Commit atomically per step.
+- Read `~/.flow/active-cell/stages/implement/implement.md` and follow it. Commit atomically per step.
 - Commit the thread's `spike-log.md` along with each step's implementation commit, so the decision timeline shows up in `git log`.
 - If tests fail mid-step: fix once. If still failing, invoke the abort protocol.
 
 ### Step 4: LLM review (single round)
 
-Use the normal `review` skill; output `03-review-r1.md` in the thread folder.
+Read `~/.flow/active-cell/stages/review/review.md` and follow it; output `03-review-r1.md` in the thread folder.
 
 - Classify findings. Auto-fix mechanical + critical findings in **one pass**. Do NOT re-run LLM review after fixing — loop cap = 1.
 - Residual findings (not fixed) are flagged for human review.
@@ -127,11 +119,11 @@ Use the normal `review` skill; output `03-review-r1.md` in the thread folder.
   2. What's the strongest fact I found that *contradicts* the thesis?
   3. What tests did I run that would have falsified the thesis, and did they?
   4. What would a skeptical reviewer push back on?
-- **Quiz** — after the adversarial read, produce 3–5 thesis-oriented diagnostic questions for the human reviewer. Ground them in actual evidence, not hypotheticals. See `skills/spike/templates/pr-body.md` for examples.
+- **Quiz** — after the adversarial read, produce 3–5 thesis-oriented diagnostic questions for the human reviewer. Ground them in actual evidence, not hypotheticals. See `pr-body.md` next to this doc for examples.
 
 ### Step 5: Ship
 
-- **Draft PR only**: `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `skills/spike/templates/pr-body.md` (all 7 sections filled).
+- **Draft PR only**: `gh pr create --draft --title "[SPIKE] <thesis-first-60-chars>"` with body from `pr-body.md` next to this doc (all 7 sections filled).
 - Never `gh pr ready`. Never `gh pr merge`. Those are human-review decisions.
 - Record the PR number into the spec's frontmatter comment (same as normal ship): `<!-- branch: <branch> · date: <date> · author: <author> · pr: <N> -->`. The thread folder stays put; no archive move.
 - After push + PR creation, report the PR URL in plain text. Do NOT invoke reflection (`/flow:reflect`) — reflection is for longitudinal flow use, not spikes.
@@ -170,10 +162,10 @@ Aborting still produces a draft PR — the partial work is valuable for the huma
 - **DO NOT** override `bootstrap.sh` — if it refuses because the thread folder exists, that's abort, not auto-retry.
 - **DO NOT** rewrite history in `spike-log.md` — append only.
 
-## Related skills
+## Related docs
 
-- `skills/run/SKILL.md` — the skill spike bypasses `AskUserQuestion` for.
-- `skills/run/references/user-interaction.md` — documents the spike exception to the AUQ default.
-- `skills/review/SKILL.md` — the single LLM-review round consumes this skill's contract.
-- `skills/ship/SKILL.md` — spike-ship is a constrained version (draft, no reflection; still records `pr:`).
-- `skills/run/references/style.md` — house style applied to every doc, including the spike PR body and log.
+- `~/.flow/runtime/skills/run/SKILL.md` — the kernel spike bypasses `AskUserQuestion` for.
+- `~/.flow/runtime/skills/run/references/user-interaction.md` — documents the spike exception to the AUQ default.
+- `stages/review/review.md` — the single LLM-review round consumes this doc's contract.
+- `stages/ship/ship.md` — spike-ship is a constrained version (draft, no reflection; still records `pr:`).
+- `~/.flow/runtime/skills/run/references/style.md` — house style applied to every doc, including the spike PR body and log.

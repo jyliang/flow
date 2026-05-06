@@ -36,6 +36,7 @@ For each pattern, propose exactly one of:
 | `CLAUDE.md` | A new rule, with exact text. Lands via the `ingest` skill. |
 | `.flow/config.sh` | A field plus its new value. |
 | Active cell skill (`~/.flow/active-cell/skills/<name>/`) | A diff. Lands as a PR via `cell-branch.sh` + `cell-pr.sh` once approved. |
+| Active cell stage/discipline doc (e.g. `~/.flow/active-cell/stages/<name>/<name>.md`, `~/.flow/active-cell/disciplines/<name>.md`) | A diff against the doc the kernel Reads. Same auto-PR path. |
 | Active cell manifest (`cell.yaml`) | A field change. Same auto-PR path. |
 
 ### Step 6: Surface proposals for approval

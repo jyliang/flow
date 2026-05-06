@@ -1,15 +1,6 @@
----
-name: review
-description: Review code changes and produce a findings document. Stage skill — reads changes, produces findings that feed into ship stage. Referenced by flow.
-argument-hint: [pr-number-or-url-or-local]
-metadata:
-  short-description: Changes → findings document
-  internal: true
----
-
 # Review
 
-Stage skill read by the next-stage agent (ship) and by a human deciding whether the PR is safe to merge. Produces `03-review-r<N>.md` in the active thread folder (`agent/threads/*-$(git branch --show-current)/`).
+Stage doc read by the run kernel when it advances to `review`, by the next-stage agent (ship), and by a human deciding whether the PR is safe to merge. Produces `03-review-r<N>.md` in the active thread folder (`agent/threads/*-$(git branch --show-current)/`).
 
 ## Goal
 
@@ -44,7 +35,7 @@ For every changed file, read the full file — not just the diff hunks. Use para
 
 #### Rules
 
-- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `skills/run/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
+- **DO** use `AskUserQuestion` for any mid-review ambiguity that blocks finding classification (see `~/.flow/runtime/skills/run/references/user-interaction.md`). Prefer capturing ambiguities in the findings' `## Open` section over interrupting mid-review.
 - **DO NOT** review based only on diff hunks — this is the #1 source of false claims.
 
 > **Warning:** Don't assume code is unused. Grep the codebase for all call sites before claiming anything is dead code.
@@ -85,7 +76,7 @@ Keep the walkthrough brief (a few lines per audience) but explicit.
 
 ### Step 5: Write findings
 
-Write to `03-review-r<N>.md` in the active thread folder (`agent/threads/<date>-<branch>/`) following the document protocol (`skills/run/references/protocol.md`) and the scaffold in `references/findings-template.md`. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the thread is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
+Write to `03-review-r<N>.md` in the active thread folder (`agent/threads/<date>-<branch>/`) following the document protocol (`~/.flow/runtime/skills/run/references/protocol.md`) and the scaffold in `findings-template.md` next to this doc. The scaffold seeds the structure; break from it only when the change has a natural shape that scans better. Round ordinal auto-increments: the first review of the thread is `r1`, the next is `r2`, and so on. PR-vs-local distinction lives in the frontmatter, not the filename.
 
 ```markdown
 <!-- branch: [branch] · date: [date] · author: [git user] · pr: [URL or omit] · base: [base] -->
@@ -155,7 +146,7 @@ This keeps the documents in sync with reality, and the revision trail explains w
 
 ## How to post comments (PR mode)
 
-When asked, use the GitHub reviews API. See `references/github-review-api.md`.
+When asked, use the GitHub reviews API. See `github-review-api.md` next to this doc.
 
 ### Rules
 
@@ -163,6 +154,6 @@ When asked, use the GitHub reviews API. See `references/github-review-api.md`.
 - **DO NOT** approve or request-changes.
 - **DO NOT** delete posted comments.
 
-## Related skills
+## Related docs
 
-- `skills/parallel/SKILL.md` — parallelizing file reads and subagents.
+- `disciplines/parallel.md` — parallelizing file reads and subagents.

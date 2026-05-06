@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Read the active cell's manifest and emit one line per stage:
-#   <name>|<output>|<next>
+#   <name>|<output>|<next>|<path>
 #
 # Reads ~/.flow/active-cell/cell.yaml unless CELL_YAML is set.
-# Output is consumed by detect-stage.sh; keep the format stable.
+# Output is consumed by detect-stage.sh and the run kernel; keep the format stable.
 #
 # Parser is intentionally minimal: handles the constrained cell.yaml shape
 # this runtime produces (list of "- key: value" blocks under `stages:`).
@@ -27,6 +27,7 @@ awk '
     if (key == "name") name = val
     else if (key == "output") output = val
     else if (key == "next") nxt = val
+    else if (key == "path") path = val
   }
   function parse_kv(line,    pos, key, val) {
     pos = index(line, ":")
@@ -36,8 +37,8 @@ awk '
     set_field(key, val)
   }
   function emit() {
-    if (name != "") print name "|" output "|" nxt
-    name = ""; output = ""; nxt = ""
+    if (name != "") print name "|" output "|" nxt "|" path
+    name = ""; output = ""; nxt = ""; path = ""
   }
   /^stages:[ \t]*$/ { in_stages = 1; next }
   in_stages && /^[A-Za-z]/ { emit(); in_stages = 0; next }

@@ -1,7 +1,7 @@
 {
   "name": "code-pipeline",
-  "version": "0.1.0",
-  "description": "Flow cell — idea → spec → plan → implement → review → PR. Stage skills consumed by the flow:run kernel orchestrator.",
+  "version": "0.2.0",
+  "description": "Flow cell — idea → spec → plan → implement → review → PR. Stage and discipline docs consumed by the flow:run kernel orchestrator (not surfaced as skills).",
   "author": {
     "name": "Jason Liang",
     "url": "https://github.com/jyliang"

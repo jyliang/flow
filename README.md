@@ -31,7 +31,7 @@ In any project:
 
 Flow has no cell installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
 
-That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage skills appear as `code-pipeline:explore`, `code-pipeline:plan`, etc. `/flow:flow` is ready.
+That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage docs live under `stages/<name>/<name>.md` inside the cell — they are not surfaced as skills; the `flow:run` kernel reads them on demand. `/flow:flow` is ready.
 
 ### 3. Start a thread
 
@@ -193,7 +193,7 @@ After `make install`:
    └── enabledPlugins: { flow@flow: true, <cell>@flow: true }  # written by make install
 ```
 
-Skills and commands appear in pickers under their plugin namespace: `flow:run`, `flow:ingest`, `flow:reflect`, `code-pipeline:explore`, etc. End-user marketplace installs produce the same namespacing — `make install` is dev-mode only.
+Skills and commands appear in pickers under their plugin namespace: `flow:run`, `flow:ingest`, `flow:reflect`, plus `/flow:*` slash commands. Cell stage and discipline docs deliberately live outside `skills/` so they don't show up in the picker — the kernel reads them on demand. End-user marketplace installs produce the same namespacing — `make install` is dev-mode only.
 
 ## Reflection
 

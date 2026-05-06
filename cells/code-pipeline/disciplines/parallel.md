@@ -1,14 +1,6 @@
----
-name: parallel
-description: Guidelines for using parallel subagents effectively — when to parallelize, when to serialize, and how to preserve context. Auto-triggers during exploration, review, and implementation work.
-metadata:
-  short-description: Parallel subagent usage patterns
-  internal: true
----
-
 # Parallel Agents
 
-Auto-triggered skill read by any agent deciding whether to fan work out. Parallelize independent operations; serialize anything with shared mutable state.
+Discipline doc Read by stage agents (explore, review, implement) deciding whether to fan work out. Parallelize independent operations; serialize anything with shared mutable state.
 
 ## Goal
 

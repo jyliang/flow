@@ -4,30 +4,36 @@ The starter cell. Idea → spec → plan → implement → review → PR.
 
 ## Stages
 
-| Stage | Skill | Handoff |
+| Stage | Doc | Handoff |
 |---|---|---|
-| explore | `explore` | `01-spec-r<N>.md` |
-| plan | `plan` | `02-plan-r<N>.md` |
-| implement | `implement` | git branch |
-| review | `review` | `03-review-r<N>.md` |
-| ship | `ship` | GitHub PR (recorded as `pr:` in spec frontmatter) |
+| explore | `stages/explore/explore.md` | `01-spec-r<N>.md` |
+| plan | `stages/plan/plan.md` | `02-plan-r<N>.md` |
+| implement | `stages/implement/implement.md` | git branch |
+| review | `stages/review/review.md` | `03-review-r<N>.md` |
+| ship | `stages/ship/ship.md` | GitHub PR (recorded as `pr:` in spec frontmatter) |
+
+Stage docs are **not** Claude Code skills — the `flow:run` kernel `Read`s them on demand, driven by `cell.yaml`'s `path:` field. This keeps stages out of the skill picker so they only run via the kernel and cannot be auto-invoked out of context.
+
+`stages/spike/spike.md` is the spike-mode variant, driven by `/flow:spike` and read by it directly.
 
 ## Delivery
 
 `github-pr` — the ship stage opens a draft PR and records the PR number in the spec frontmatter.
 
-## Support skills
+## Disciplines
 
-- `tdd` — test-driven discipline during implement.
-- `commits` — atomic commits during implement and ship.
-- `parallel` — parallel-subagent guidelines during explore and review.
+Cross-cutting docs at `disciplines/<name>.md`. Stage docs reference them; the kernel doesn't trigger them itself.
+
+- `disciplines/tdd.md` — test-driven discipline during implement.
+- `disciplines/commits.md` — atomic commits during implement and ship.
+- `disciplines/parallel.md` — parallel-subagent guidelines during explore and review.
 
 ## Lifecycle
 
 This cell is your personal git repo. After `make cell-init STARTER=code-pipeline`, it lives at `~/.flow/cells/code-pipeline/` with a fresh `git init` and no remote.
 
 - **Revisions** to handoffs (inside threads) happen in your project repos, never here.
-- **Evolutions** to the skills here happen via `/flow:reflect` — branch + commit + PR opened by `cell-pr`.
+- **Evolutions** to the docs here happen via `/flow:reflect` — branch + commit + PR opened by `cell-pr`.
 
 Wire to a remote when you want sync across machines:
 

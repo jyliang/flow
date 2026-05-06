@@ -1,6 +1,6 @@
 # Per-project flow config
 
-Project maintainers and the flow stage skills both read this doc — maintainers to tune `.flow/config.sh`, agents to know which variables they can consult at runtime.
+Project maintainers and the flow stage docs both read this doc — maintainers to tune `.flow/config.sh`, agents to know which variables they can consult at runtime.
 
 Each project may have a `.flow/config.sh` at the repo root. It is bash-sourceable — set `KEY=VALUE` lines, comments with `#`. Scripts source the file directly; malformed content fails loudly via `set -euo pipefail`.
 

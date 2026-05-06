@@ -17,7 +17,7 @@ Two buckets: decisions go through the tool, narration and open-ended prompts don
 - **Document-boundary decisions** — advance to the next stage, pause, or revise.
 - **Unresolved spec/plan/findings decisions** — any item under `## Decisions needed` that blocks progress.
 - **Mid-stage clarifications** — ambiguous requirements, unknown scope, discovered edge cases that require human judgment.
-- **Review-finding triage** — anything that qualifies as "Ask the human" per `skills/ship/SKILL.md` (multiple valid approaches, architectural decisions, behavior changes, trade-offs, uncertainty).
+- **Review-finding triage** — anything that qualifies as "Ask the human" per the active cell's ship-stage doc (multiple valid approaches, architectural decisions, behavior changes, trade-offs, uncertainty).
 - **Stale-document scenarios** — spec references missing files, plan without spec, findings out of date vs code.
 - **Teach-skill scope and capture** — "system-wide vs project", "is this rule right?", "confirm outline before writing".
 
@@ -28,7 +28,7 @@ Two buckets: decisions go through the tool, narration and open-ended prompts don
 - **Irreversible-action confirmations** — `git push --force`, destructive operations. The Claude Code permission layer handles these; duplicating the confirmation in `AskUserQuestion` is noise.
 - **Purely informational output** — findings, summaries, diffs. Write these as prose or documents.
 - **Open-ended knowledge gathering** — "Give me a concrete example", "Share reference material", "Describe your use case". The tool requires 2–4 discrete options per question; there's no natural option set for open-ended answers. Use free-form prompts instead.
-- **Spike mode** — the `spike` skill overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to the thread's `spike-log.md`). Stage skills remain unchanged; spike intercepts at the orchestration layer. See `skills/spike/SKILL.md`.
+- **Spike mode** — the cell's `stages/spike/spike.md` overrides `AskUserQuestion` with a decision policy (pick `(Recommended)`, else first option; log to the thread's `spike-log.md`). Stage docs remain unchanged; spike intercepts at the orchestration layer.
 
 ## Tool contract
 

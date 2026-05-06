@@ -1,14 +1,6 @@
----
-name: implement
-description: Execute an implementation plan step by step. Stage skill — reads plan, produces code changes. Referenced by flow.
-metadata:
-  short-description: Plan → code changes
-  internal: true
----
-
 # Implement
 
-Stage skill read by the implementing agent and by a human tracking progress. Reads the latest plan and produces code changes on the current branch.
+Stage doc read by the run kernel when it advances to `implement`, by the implementing agent, and by a human tracking progress. Reads the latest plan and produces code changes on the current branch.
 
 ## Goal
 
@@ -38,7 +30,7 @@ Pick the single most important incomplete step from the plan, then run it throug
 
 - **DO** update the plan after every step so a fresh agent can pick up.
 - **DO** write production-ready code — no placeholders, no stubs.
-- **DO** use `AskUserQuestion` rather than guessing requirements (see `skills/run/references/user-interaction.md`).
+- **DO** use `AskUserQuestion` rather than guessing requirements (see `~/.flow/runtime/skills/run/references/user-interaction.md`).
 - **DO NOT** edit files directly in the main context — delegate all edits to subagents.
 - **DO NOT** proceed to the next step with failing tests.
 
@@ -49,7 +41,7 @@ During implementation you will discover things that contradict the spec or plan 
 When it happens:
 
 1. **Update the earlier document.** Create a new revision of the spec or plan (`-rN+1`) in the active thread folder with the affected section revised. The prior `-rN` stays frozen as history.
-2. **Add a Revisions entry** to the new file (see `skills/run/references/protocol.md`):
+2. **Add a Revisions entry** to the new file (see `~/.flow/runtime/skills/run/references/protocol.md`):
    ```markdown
    ## Revisions
    - **implement → spec** [date]: [What changed]
@@ -64,8 +56,8 @@ When it happens:
 - **DO** surface significant discoveries to the human via `flow` before continuing if the change is large.
 - **DO NOT** silently diverge from the spec — if the code does something different from what the spec says, update the spec.
 
-## Related skills
+## Related docs
 
-- `skills/tdd/SKILL.md` — test-first discipline (auto-triggers).
-- `skills/commits/SKILL.md` — atomic commit discipline (auto-triggers).
-- `skills/parallel/SKILL.md` — subagent patterns (auto-triggers).
+- `disciplines/tdd.md` — test-first discipline. Read it before Step 1 of the loop.
+- `disciplines/commits.md` — atomic commit discipline. Read it before Step 4.
+- `disciplines/parallel.md` — subagent patterns. Read it before Step 1.

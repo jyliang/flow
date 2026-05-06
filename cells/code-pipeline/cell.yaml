@@ -1,33 +1,38 @@
 # Cell manifest — read by the run kernel skill.
 # Stage names, file prefixes, and delivery target are cell-defined; the kernel knows none of them.
+#
+# Stage docs live under stages/<name>/<name>.md. They are NOT discoverable
+# Claude Code skills — the kernel Reads them on demand. Disciplines work
+# the same way: docs under disciplines/<name>.md, loaded by reference from
+# stage docs.
 
 name: code-pipeline
-version: 0.1.0
+version: 0.2.0
 description: Idea → spec → plan → implement → review → PR. The starter pipeline.
 
 # Stages run in order. detect-stage.sh walks this list and stops at the first stage whose output is missing.
 stages:
   - name: explore
-    skill: explore
+    path: stages/explore/explore.md
     output: 01-spec
     next: plan
   - name: plan
-    skill: plan
+    path: stages/plan/plan.md
     input: 01-spec
     output: 02-plan
     next: implement
   - name: implement
-    skill: implement
+    path: stages/implement/implement.md
     input: 02-plan
     output: branch          # special: detection inspects git diff, not a file
     next: review
   - name: review
-    skill: review
+    path: stages/review/review.md
     input: branch
     output: 03-review
     next: ship
   - name: ship
-    skill: ship
+    path: stages/ship/ship.md
     input: 03-review
     output: pr              # special: detection looks for an open PR + spec frontmatter `pr:` value
 
@@ -37,8 +42,11 @@ delivery: github-pr
 # Where this cell's templates live (relative to cell root).
 templates_dir: templates
 
-# Skills auto-triggered during runs (not stages, but referenced by the stage skills).
-support_skills:
-  - tdd
-  - commits
-  - parallel
+# Cross-cutting disciplines — referenced by stage docs (not auto-triggered).
+disciplines:
+  - name: tdd
+    path: disciplines/tdd.md
+  - name: commits
+    path: disciplines/commits.md
+  - name: parallel
+    path: disciplines/parallel.md

@@ -23,7 +23,9 @@ The active cell defines its own stages via `cell.yaml`. The `code-pipeline` star
 Idea → [explore] → Spec → [plan] → Plan → [implement] → Changes → [review] → Findings → [ship] → PR
 ```
 
-Each stage reads the previous stage's handoff, performs its work, and writes the next one. Stage names, file prefixes, and delivery target all come from the active cell — `run` itself knows none of them.
+Each stage reads the previous stage's handoff, performs its work, and writes the next one. Stage names, file prefixes, the **stage doc path**, and delivery target all come from the active cell — `run` itself knows none of them.
+
+Stage docs live inside the cell at `cell.yaml`'s `stages[i].path` (e.g. `stages/plan/plan.md` in code-pipeline). They are **not** Claude Code skills — `run` opens them with `Read`, not the Skill tool. This keeps the picker free of a `<cell>:<stage>` skill per stage and forces every stage transition through this orchestrator.
 
 | Stage | Input | Output | Path |
 |---|---|---|---|
@@ -60,6 +62,10 @@ When multiple conditions match, pick the **furthest-downstream** stage.
 - **DO** use `AskUserQuestion` when a handoff is missing, stale, or ambiguous. See `references/stage-detection.md`.
 - **DO NOT** silently proceed with stale input.
 
+## How to run a stage
+
+When you've detected the current stage, **Read** its doc at `~/.flow/active-cell/<stages[i].path>` and follow it. There is no `<cell>:<stage>` skill to invoke — the doc is the source of behavior, and the kernel is the only caller. The cell may also expose discipline docs at `disciplines/<name>.md`; stage docs reference them by path, and you Read those too when the stage doc says to.
+
 ## How to handle a stage boundary
 
 Every boundary follows the same four beats:
@@ -94,5 +100,6 @@ Shell helpers live under `skills/run/scripts/`. They avoid spending LLM tokens o
 ## Related skills
 
 - **Kernel primitives**: `ingest` (turn input into a skill), `reflect` (propose evolutions after a thread).
-- **Cell stage skills**: live in the active cell at `~/.flow/active-cell/skills/`. Installed as a `<cell-name>:*` plugin by `make cell-use`.
-- **Spike mode**: `<cell-name>:spike` (cell-provided) — runs a thread end-to-end unattended.
+- **Cell stage docs**: live in the active cell at `~/.flow/active-cell/stages/`. Read on demand by this kernel; not exposed as `<cell-name>:*` skills.
+- **Cell discipline docs**: live at `~/.flow/active-cell/disciplines/`. Referenced by stage docs (e.g. `tdd`, `commits`, `parallel`); Read when the stage doc points to them.
+- **Spike mode**: `stages/spike/spike.md` in the cell — runs a thread end-to-end unattended. Driven by `/flow:spike`, which Reads the doc directly.

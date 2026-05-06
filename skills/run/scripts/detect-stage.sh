@@ -78,13 +78,15 @@ fi
 # No thread for this branch yet → first-stage-empty.
 if [[ -z "$thread" ]]; then
   first_name="$(printf '%s\n' "$stages_data" | head -1 | cut -d'|' -f1)"
+  # Trailing path field (4th column) is harmless here — only the name matters.
   debug "no thread for branch=$branch; first=$first_name"
   echo "${first_name:-explore}-empty"
   exit 0
 fi
 
 # Walk stages. First stage whose output is missing OR whose handoff has unchecked items wins.
-while IFS='|' read -r name output nxt; do
+# `path` is also emitted by cell-stages.sh; consumed by the run kernel, ignored here.
+while IFS='|' read -r name output nxt _path; do
   [[ -n "$name" ]] || continue
   case "$output" in
     pr)

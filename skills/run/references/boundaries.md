@@ -1,6 +1,6 @@
 # Document boundaries
 
-The stage-skill agent (and the human reviewing its work) reads this doc to decide whether to auto-advance, pause, or revise at a stage transition.
+The stage agent (the kernel running a stage doc) and the human reviewing its work read this doc to decide whether to auto-advance, pause, or revise at a stage transition.
 
 ## Choose auto-advance vs pause
 

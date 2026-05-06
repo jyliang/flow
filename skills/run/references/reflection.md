@@ -67,7 +67,7 @@ Runs only on explicit `/flow:reflect` invocation, looking across shipped threads
 
 - Update to `CLAUDE.md` (new rule).
 - Edit to `.flow/config.sh` (template, stages, hooks).
-- Tweak to a stage skill file (show proposed diff; user decides).
+- Tweak to a stage doc, discipline doc, or skill file in the active cell (show proposed diff; user decides).
 
 > **Note:** If fewer than 2 threads under `agent/threads/` have a `pr:` value, say "not enough history yet" and exit. Reflection needs data.
 

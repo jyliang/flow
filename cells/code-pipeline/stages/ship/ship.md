@@ -1,14 +1,6 @@
----
-name: ship
-description: Fix review findings and ship a PR. Stage skill — reads findings, applies fixes, pushes a reviewed PR. Referenced by flow.
-metadata:
-  short-description: Findings → fix → PR
-  internal: true
----
-
 # Ship
 
-Stage skill read by the shipping agent and by a human about to review the PR. Turns findings into fixes, fixes into a clean PR.
+Stage doc read by the run kernel when it advances to `ship`, by the shipping agent, and by a human about to review the PR. Turns findings into fixes, fixes into a clean PR.
 
 ## Goal
 
@@ -23,7 +15,7 @@ A twelve-step pipeline from findings read through reflection scan.
 Read the latest `03-review-r*.md` in the active thread (`agent/threads/*-$(git branch --show-current)/`). Check for:
 
 - Resolved decisions (human already edited the document) — apply them.
-- Unresolved decisions — present to human via `AskUserQuestion` (see `skills/run/references/user-interaction.md`).
+- Unresolved decisions — present to human via `AskUserQuestion` (see `~/.flow/runtime/skills/run/references/user-interaction.md`).
 
 ### Step 2: Run the tests
 
@@ -71,7 +63,7 @@ A finding requires asking when **any** are true:
 - Trade-offs involved.
 - Not confident the fix is correct.
 
-Present via `AskUserQuestion` with concrete options, batched 1–4 per call (see `skills/run/references/user-interaction.md`). Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
+Present via `AskUserQuestion` with concrete options, batched 1–4 per call (see `~/.flow/runtime/skills/run/references/user-interaction.md`). Give file:line, what the issue is, why it matters, and concrete options (not just "fix or skip" — describe what each option does). If you have a recommendation, make it the first option with "(Recommended)" label.
 
 **Group related findings.** If 3 findings are all about the same architectural concern, present them as one question — don't spam the user with repetitive prompts.
 
@@ -116,7 +108,7 @@ git commit -m "Address review findings"
 git push
 ```
 
-Follow `skills/commits/SKILL.md` for commit practices.
+Follow `disciplines/commits.md` for commit practices.
 
 ### Step 7: Create or update the PR
 
@@ -146,7 +138,7 @@ If a PR already exists, update its body via `gh api repos/<owner>/<repo>/pulls/<
 
 ### Step 8: Self-review loop
 
-Re-run `skills/review/SKILL.md` on the PR. If new issues found, repeat steps 3–7.
+Re-run `stages/review/review.md` on the PR. If new issues found, repeat steps 3–7.
 
 #### Rules
 
@@ -177,12 +169,12 @@ If `FLOW_TEST_CMD` is set (see Step 2), re-run it to verify nothing broke. Other
 
 ### Step 12: Reflection scan (silent when empty)
 
-Before returning control, scan this session's conversation for facts stated ≥ 2 times that aren't already in `CLAUDE.md`. See `skills/run/references/reflection.md` for qualifying observations and the 3-candidate cap.
+Before returning control, scan this session's conversation for facts stated ≥ 2 times that aren't already in `CLAUDE.md`. See `~/.flow/runtime/skills/run/references/reflection.md` for qualifying observations and the 3-candidate cap.
 
 If there are candidates, surface each via `AskUserQuestion` (at most 3). If there are none, say nothing — reflection is silent when empty.
 
-## Related skills
+## Related docs
 
-- `skills/review/SKILL.md` — produces the findings this stage consumes.
-- `skills/commits/SKILL.md` — commit practices (auto-triggers).
-- `skills/run/references/reflection.md` — the "twice is a pattern" rule used in Step 12.
+- `stages/review/review.md` — produces the findings this stage consumes.
+- `disciplines/commits.md` — commit practices. Read it before Step 6.
+- `~/.flow/runtime/skills/run/references/reflection.md` — the "twice is a pattern" rule used in Step 12.

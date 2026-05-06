@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Install the active cell as a Claude Code plugin (dev mode).
 #
-# Cell skills appear in the picker namespaced as <cell-name>:<skill-name>
-# (e.g. code-pipeline:explore). Same end state as a marketplace install —
-# but pointed at the live cell repo so edits flow through.
+# Any cell skills under skills/<name>/SKILL.md still appear in the picker
+# namespaced as <cell-name>:<skill-name>. Stage and discipline docs (e.g.
+# code-pipeline's stages/ and disciplines/ trees) deliberately live outside
+# skills/ so they are not auto-surfaced — the kernel Reads them on demand.
+# Same end state as a marketplace install — but pointed at the live cell
+# repo so edits flow through.
 #
 # If the cell lacks a .claude-plugin/plugin.json, this script auto-generates
 # one from cell.yaml so the cell can be loaded as a plugin.

@@ -1,14 +1,6 @@
----
-name: commits
-description: Commit practices for implementation work — atomic commits, frequent checkpoints, never commit with failing tests. Auto-triggers when committing code or completing implementation steps.
-metadata:
-  short-description: Atomic commits and commit discipline
-  internal: true
----
-
 # Commit Discipline
 
-Auto-triggered skill read by the implementing agent while committing code. Keeps the history atomic and bisectable.
+Discipline doc Read by the implementing and shipping agents (via their stage docs) while committing code. Keeps the history atomic and bisectable.
 
 ## Goal
 

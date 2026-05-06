@@ -193,7 +193,7 @@ One-glance checklist. Every item expands into a full principle above.
 - **DO NOT** capitalize `Spec` / `Plan` / `Findings` unless they open a sentence.
 - **DO NOT** add decorative emoji.
 - **DO NOT** rename a heading referenced by another doc without updating the referrer.
-- **DO NOT** change a template's section structure — the stage skill that fills it depends on those headings.
+- **DO NOT** change a template's section structure — the stage doc that fills it depends on those headings.
 - **DO NOT** introduce a new tool or dependency (mermaid, a doc generator, a linter plugin) for a docs-only change.
 
 ## Related skills

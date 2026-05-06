@@ -77,6 +77,7 @@ User invokes `/flow:reflect [scope]` to scan across multiple shipped threads. `s
 | New rule | `CLAUDE.md` (project or user, prompt for scope) |
 | Cell manifest change | `~/.flow/active-cell/cell.yaml` |
 | Skill evolution | `~/.flow/active-cell/skills/<name>/SKILL.md` (or references) |
+| Stage/discipline doc evolution | A doc inside the active cell that isn't a skill — e.g. `~/.flow/active-cell/stages/<name>/<name>.md` or `~/.flow/active-cell/disciplines/<name>.md`. Same branch + PR plumbing as a skill evolution. |
 
 Show the proposed diff inline. The user's Yes is informed consent — pre-baked plumbing applies it.
 
