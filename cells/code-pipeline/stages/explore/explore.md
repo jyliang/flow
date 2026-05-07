@@ -24,6 +24,14 @@ Use parallel subagents to understand the codebase before writing anything.
 - **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
 - **DO NOT** assume features aren't implemented — study the code first.
 
+### Warm-fresh / conversation-derived specs
+
+Some entries (`/flow:here`, the "I've been chatting and want to make this real" path) seed the spec from conversation history rather than fresh codebase study. Still run the pre-spec analysis (similarity, impact, dependencies) — the conversation supplies the *what*, the code supplies the *risk*. The spec must capture both: conversation-derived intent AND source-code-derived constraints, with citations to each. This mirrors the warm-fresh structure in `stages/spike/spike.md:38` — read it for the parallel.
+
+### Small-change escape hatch
+
+Mechanical or housekeeping changes (renames, version bumps, single-line fixes — see `agent/threads/2026-04-17-flow-skill-refactor/`) may legitimately skip explore + plan and produce only a review/findings doc. The author records the reason in the PR body and the review doc's frontmatter. This is *not* a license to skip; it's an acknowledgement that ceremony costs more than it returns when the change is trivial. If in doubt, write the spec.
+
 ## How to produce the spec
 
 Write the spec at `agent/threads/<YYYY-MM-DD>-<branch>/01-spec-r<N>.md` following the document protocol (`~/.flow/runtime/kernel/run/references/protocol.md`). The scaffold at `~/.flow/active-cell/templates/spec.md` seeds the structure; break from it only when the work has a natural shape that scans better.
