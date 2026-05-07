@@ -48,7 +48,7 @@ Six testable units, ordered by ascending blast radius, all under `cells/code-pip
 ### Step 4: `explore.md` warm-fresh entry + small-change escape hatch
 
 - [ ] Tests: `grep -nE "^### (Warm-fresh|Conversation-derived|Small-change|Review-only)" cells/code-pipeline/stages/explore/explore.md` returns ≥2 matches (one per new sub-section).
-- [ ] Code: Edit `cells/code-pipeline/stages/explore/explore.md` — add `### Warm-fresh / conversation-derived specs` (≤6 lines) explaining the `flow:here` path: spec is seeded from conversation history, not codebase study; still apply the pre-spec analysis (similarity, impact, dependencies). Mirror the structure of `stages/spike/spike.md:38` so the two stay coherent.
+- [ ] Code: Edit `cells/code-pipeline/stages/explore/explore.md` — add `### Warm-fresh / conversation-derived specs` (≤6 lines) explaining the `flow:here` path: spec is seeded from conversation history, not codebase study; still apply the pre-spec analysis (similarity, impact, dependencies). Mirror the structure of `stages/spike/spike.md` § *How to determine entry mode* so the two stay coherent.
 - [ ] Code: Add `### Small-change escape hatch` (≤6 lines) — when a change is mechanical or housekeeping (e.g. `2026-04-17-flow-skill-refactor/`), it is permitted to skip explore + plan and produce only a review/findings doc. Author records the reason in the PR body.
 - [ ] Test run: `make lint-docs` → `[PASTE TEST SUMMARY HERE]`
 - [ ] Structural check: `wc -l cells/code-pipeline/stages/explore/explore.md` — increase ≤30 lines from baseline.
