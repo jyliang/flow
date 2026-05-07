@@ -1,4 +1,4 @@
-<!-- branch: code-pipeline-reflect · date: 2026-05-06 · author: Jason Liang · pr: -->
+<!-- branch: code-pipeline-reflect · date: 2026-05-06 · author: Jason Liang · pr: 20 -->
 
 # Spec: code-pipeline-reflect · explore → plan
 
