@@ -15,7 +15,8 @@ LINT_DOC_PATHS := README.md kernel commands cells
 
 .PHONY: help install doctor list lint-docs \
 	cell-init cell-new cell-list cell-use cell-rm \
-	cell-status cell-link-remote cell-pull cell-push cell-branch cell-pr
+	cell-status cell-link-remote cell-pull cell-push cell-branch cell-pr \
+	eval-task-new eval-record eval-review eval-compare eval-list
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -77,6 +78,32 @@ cell-branch: ## Cut a branch in the cell for an edit (vars: BRANCH, optional NAM
 
 cell-pr: ## Open a PR for current cell edits (vars: TITLE, BODY; optional NAME)
 	@bash $(RUNTIME_ROOT)/scripts/cell-pr.sh "$(NAME)" "$(TITLE)" "$(BODY)"
+
+# ----- Eval harness (capture flow runs, review them, compare across versions) -----
+
+eval-task-new: ## Scaffold a new eval task (var: TASK)
+	@bash $(RUNTIME_ROOT)/scripts/eval-task-new.sh "$(TASK)"
+
+eval-record: ## Capture a flow run as an eval (vars: TASK; optional PROJECT, THREAD, BASE, COST, DURATION)
+	@bash $(RUNTIME_ROOT)/scripts/eval-record.sh \
+		--task "$(TASK)" \
+		$(if $(PROJECT),--project "$(PROJECT)") \
+		$(if $(THREAD),--thread "$(THREAD)") \
+		$(if $(BASE),--base "$(BASE)") \
+		$(if $(COST),--cost "$(COST)") \
+		$(if $(DURATION),--duration "$(DURATION)")
+
+eval-review: ## Open $$EDITOR on a long-form qualitative review (vars: TASK, RUN; optional REVIEWER)
+	@bash $(RUNTIME_ROOT)/scripts/eval-review.sh \
+		--task "$(TASK)" --run "$(RUN)" \
+		$(if $(REVIEWER),--reviewer "$(REVIEWER)")
+
+eval-compare: ## Compare two recorded runs (vars: TASK, A, B)
+	@bash $(RUNTIME_ROOT)/scripts/eval-compare.sh \
+		--task "$(TASK)" --a "$(A)" --b "$(B)"
+
+eval-list: ## List eval tasks and recorded runs
+	@bash $(RUNTIME_ROOT)/scripts/eval-list.sh
 
 # ----- Doc lint (preserved from v2) -----
 
