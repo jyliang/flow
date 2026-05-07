@@ -7,7 +7,7 @@
 # stage docs.
 
 name: code-pipeline
-version: 0.2.0
+version: 0.3.0
 description: Idea → spec → plan → implement → review → PR. The starter pipeline.
 
 # Stages run in order. detect-stage.sh walks this list and stops at the first stage whose output is missing.

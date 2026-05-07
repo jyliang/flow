@@ -51,6 +51,20 @@ Give each specialist the full diff and changed file list. Be aggressive on sever
 | Error Handling Hunter | Every try/catch, optional chain, guard/throw, fallback. Is the error logged? Could it swallow unrelated errors? Silent failures? Empty catch blocks? | Rate by blast radius: silent swallow in a hot path = 9, missing log on a recoverable error = 6. |
 | Test Coverage Analyzer | Coverage of new or changed behavior. | New public API with zero tests = 10. Changed behavior without test updates = 8. Any new behavior without tests = 8+. |
 | Pattern Reuse Scanner | Level 1: does the codebase already solve this? Level 2: does the change duplicate across files? Level 3: structural similarity to existing code. | Duplication of an existing utility = 7. Structural near-duplicate = 5. |
+| Reference Resolver | Validates step refs, backticked section names, file paths, and skill names in changed stage docs against current files. See *How the Reference Resolver runs* below for patterns and scope. | Broken reference to a renamed/moved stage doc = 8. Stale step number that still resolves to a real but wrong step = 7. Legacy skill name (`/flow-reflect`) = 6. Cosmetic drift (heading punctuation) = 3. |
+
+#### How the Reference Resolver runs
+
+Grep-validates references inside changed stage docs against current files.
+
+- **Step refs** — `Step \d+(\.\d+)?`; verify the cited step still exists in the target doc.
+- **Backticked section names** — e.g. `` `"Conversation absorption"` `` or `` `Step 7.5` ``; verify the heading or label is still present.
+- **Relative file paths** — e.g. `stages/ship/ship.md` or `disciplines/tdd.md`; verify the file exists at that path.
+- **Skill names** — e.g. `flow:reflect` or `flow:flow`; verify they are current and flag legacy `/flow-reflect` style.
+
+Scope: changed files in `cells/code-pipeline/stages/**` plus any stage doc transitively referenced by them; explicitly NOT `commands/*.md` (sibling thread).
+
+Output: bulleted list of `**file:line** — quoted reference → fix suggestion`, merged into `## Findings` by severity like the other specialists. If no findings, output `Reference Resolver: clean`.
 
 ### Step 4: Synthesize
 

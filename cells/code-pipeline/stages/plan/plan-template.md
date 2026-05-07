@@ -16,6 +16,16 @@ Save as `./agent/threads/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-p
 
 [One-sentence lede. High-level design: patterns to follow, order of changes, architectural decisions with rationale collapsed to one-liners ("chose X over Y because Z").]
 
+## Disciplines applied
+
+[Optional. Omit when the thread is a single-file rename or version bump. For each discipline, mark `applied`, `skipped — <reason>`, or `n/a — <reason>`.]
+
+- **tdd:** [applied | skipped — reason | n/a — reason]
+- **commits:** [applied | skipped — reason | n/a — reason]
+- **parallel:** [applied | skipped — reason | n/a — reason]
+
+> Examples: `applied`, `skipped — single-file rename, no test surface`, `n/a — no test framework`.
+
 ## Steps
 
 ### Step 1: [First Testable Unit]

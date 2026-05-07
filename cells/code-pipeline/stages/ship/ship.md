@@ -25,7 +25,7 @@ Load the project's test command from config and run it before touching any fixes
 eval "$($HOME/.flow/runtime/kernel/run/scripts/load-config.sh)"
 ```
 
-If `FLOW_TEST_CMD` is non-empty, run it via a subagent. If empty, note "no test command configured for this project — skipping" and move on; this is expected for docs-only or shell-script repos that rely on manual verification.
+If `FLOW_TEST_CMD` is non-empty, run it via a subagent. If empty, follow `disciplines/tdd.md` § *How to verify when FLOW_TEST_CMD is empty* — substitute smoke checks (grep, structural diff, lint, dry-run trace) per the discipline. Record each step's chosen check in the findings doc's verification list.
 
 If tests fail:
 
