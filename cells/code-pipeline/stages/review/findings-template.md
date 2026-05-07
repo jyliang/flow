@@ -60,5 +60,5 @@ Save as `./agent/threads/<YYYY-MM-DD>-<branch>/03-review-r<N>.md`. PR-vs-local d
 ## Ship trail
 
 <!-- Appended by ship stage — do not fill during review. -->
-<!-- Records what ship did with the findings: auto-fixed (N), user-approved (N), skipped, deferred. See ship/SKILL.md Step 5. -->
+<!-- Records what ship did with the findings: auto-fixed (N), user-approved (N), skipped, deferred. See stages/ship/ship.md Step 5. -->
 ```
