@@ -26,6 +26,7 @@ Based on the spec's impact analysis and current state:
 2. Break each change into the smallest testable unit.
 3. Identify what tests to write for each unit.
 4. Reference existing patterns to follow.
+5. If `FLOW_TEST_CMD` is empty, follow `disciplines/tdd.md` → "When FLOW_TEST_CMD is empty" — define smoke checks (grep, structural, lint) instead of unit tests.
 
 ### Step 3: Write the plan
 

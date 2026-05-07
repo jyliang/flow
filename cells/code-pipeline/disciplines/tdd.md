@@ -55,3 +55,11 @@ What to cover and at which level:
 - Integration tests for workflows (use real dependencies where patterns exist — inspect existing tests for examples).
 - E2E tests for critical user paths.
 - Think about the full user journey, not just the happy path.
+
+## When FLOW_TEST_CMD is empty
+
+Some repos lack an automated test framework. `FLOW_TEST_CMD` is set in `.flow/config.sh` and is empty in those cases.
+
+- When empty, the implement/ship steps replace unit tests with **smoke checks**: grep assertions, structural diffs, `make lint-docs` (or analogue), and dry-run traces of the affected behavior.
+- Record the chosen verification approach in the plan's per-step `Tests:` line so the implement loop has a defined gate.
+- The discipline still holds — define the smoke check before the edit, then make it pass.
