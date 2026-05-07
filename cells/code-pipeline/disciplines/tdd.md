@@ -56,10 +56,29 @@ What to cover and at which level:
 - E2E tests for critical user paths.
 - Think about the full user journey, not just the happy path.
 
-## When FLOW_TEST_CMD is empty
+## How to verify when FLOW_TEST_CMD is empty
 
-Some repos lack an automated test framework. `FLOW_TEST_CMD` is set in `.flow/config.sh` and is empty in those cases.
+Some repos lack an automated test framework (`FLOW_TEST_CMD` is set in `.flow/config.sh` and is empty in those cases) — substitute a defined smoke gate so test-first discipline still holds.
 
-- When empty, the implement/ship steps replace unit tests with **smoke checks**: grep assertions, structural diffs, `make lint-docs` (or analogue), and dry-run traces of the affected behavior.
-- Record the chosen verification approach in the plan's per-step `Tests:` line so the implement loop has a defined gate.
-- The discipline still holds — define the smoke check before the edit, then make it pass.
+### Step 1: Define the smoke check before editing
+
+Before touching code or docs, write down the concrete check that will tell you the change works. Mirror test-first discipline: the gate exists before the edit so the edit has something to satisfy.
+
+### Step 2: Substitute the gate
+
+Pick the smoke check from these options, in order of preference:
+
+- **grep assertions** — assert presence/absence of specific strings in the affected files.
+- **Structural diffs** — verify section counts, heading shapes, or file shape via `diff` or scripted checks.
+- **Lint** — run `make lint-docs` if defined; otherwise the project's documented lint command from `CLAUDE.md`; otherwise skip and note the absence in the plan.
+- **Dry-run traces** — execute the affected behavior in dry-run / `--help` / no-op mode and assert on the trace.
+
+### Step 3: Record per step
+
+Record the chosen check on the plan's per-step `Tests:` line so the implement loop has a defined gate to run against.
+
+#### Rules
+
+- **DO** define the smoke check before the edit (test-first still applies).
+- **DO** record the chosen verification on each plan step's `Tests:` line.
+- **DO NOT** ship a step without a defined smoke gate.

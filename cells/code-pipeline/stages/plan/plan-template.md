@@ -18,11 +18,13 @@ Save as `./agent/threads/<YYYY-MM-DD>-<branch>/02-plan-r<N>.md` (typically `02-p
 
 ## Disciplines applied
 
-[Optional. Omit for trivial threads. Mark each as `applied`, `skipped — <reason>`, or `n/a — <reason>`.]
+[Optional. Omit when the thread is a single-file rename or version bump. For each discipline, mark `applied`, `skipped — <reason>`, or `n/a — <reason>`.]
 
 - **tdd:** [applied | skipped — reason | n/a — reason]
 - **commits:** [applied | skipped — reason | n/a — reason]
 - **parallel:** [applied | skipped — reason | n/a — reason]
+
+> Examples: `applied`, `skipped — single-file rename, no test surface`, `n/a — no test framework`.
 
 ## Steps
 

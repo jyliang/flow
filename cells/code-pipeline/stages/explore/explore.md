@@ -17,20 +17,28 @@ Use parallel subagents to understand the codebase before writing anything.
 3. Read `CLAUDE.md`, project-level reference specs, and `roadmap.md` if they exist.
 4. Research technical concepts via web search if needed.
 
+### Warm-fresh / conversation-derived specs
+
+Some entries (`/flow:here`, the "I've been chatting and want to make this real" path) seed the spec from conversation history rather than fresh codebase study. Still run the pre-spec analysis (similarity, impact, dependencies) — the conversation supplies the *what*, the code supplies the *risk*. The spec must capture both: conversation-derived intent AND source-code-derived constraints, with citations to each. This mirrors the warm-fresh structure in `stages/spike/spike.md` § *How to determine entry mode* — read it for the parallel.
+
+### Small-change escape hatch
+
+Mechanical or housekeeping changes (renames, version bumps, single-line fixes) may legitimately skip explore + plan and produce only a review/findings doc.
+
+- **DO** skip explore + plan and produce only a review/findings doc when **all** are true:
+  - No production-code change (docs, version bumps, renames, single-line fixes only).
+  - No behavior change.
+  - Single-file or tightly-coupled diff under ~50 lines.
+- **DO** record the skip-reason in the PR body and the review doc's frontmatter; the human approves by merging.
+- **DO NOT** invoke this hatch for any change that affects runtime behavior, even if the diff is small.
+- See `agent/threads/2026-04-17-flow-skill-refactor/` for a worked example.
+
 ### Rules
 
 - **DO** search for existing implementations before assuming they don't exist.
 - **DO** use parallel subagents for all exploration (see `disciplines/parallel.md`).
-- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open questions` in the spec over interrupting mid-explore.
+- **DO** use `AskUserQuestion` for any mid-explore clarification that requires a user decision (see `~/.flow/runtime/kernel/run/references/user-interaction.md`). Prefer capturing ambiguities under `## Open` in the spec over interrupting mid-explore.
 - **DO NOT** assume features aren't implemented — study the code first.
-
-### Warm-fresh / conversation-derived specs
-
-Some entries (`/flow:here`, the "I've been chatting and want to make this real" path) seed the spec from conversation history rather than fresh codebase study. Still run the pre-spec analysis (similarity, impact, dependencies) — the conversation supplies the *what*, the code supplies the *risk*. The spec must capture both: conversation-derived intent AND source-code-derived constraints, with citations to each. This mirrors the warm-fresh structure in `stages/spike/spike.md:38` — read it for the parallel.
-
-### Small-change escape hatch
-
-Mechanical or housekeeping changes (renames, version bumps, single-line fixes — see `agent/threads/2026-04-17-flow-skill-refactor/`) may legitimately skip explore + plan and produce only a review/findings doc. The author records the reason in the PR body and the review doc's frontmatter. This is *not* a license to skip; it's an acknowledgement that ceremony costs more than it returns when the change is trivial. If in doubt, write the spec.
 
 ## How to produce the spec
 
@@ -98,6 +106,7 @@ The spec is read by a human approving the plan and by the next-stage agent, ofte
 
 Where things live and how they're named:
 
+- On `-rN` where N>1, uncomment the `## Revisions` block in the spec template.
 - `agent/threads/<date>-<branch>/01-spec-r<N>.md` — the spec. A new thread starts at `r1`; revisions create `r2`, `r3`, … with the prior file frozen and a `## Revisions` section explaining the delta.
 - `roadmap.md` — product vision (read-only reference).
 

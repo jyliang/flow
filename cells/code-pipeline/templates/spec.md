@@ -21,7 +21,7 @@
 ## Verification
 [One-sentence lede. What must be confirmed after the change ships.]
 
-- [ ] 
+- [ ] [thing to check]
 
 ## Open
 [One-sentence lede — or go straight to the list if there's only one item.]

@@ -31,7 +31,7 @@ Six testable units, ordered by ascending blast radius, all under `cells/code-pip
 ### Step 2: Spec template alignment with `explore.md`
 
 - [ ] Tests: `grep -cE "^\\[One-sentence lede" cells/code-pipeline/templates/spec.md` returns ≥6 (one per section); `grep -nE "^## Revisions" cells/code-pipeline/templates/spec.md` returns one match in a comment block (optional slot).
-- [ ] Code: Edit `cells/code-pipeline/templates/spec.md` to add `[One-sentence lede — ...]` placeholders under `## Scope`, `## Decisions`, `## Design`, `## Constraints`, `## Verification`, `## Open` matching the section descriptions in `cells/code-pipeline/stages/explore/explore.md:33-60`.
+- [ ] Code: Edit `cells/code-pipeline/templates/spec.md` to add `[One-sentence lede — ...]` placeholders under `## Scope`, `## Decisions`, `## Design`, `## Constraints`, `## Verification`, `## Open` matching the section descriptions in `cells/code-pipeline/stages/explore/explore.md` § *How to produce the spec*.
 - [ ] Code: Add an HTML-comment-fenced optional `## Revisions` block at the bottom of the template, with a one-line usage note ("only on `-rN+1`; explain what changed since `-rN-1`").
 - [ ] Code: Inline comment near `## Decisions` documenting the `(resolved)` / `(open)` annotation convention used by 7 of 11 historical threads.
 - [ ] Test run: `make lint-docs` → `[PASTE TEST SUMMARY HERE]`
