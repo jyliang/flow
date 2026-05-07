@@ -1,0 +1,6 @@
+{
+  "id": "mini-todo",
+  "type": "code",
+  "title": "Build a mini TODO CLI in a fresh repo",
+  "description": "Have flow build a single-file Python TODO CLI with JSON-file persistence and the commands: add, ls, done, rm. Tests scope discipline (will flow over- or under-engineer it?), spec quality (does it pin the data shape and edge cases?), and code quality on greenfield work."
+}
