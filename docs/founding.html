@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flow — A Conviction Doc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f4;
+    --paper: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-faint: #8a8a8a;
+    --rule: #e6e1d8;
+    --accent: #c4541e;
+    --accent-soft: #fbeee5;
+    --settled: #2f6e3a;
+    --leaning: #b8860b;
+    --open: #c4541e;
+    --max: 760px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .ui { font-family: "Inter", system-ui, sans-serif; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+  main { max-width: var(--max); margin: 0 auto; padding: 80px 32px 160px; }
+
+  /* Header */
+  .meta-row {
+    display: flex; align-items: center; gap: 12px;
+    font-family: "Inter", sans-serif; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 32px;
+  }
+  .meta-row .pill {
+    background: var(--ink); color: var(--bg);
+    padding: 4px 10px; border-radius: 2px; font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .meta-row .dot { color: var(--rule); }
+
+  h1.title {
+    font-family: "Source Serif 4", serif;
+    font-weight: 400;
+    font-size: 64px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px;
+  }
+  .deck {
+    font-size: 22px; line-height: 1.45;
+    color: var(--ink-soft);
+    font-weight: 300;
+    margin: 0 0 64px;
+    max-width: 620px;
+  }
+
+  /* Format key */
+  .key {
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 20px 24px;
+    margin: 0 0 72px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .key-title {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 10px; font-weight: 600;
+  }
+  .key-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .key-item { display: flex; align-items: center; gap: 8px; }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    font-family: "Inter", sans-serif;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px;
+    vertical-align: middle;
+  }
+  .badge.settled { background: #e8f1ea; color: var(--settled); }
+  .badge.leaning { background: #fbf2dc; color: var(--leaning); }
+  .badge.open    { background: var(--accent-soft); color: var(--accent); }
+
+  /* Sections */
+  section { margin: 72px 0; }
+  .section-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+  h2 {
+    font-family: "Source Serif 4", serif;
+    font-weight: 400; font-size: 36px;
+    line-height: 1.15; letter-spacing: -0.01em;
+    margin: 6px 0 28px;
+  }
+
+  /* Claims */
+  .claim {
+    margin: 36px 0;
+    padding-left: 20px;
+    border-left: 2px solid var(--rule);
+  }
+  .claim-head {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .claim-text {
+    font-size: 22px; line-height: 1.35;
+    letter-spacing: -0.005em;
+    flex: 1; min-width: 280px;
+  }
+  .claim p { margin: 12px 0 0; color: var(--ink-soft); font-size: 17px; }
+  .claim p:first-of-type { margin-top: 16px; }
+
+  /* Callouts */
+  .callout {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin: 28px 0;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .callout.decision { border-left-color: var(--settled); }
+  .callout.question { border-left-color: var(--open); }
+  .callout-label {
+    font-family: "Inter", sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .callout.decision .callout-label { color: var(--settled); }
+  .callout.question .callout-label { color: var(--open); }
+  .callout p { margin: 4px 0; }
+
+  /* Lists */
+  ul, ol { padding-left: 22px; color: var(--ink-soft); }
+  li { margin: 8px 0; }
+  li strong { color: var(--ink); }
+
+  /* Code */
+  code { font-family: "JetBrains Mono", monospace; font-size: 0.9em;
+         background: var(--paper); border: 1px solid var(--rule);
+         padding: 1px 5px; border-radius: 2px; color: var(--ink); }
+  pre { background: var(--paper); border: 1px solid var(--rule);
+        padding: 18px; overflow-x: auto; border-radius: 2px;
+        font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
+  pre code { background: none; border: none; padding: 0; }
+
+  /* Decision log */
+  .log { border-top: 1px solid var(--rule); }
+  .log-entry {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 16px;
+  }
+  .log-entry .when {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; color: var(--ink-faint);
+    letter-spacing: 0.04em; padding-top: 4px;
+  }
+  .log-entry .what strong { display: block; margin-bottom: 4px; }
+  .log-entry .what span { color: var(--ink-soft); }
+
+  /* Footer */
+  footer {
+    margin-top: 120px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    font-family: "Inter", sans-serif;
+    font-size: 13px; color: var(--ink-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+
+  /* Hero claim styling — first section is bigger */
+  .hero-claim {
+    font-family: "Source Serif 4", serif;
+    font-weight: 400;
+    font-size: 38px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin: 48px 0 32px;
+    color: var(--ink);
+    max-width: 680px;
+  }
+  .hero-claim em { font-style: italic; color: var(--accent); }
+
+  @media (max-width: 640px) {
+    main { padding: 56px 22px 100px; }
+    h1.title { font-size: 44px; }
+    .deck { font-size: 19px; }
+    .hero-claim { font-size: 28px; }
+    h2 { font-size: 28px; }
+    .claim-text { font-size: 19px; }
+    .log-entry { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<div class="meta-row ui">
+  <span class="pill">Conviction Doc</span>
+  <span class="dot">·</span>
+  <span>v0.1</span>
+  <span class="dot">·</span>
+  <span>2026-05-14</span>
+  <span class="dot">·</span>
+  <span>Owner: Jason</span>
+  <span class="dot">·</span>
+  <span>Status: Sharpening</span>
+</div>
+
+<h1 class="title">Flow</h1>
+<p class="deck">A working doc for the product. Every claim below is tagged with its conviction level so we know exactly where to push next.</p>
+
+<div class="key ui">
+  <div class="key-title">How to read this doc</div>
+  <div class="key-row">
+    <div class="key-item"><span class="badge settled">Settled</span><span>load-bearing, don't touch</span></div>
+    <div class="key-item"><span class="badge leaning">Leaning</span><span>current direction, can flex</span></div>
+    <div class="key-item"><span class="badge open">Open</span><span>active debate, push here</span></div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 01</div>
+  <h2>The Bet</h2>
+
+  <p class="hero-claim">
+    Git was for code. <em>Flow is for the docs AI agents produce.</em>
+  </p>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">The interchange format between AI work steps should be the same artifacts humans already review at work — specs, plans, decision records, postmortems, RFCs.</div>
+    <p>Not graphs, not opaque agent state, not JSON traces. Markdown documents a senior engineer or PM would recognize at a glance. This is a 20-year-stable bet, because the artifacts predate AI.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Humans must be able to inspect, edit, and resume from any step in the pipeline.</div>
+    <p>Inspection without modification is theater. If a human can read a doc but not fix it and continue, the loop is closed and the human is decoration.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 02</div>
+  <h2>The Problem</h2>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Current flow has too many surface options and too much accidental opinionation.</div>
+    <p>The Makefile sprawls. The stages are hard-coded for code work. Users can't compose their own pipelines for non-code domains. The product became a pipeline instead of a pipeline factory.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Existing AI workflow tools (LangGraph, evomap, hermes, DevSwarm) compete on orchestration, evolution, and autonomy.</div>
+    <p>None of them own the human-readable doc layer. They treat documents as side effects. Flow's wedge is to invert that — documents are the substrate, skills are the producers.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 03</div>
+  <h2>The Principle</h2>
+
+  <p class="hero-claim">
+    A flow is a chain of <em>(skill, doc-type)</em> pairs. The doc-types are the product.
+  </p>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Flow is a documentation expert, not an LLM and not a skill-improver.</div>
+    <p>Flow's value is knowing what kind of doc belongs between skill A and skill B. Skills are external (Claude Code skills, or whatever). LLMs are external. Skill quality is somebody else's problem.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Every stage emits a doc. Every doc is a resume point.</div>
+    <p>This single mechanic gives us audit trail, human review, fork-and-restart, and archival — without inventing new concepts.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 04</div>
+  <h2>What Flow Is</h2>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Flow is a pipeline-builder CLI.</div>
+    <p>Users assemble their own pipelines from skills and doc-types. Flow does not ship "the one true pipeline" — it ships the construction kit and the doc-type catalog.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">A flow is a linear chain. Forks happen by starting a new flow from a checkpoint doc, not by branching mid-flow.</div>
+    <p>DAGs were considered and rejected for v1. They add graph editing, cycle detection, parallel execution, and visualization burden — for a capability (forking) that linear-plus-checkpoint gives us for free.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Two execution modes, one toggle: spike and step.</div>
+    <p><strong>Spike</strong> runs end-to-end, never pauses, produces a spike log. <strong>Step</strong> pauses at every doc for human review, edit, or abort. This collapses the "too many make options" complaint into one axis: trust vs review.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Each flow compiles to two generated skills: <code>flow-{name}-spike</code> and <code>flow-{name}-step</code>.</div>
+    <p>Source of truth is a flow definition (likely <code>flow.yaml</code>). The generated skills carry a "do not edit" header. Editing a flow means editing the source and regenerating.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 05</div>
+  <h2>How It Works</h2>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">The atomic unit is a (skill, doc-type) pair.</div>
+    <p>Flow does the binding between an external skill and a doc-type from the catalog. Skills stay agnostic — they don't need to know about flow. This preserves the boundary that lets flow remain a substrate.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Checkpoint trail lives under <code>.flow/runs/&lt;flow&gt;/&lt;timestamp&gt;/</code>.</div>
+    <p>Numbered files like <code>01-spec.md</code>, <code>02-plan.md</code>, <code>03-findings.md</code>. Resume via <code>flow resume &lt;run-id&gt; --from &lt;NN&gt;</code>. Edit any file before resuming to fork the run.</p>
+  </div>
+
+  <pre><code>flow new          # interactive: pick skills and doc-types
+flow list         # show defined flows
+flow edit &lt;name&gt;  # edit the source flow definition
+flow rm &lt;name&gt;    # delete a flow
+
+# generated skills are invoked through Claude Code:
+/flow-build-feature-spike
+/flow-build-feature-step</code></pre>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 06</div>
+  <h2>The Moat — A Community of Doc-Types</h2>
+
+  <p class="hero-claim">
+    Builder CLIs are commodity. <em>A curated, contributable catalog of human-readable doc-types is not.</em>
+  </p>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">A doc-type is a markdown file with frontmatter — purely descriptive, no runtime.</div>
+    <pre><code>---
+name: spec
+purpose: capture intent before planning — what + why, not how
+audience: human reviewer, downstream plan skill
+shape: problem / goals / non-goals / constraints / open-questions
+lifecycle: append-only; supersedes prior specs
+maturity: stable
+---
+[template body with section guidance]
+[1-2 example docs]</code></pre>
+    <p>This is the contribution unit. Markdown plus frontmatter. No DSL, no execution semantics. Anyone who can write a good design doc can contribute.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Ship a bootstrap catalog of 6-8 doc-types, then open contribution.</div>
+    <ul>
+      <li><strong>spec</strong> — intent</li>
+      <li><strong>plan</strong> — steps</li>
+      <li><strong>findings</strong> — review output</li>
+      <li><strong>decision-record</strong> — why we chose X</li>
+      <li><strong>spike-log</strong> — what was tried, what we learned</li>
+      <li><strong>change-summary</strong> — what shipped, for PR description</li>
+    </ul>
+    <p>Each is hand-tested in real work before launch. That's the credibility floor.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge open">Open</span>
+    </div>
+    <div class="claim-text">Community model: start with a GitHub repo + PR-based contributions. Move to a CLI registry only if usage demands it.</div>
+    <p>Three options ranked: (1) <strong>GitHub repo</strong> — lowest friction, ship now; (2) <strong>CLI registry</strong> with versioning and namespacing — feels like a real ecosystem, more infra; (3) <strong>Curated only</strong> — defeats the moat thesis. Default to (1).</p>
+  </div>
+
+  <div class="callout question">
+    <div class="callout-label ui">Risk to name</div>
+    <p>Communities don't form because the product is good. They form because a recognizable group is already using it in public and writing about it. Distribution is the actual work — and it's not bundled with the code.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 07</div>
+  <h2>What Flow Is Not</h2>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Flow does not improve skills, host LLMs, or evaluate output quality.</div>
+    <p>Skill evolution belongs to the user, to evomap, to hermes, or to whatever comes next. Flow stays out of the agent arms race so it can be the substrate they all depend on.</p>
+  </div>
+
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge leaning">Leaning</span>
+    </div>
+    <div class="claim-text">Flow does not ship opinionated pipelines for specific domains.</div>
+    <p>The current <code>code-pipeline</code> cell becomes a starter template, not the product. Other pipelines are user-built. Flow ships the kit, not the work.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 08</div>
+  <h2>Decision Log</h2>
+  <div class="log">
+    <div class="log-entry">
+      <div class="when mono">2026-05-14</div>
+      <div class="what">
+        <strong>Flow is a pipeline-builder, not a fixed pipeline.</strong>
+        <span>User assembles their own. Bootstrap catalog provides the vocabulary.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-14</div>
+      <div class="what">
+        <strong>Doc-type catalog is the moat.</strong>
+        <span>Community-curated, GitHub-first, contributable as markdown + frontmatter.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-14</div>
+      <div class="what">
+        <strong>Linear chains for v1. DAGs deferred.</strong>
+        <span>Forks happen by resuming from a checkpoint doc, not by branching mid-flow.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-14</div>
+      <div class="what">
+        <strong>Spike vs step is the only mode toggle.</strong>
+        <span>Trust vs review. No other knobs at the surface.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-13</div>
+      <div class="what">
+        <strong>Flow does not use an LLM and does not improve skills.</strong>
+        <span>Hard boundary. Flow is documentation expertise; skills and agents are external.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 09</div>
+  <h2>Open Questions — Push Here</h2>
+
+  <div class="callout question">
+    <div class="callout-label ui">Open · catalog governance</div>
+    <p>Who reviews PRs to the doc-type catalog? Solo curation (high quality, no scale) vs maintainer pool (scales, drifts) vs tag-based namespaces (<code>jliang/spec</code> vs <code>official/spec</code>)? This decision shapes whether the moat is a personal canon or a community standard.</p>
+  </div>
+
+  <div class="callout question">
+    <div class="callout-label ui">Open · source format</div>
+    <p>Is the flow definition <code>flow.yaml</code>, a markdown file with frontmatter, or generated entirely through interactive prompts with no human-edited source? The doc-as-source approach is on-brand but adds parsing weight.</p>
+  </div>
+
+  <div class="callout question">
+    <div class="callout-label ui">Open · skill discovery</div>
+    <p>How does flow know what skills exist? Reads <code>~/.claude/skills</code>? Project-local <code>.claude/skills</code>? Both? Cross-tool (also read from Cursor, Cline, etc.)? The answer determines portability.</p>
+  </div>
+
+  <div class="callout question">
+    <div class="callout-label ui">Open · the "what doc belongs here" decision</div>
+    <p>Is binding (skill ↔ doc-type) chosen by the user at flow-creation time, or inferred by flow based on the doc-type catalog's metadata? The latter is more "documentation expert" — but it's also where flow could quietly become opinionated again.</p>
+  </div>
+
+  <div class="callout question">
+    <div class="callout-label ui">Open · distribution wedge</div>
+    <p>What's the first public artifact that gets people in? A blog post walking through a real flow with the full doc trail visible? A demo video? A live registry page? Pick the one we can ship in a week.</p>
+  </div>
+</section>
+
+<!-- ============================================== -->
+<section>
+  <div class="section-num">§ 10</div>
+  <h2>First Moves</h2>
+
+  <ol>
+    <li><strong>Author the bootstrap catalog</strong> — 6-8 doc-types, written as proper markdown templates with examples. Test each one in a real flow before publishing.</li>
+    <li><strong>Write one founding blog post</strong> at jasonliang.com: a real flow run with the complete doc trail visible. Title candidate: <em>"What my AI workflow leaves behind."</em></li>
+    <li><strong>Strip the runtime to the kernel</strong> — remove the embedded code-pipeline opinions from the core. Make it a starter cell, not the product.</li>
+    <li><strong>Ship <code>flow new</code></strong> as the interactive builder. Linear chains only. Generate spike and step skills as output.</li>
+    <li><strong>Stand up <code>flow-doc-types</code> repo</strong> on GitHub with the bootstrap catalog and a clear contribution README. Accept first external PR before building any registry infra.</li>
+  </ol>
+</section>
+
+<footer class="ui">
+  <div>Conviction Doc · format v0 · written for sharpening, not announcing</div>
+  <div>Next read: the bootstrap catalog draft</div>
+</footer>
+
+</main>
+</body>
+</html>
