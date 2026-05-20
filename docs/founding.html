@@ -241,7 +241,6 @@
   <div class="key-title">How to read this doc</div>
   <div class="key-row">
     <div class="key-item"><span class="badge settled">Settled</span><span>load-bearing, don't touch</span></div>
-    <div class="key-item"><span class="badge leaning">Leaning</span><span>current direction, can flex</span></div>
     <div class="key-item"><span class="badge open">Open</span><span>active debate, push here</span></div>
   </div>
 </div>
@@ -260,7 +259,7 @@
       <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">The interchange format between AI work steps should be the same artifacts humans already review at work — specs, plans, decision records, postmortems, RFCs.</div>
-    <p>Not graphs, not opaque agent state, not JSON traces. Markdown documents a senior engineer or PM would recognize at a glance. This is a 20-year-stable bet, because the artifacts predate AI.</p>
+    <p>Not graphs, not opaque agent state, not JSON traces. Documents a senior engineer or PM would recognize at a glance — markdown, or HTML when it deserves to be read. This is a 20-year-stable bet, because the artifacts predate AI.</p>
   </div>
 
   <div class="claim">
@@ -285,13 +284,6 @@
     <p>The Makefile sprawls. The stages are hard-coded for code work. Users can't compose their own pipelines for non-code domains. The product became a pipeline instead of a pipeline factory.</p>
   </div>
 
-  <div class="claim">
-    <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
-    </div>
-    <div class="claim-text">Existing AI workflow tools (LangGraph, evomap, hermes, DevSwarm) compete on orchestration, evolution, and autonomy.</div>
-    <p>None of them own the human-readable doc layer. They treat documents as side effects. Flow's wedge is to invert that — documents are the substrate, skills are the producers.</p>
-  </div>
 </section>
 
 <!-- ============================================== -->
@@ -327,7 +319,7 @@
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">Flow is a pipeline-builder CLI.</div>
     <p>Users assemble their own pipelines from skills and doc-types. Flow does not ship "the one true pipeline" — it ships the construction kit and the doc-type catalog.</p>
@@ -335,7 +327,7 @@
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">A flow is a linear chain. Forks happen by starting a new flow from a checkpoint doc, not by branching mid-flow.</div>
     <p>DAGs were considered and rejected for v1. They add graph editing, cycle detection, parallel execution, and visualization burden — for a capability (forking) that linear-plus-checkpoint gives us for free.</p>
@@ -343,7 +335,7 @@
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">Two execution modes, one toggle: spike and step.</div>
     <p><strong>Spike</strong> runs end-to-end, never pauses, produces a spike log. <strong>Step</strong> pauses at every doc for human review, edit, or abort. This collapses the "too many make options" complaint into one axis: trust vs review.</p>
@@ -351,10 +343,10 @@
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">Each flow compiles to two generated skills: <code>flow-{name}-spike</code> and <code>flow-{name}-step</code>.</div>
-    <p>Source of truth is a flow definition (likely <code>flow.yaml</code>). The generated skills carry a "do not edit" header. Editing a flow means editing the source and regenerating.</p>
+    <p>There is no separate source file. <code>flow new</code> is an interactive wizard, and the two generated skills are the only artifacts. Editing a flow means re-running the wizard — <code>flow edit</code> reopens it prefilled and regenerates both skills.</p>
   </div>
 </section>
 
@@ -365,23 +357,31 @@
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">The atomic unit is a (skill, doc-type) pair.</div>
-    <p>Flow does the binding between an external skill and a doc-type from the catalog. Skills stay agnostic — they don't need to know about flow. This preserves the boundary that lets flow remain a substrate.</p>
+    <p>The user binds each skill to a doc-type when building the flow; flow never infers or imposes the pairing. Skills stay agnostic — they don't need to know about flow. This preserves the boundary that lets flow remain a substrate.</p>
   </div>
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">Checkpoint trail lives under <code>.flow/runs/&lt;flow&gt;/&lt;timestamp&gt;/</code>.</div>
     <p>Numbered files like <code>01-spec.md</code>, <code>02-plan.md</code>, <code>03-findings.md</code>. Resume via <code>flow resume &lt;run-id&gt; --from &lt;NN&gt;</code>. Edit any file before resuming to fork the run.</p>
   </div>
 
+  <div class="claim">
+    <div class="claim-head">
+      <span class="badge settled">Settled</span>
+    </div>
+    <div class="claim-text">Flow discovers skills from both <code>~/.claude/skills</code> and the project's <code>.claude/skills</code>.</div>
+    <p>Global and project-local skills, the same resolution Claude Code already uses. Cross-tool discovery (Cursor, Cline, and the rest) is deferred until a flow needs it.</p>
+  </div>
+
   <pre><code>flow new          # interactive: pick skills and doc-types
 flow list         # show defined flows
-flow edit &lt;name&gt;  # edit the source flow definition
+flow edit &lt;name&gt;  # reopen the wizard, regenerate skills
 flow rm &lt;name&gt;    # delete a flow
 
 # generated skills are invoked through Claude Code:
@@ -392,35 +392,36 @@ flow rm &lt;name&gt;    # delete a flow
 <!-- ============================================== -->
 <section>
   <div class="section-num">§ 06</div>
-  <h2>The Moat — A Community of Doc-Types</h2>
+  <h2>The Doc-Types</h2>
 
   <p class="hero-claim">
-    Builder CLIs are commodity. <em>A curated, contributable catalog of human-readable doc-types is not.</em>
+    A doc-type is <em>frontmatter plus a template</em> — markdown or HTML, whatever reads best to a human.
   </p>
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
-    <div class="claim-text">A doc-type is a markdown file with frontmatter — purely descriptive, no runtime.</div>
+    <div class="claim-text">Frontmatter declares the doc's purpose, audience, shape, lifecycle, and render format.</div>
     <pre><code>---
 name: spec
 purpose: capture intent before planning — what + why, not how
 audience: human reviewer, downstream plan skill
 shape: problem / goals / non-goals / constraints / open-questions
 lifecycle: append-only; supersedes prior specs
+format: markdown            # or html for human-facing, visually-rich docs
 maturity: stable
 ---
 [template body with section guidance]
 [1-2 example docs]</code></pre>
-    <p>This is the contribution unit. Markdown plus frontmatter. No DSL, no execution semantics. Anyone who can write a good design doc can contribute.</p>
+    <p>The body is markdown by default, or HTML when a doc is human-facing and deserves to be read, not just parsed — this conviction doc is itself an HTML doc-type. Either way: no DSL, no execution semantics. If you can write a good design doc, you can write a doc-type.</p>
   </div>
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
-    <div class="claim-text">Ship a bootstrap catalog of 6-8 doc-types, then open contribution.</div>
+    <div class="claim-text">Ship a bootstrap catalog of 6-8 doc-types.</div>
     <ul>
       <li><strong>spec</strong> — intent</li>
       <li><strong>plan</strong> — steps</li>
@@ -429,20 +430,7 @@ maturity: stable
       <li><strong>spike-log</strong> — what was tried, what we learned</li>
       <li><strong>change-summary</strong> — what shipped, for PR description</li>
     </ul>
-    <p>Each is hand-tested in real work before launch. That's the credibility floor.</p>
-  </div>
-
-  <div class="claim">
-    <div class="claim-head">
-      <span class="badge open">Open</span>
-    </div>
-    <div class="claim-text">Community model: start with a GitHub repo + PR-based contributions. Move to a CLI registry only if usage demands it.</div>
-    <p>Three options ranked: (1) <strong>GitHub repo</strong> — lowest friction, ship now; (2) <strong>CLI registry</strong> with versioning and namespacing — feels like a real ecosystem, more infra; (3) <strong>Curated only</strong> — defeats the moat thesis. Default to (1).</p>
-  </div>
-
-  <div class="callout question">
-    <div class="callout-label ui">Risk to name</div>
-    <p>Communities don't form because the product is good. They form because a recognizable group is already using it in public and writing about it. Distribution is the actual work — and it's not bundled with the code.</p>
+    <p>Each is hand-tested in real work before it ships.</p>
   </div>
 </section>
 
@@ -461,7 +449,7 @@ maturity: stable
 
   <div class="claim">
     <div class="claim-head">
-      <span class="badge leaning">Leaning</span>
+      <span class="badge settled">Settled</span>
     </div>
     <div class="claim-text">Flow does not ship opinionated pipelines for specific domains.</div>
     <p>The current <code>code-pipeline</code> cell becomes a starter template, not the product. Other pipelines are user-built. Flow ships the kit, not the work.</p>
@@ -474,6 +462,27 @@ maturity: stable
   <h2>Decision Log</h2>
   <div class="log">
     <div class="log-entry">
+      <div class="when mono">2026-05-20</div>
+      <div class="what">
+        <strong>No source file — flows are authored interactively.</strong>
+        <span><code>flow new</code> is a wizard that generates the spike/step skills directly. Editing a flow means re-running it.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-20</div>
+      <div class="what">
+        <strong>Skills discovered from <code>~/.claude</code> and project <code>.claude</code>.</strong>
+        <span>Both global and project-local Claude skill dirs. Cross-tool support deferred.</span>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="when mono">2026-05-20</div>
+      <div class="what">
+        <strong>User binds skill → doc-type at creation.</strong>
+        <span>Flow does not infer the pairing. Keeps flow a pure, unopinionated substrate.</span>
+      </div>
+    </div>
+    <div class="log-entry">
       <div class="when mono">2026-05-14</div>
       <div class="what">
         <strong>Flow is a pipeline-builder, not a fixed pipeline.</strong>
@@ -483,8 +492,8 @@ maturity: stable
     <div class="log-entry">
       <div class="when mono">2026-05-14</div>
       <div class="what">
-        <strong>Doc-type catalog is the moat.</strong>
-        <span>Community-curated, GitHub-first, contributable as markdown + frontmatter.</span>
+        <strong>Doc-types are frontmatter + a template (markdown or HTML).</strong>
+        <span>Purely descriptive — no DSL, no runtime, no execution semantics.</span>
       </div>
     </div>
     <div class="log-entry">
@@ -516,30 +525,7 @@ maturity: stable
   <div class="section-num">§ 09</div>
   <h2>Open Questions — Push Here</h2>
 
-  <div class="callout question">
-    <div class="callout-label ui">Open · catalog governance</div>
-    <p>Who reviews PRs to the doc-type catalog? Solo curation (high quality, no scale) vs maintainer pool (scales, drifts) vs tag-based namespaces (<code>jliang/spec</code> vs <code>official/spec</code>)? This decision shapes whether the moat is a personal canon or a community standard.</p>
-  </div>
-
-  <div class="callout question">
-    <div class="callout-label ui">Open · source format</div>
-    <p>Is the flow definition <code>flow.yaml</code>, a markdown file with frontmatter, or generated entirely through interactive prompts with no human-edited source? The doc-as-source approach is on-brand but adds parsing weight.</p>
-  </div>
-
-  <div class="callout question">
-    <div class="callout-label ui">Open · skill discovery</div>
-    <p>How does flow know what skills exist? Reads <code>~/.claude/skills</code>? Project-local <code>.claude/skills</code>? Both? Cross-tool (also read from Cursor, Cline, etc.)? The answer determines portability.</p>
-  </div>
-
-  <div class="callout question">
-    <div class="callout-label ui">Open · the "what doc belongs here" decision</div>
-    <p>Is binding (skill ↔ doc-type) chosen by the user at flow-creation time, or inferred by flow based on the doc-type catalog's metadata? The latter is more "documentation expert" — but it's also where flow could quietly become opinionated again.</p>
-  </div>
-
-  <div class="callout question">
-    <div class="callout-label ui">Open · distribution wedge</div>
-    <p>What's the first public artifact that gets people in? A blog post walking through a real flow with the full doc trail visible? A demo video? A live registry page? Pick the one we can ship in a week.</p>
-  </div>
+  <p>None open at this version. Source format, skill discovery, and the skill ↔ doc-type binding were all resolved on 2026-05-20 — see the Decision Log. New questions land here as they surface.</p>
 </section>
 
 <!-- ============================================== -->
@@ -548,11 +534,9 @@ maturity: stable
   <h2>First Moves</h2>
 
   <ol>
-    <li><strong>Author the bootstrap catalog</strong> — 6-8 doc-types, written as proper markdown templates with examples. Test each one in a real flow before publishing.</li>
-    <li><strong>Write one founding blog post</strong> at jasonliang.com: a real flow run with the complete doc trail visible. Title candidate: <em>"What my AI workflow leaves behind."</em></li>
+    <li><strong>Author the bootstrap catalog</strong> — 6-8 doc-types, written as proper markdown templates with examples. Test each one in a real flow.</li>
     <li><strong>Strip the runtime to the kernel</strong> — remove the embedded code-pipeline opinions from the core. Make it a starter cell, not the product.</li>
     <li><strong>Ship <code>flow new</code></strong> as the interactive builder. Linear chains only. Generate spike and step skills as output.</li>
-    <li><strong>Stand up <code>flow-doc-types</code> repo</strong> on GitHub with the bootstrap catalog and a clear contribution README. Accept first external PR before building any registry infra.</li>
   </ol>
 </section>
 
