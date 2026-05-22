@@ -1,7 +1,7 @@
 {
   "name": "flow",
-  "version": "0.3.0",
-  "description": "A learning runtime for Claude Code. Three kernel primitives — ingest, run, reflect — that turn any pipeline of skills (a 'cell') into something a human can inspect and that gets better with use.",
+  "version": "0.4.0",
+  "description": "A pipeline-builder for AI work. Assemble a chain of (skill, doc-type) pairs and compile it into two skills — spike (end-to-end) and step (pause at every document). Every step leaves a human-readable checkpoint you can edit and resume from.",
   "author": {
     "name": "Jason Liang",
     "url": "https://github.com/jyliang"
@@ -11,9 +11,9 @@
   "license": "MIT",
   "keywords": [
     "workflow",
-    "kernel",
-    "learning",
-    "cell",
-    "evolution"
+    "pipeline",
+    "cli",
+    "doc-types",
+    "skills"
   ]
 }
