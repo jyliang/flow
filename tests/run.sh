@@ -56,7 +56,7 @@ t_new_noninteractive() {
 t_spike_content() {
   section "generated spike command — content"
   sandbox
-  "$FLOW" new --name bf --step explore::spec --step plan::plan --step review::findings --yes >/dev/null
+  "$FLOW" new --name bf --step explore::spec --step plan::plan --step review::findings --yes >/dev/null 2>&1
   local c; c="$(cat "$SB/commands/bf-spike.md")"
   assert_contains "$c" "description: Run the bf flow end-to-end" "command-style frontmatter (description)"
   case "$c" in *$'\nname: '*) no "no skill-style name: field" "found a name: field" ;; *) ok "no skill-style name: field" ;; esac
@@ -75,7 +75,7 @@ t_spike_content() {
 t_step_content() {
   section "generated step command — content"
   sandbox
-  "$FLOW" new --name bf --step explore::spec --step plan::plan --yes >/dev/null
+  "$FLOW" new --name bf --step explore::spec --step plan::plan --yes >/dev/null 2>&1
   local c; c="$(cat "$SB/commands/bf-step.md")"
   assert_contains "$c" "step** mode"        "uses the step protocol"
   assert_contains "$c" "Yes, advance"       "step protocol offers Yes/Adjust/Pause"
@@ -85,7 +85,7 @@ t_step_content() {
 t_html_and_fences() {
   section "doc-type extraction — fences & html-aware"
   sandbox
-  "$FLOW" new --name rel --step explore::change-summary --yes >/dev/null
+  "$FLOW" new --name rel --step explore::change-summary --yes >/dev/null 2>&1
   local c; c="$(cat "$SB/commands/rel-spike.md")"
   assert_contains "$c" '```bash' "preserves an inner fenced block from the template"
   assert_contains "$c" "### change-summary" "inlines the change-summary contract"
@@ -129,7 +129,7 @@ t_list() {
   run "$FLOW" list
   assert_contains "$OUT" "No flows defined yet" "empty list message"
 
-  "$FLOW" new --name a --step explore::spec --step plan::plan --yes >/dev/null
+  "$FLOW" new --name a --step explore::spec --step plan::plan --yes >/dev/null 2>&1
   run "$FLOW" list
   assert_contains "$OUT" "a " "lists the flow name"
   assert_contains "$OUT" "[spike, step]" "shows both modes"
@@ -150,7 +150,7 @@ t_doctypes() {
 t_edit() {
   section "flow edit"
   sandbox
-  "$FLOW" new --name e --step explore::spec --step plan::plan --yes >/dev/null
+  "$FLOW" new --name e --step explore::spec --step plan::plan --yes >/dev/null 2>&1
   run "$FLOW" edit e --step explore::spec --step review::findings
   assert_rc0 "edit exits 0"
   local c; c="$(cat "$SB/commands/e-spike.md")"
@@ -164,7 +164,7 @@ t_edit() {
 t_rm() {
   section "flow rm"
   sandbox
-  "$FLOW" new --name r --step explore::spec --yes >/dev/null
+  "$FLOW" new --name r --step explore::spec --yes >/dev/null 2>&1
   run "$FLOW" rm r --yes
   assert_rc0 "rm exits 0"
   assert_nofile "$SB/commands/r-spike.md" "rm deletes spike command"
