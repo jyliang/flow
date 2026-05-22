@@ -5,7 +5,7 @@
 ROOT := $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
 LINT_DOC_PATHS := README.md doc-types templates
 
-.PHONY: help install uninstall doctor list lint-docs
+.PHONY: help install uninstall doctor list test lint-docs
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -25,6 +25,9 @@ doctor: ## Sanity check the install
 
 list: ## List the doc-type catalog
 	@$(ROOT)/bin/flow list --doc-types
+
+test: ## Run the flow CLI test suite
+	@bash $(ROOT)/tests/run.sh
 
 lint-docs: ## Check markdown docs for style-guide regressions
 	@bad=0; \
