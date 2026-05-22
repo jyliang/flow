@@ -1,84 +1,30 @@
-# Flow runtime Makefile — user-facing CLI for kernel install + cell management.
-# All cell-* targets operate on the active cell (~/.flow/active-cell) by default;
-# pass NAME=<cell> to address a specific cell.
+# Flow Makefile — install the `flow` CLI and check the doc-type catalog.
+# Flow is a pipeline-builder: assemble a chain of (skill, doc-type) pairs and
+# compile it into two skills. The CLI is bin/flow; the catalog is doc-types/.
 
-RUNTIME_ROOT := $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
-FLOW_HOME := $(HOME)/.flow
-CLAUDE_DIR := $(HOME)/.claude
-SKILLS_DIR := $(CLAUDE_DIR)/skills
-COMMANDS_DIR := $(CLAUDE_DIR)/commands
+ROOT := $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
+LINT_DOC_PATHS := README.md doc-types templates
 
-KERNEL_DOCS := $(wildcard $(RUNTIME_ROOT)/kernel/*)
-KERNEL_COMMANDS := $(wildcard $(RUNTIME_ROOT)/commands/*.md)
-
-LINT_DOC_PATHS := README.md kernel commands cells
-
-.PHONY: help install doctor list lint-docs \
-	cell-init cell-new cell-list cell-use cell-rm \
-	cell-status cell-link-remote cell-pull cell-push cell-branch cell-pr
+.PHONY: help install uninstall doctor list lint-docs
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-install: ## Install kernel into ~/.claude/, provision ~/.flow/
-	@bash $(RUNTIME_ROOT)/scripts/install.sh
+install: ## Put the flow CLI on PATH; clear stale plugin registration
+	@bash $(ROOT)/scripts/install.sh
+
+uninstall: ## Remove the flow CLI symlink from PATH
+	@for d in "$$HOME/.local/bin" /opt/homebrew/bin /usr/local/bin "$$HOME/bin"; do \
+		if [ -L "$$d/flow" ] && [ "$$(readlink "$$d/flow")" = "$(ROOT)/bin/flow" ]; then \
+			rm -f "$$d/flow"; echo "removed $$d/flow"; fi; \
+	done
 
 doctor: ## Sanity check the install
-	@bash $(RUNTIME_ROOT)/scripts/doctor.sh
+	@bash $(ROOT)/scripts/doctor.sh
 
-list: ## List kernel docs (internal, read by commands) and slash commands
-	@echo "Kernel docs (internal — Read by /flow:* commands; not in the picker):"
-	@for dir in $(KERNEL_DOCS); do \
-		name=$$(basename $$dir); \
-		printf "  kernel/%-10s %s\n" "$$name" "→ kernel/$$name/$$name.md"; \
-	done
-	@echo ""
-	@echo "Slash commands (namespaced as /flow:*):"
-	@for f in $(KERNEL_COMMANDS); do \
-		name=$$(basename $$f .md); \
-		desc=$$(grep '^description:' $$f 2>/dev/null | head -1 | sed 's/description: //'); \
-		printf "  /flow:%-9s %s\n" "$$name" "$$desc"; \
-	done
-
-# ----- Cell lifecycle -----
-
-cell-init: ## Clone a starter into ~/.flow/cells/<NAME>/ (vars: STARTER, NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-init.sh "$(STARTER)" "$(NAME)"
-
-cell-new: ## Empty cell scaffold (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-init.sh "" "$(NAME)"
-
-cell-list: ## Show installed cells, mark active
-	@bash $(RUNTIME_ROOT)/scripts/cell-list.sh
-
-cell-use: ## Switch active cell (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-use.sh "$(NAME)"
-
-cell-rm: ## Remove a cell (var: NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-rm.sh "$(NAME)"
-
-# ----- Per-cell git operations (default: active cell; override with NAME=) -----
-
-cell-status: ## git status of the cell
-	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh status "$(NAME)"
-
-cell-link-remote: ## Add origin to the cell (vars: URL, optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh link-remote "$(NAME)" "$(URL)"
-
-cell-pull: ## git pull on the cell
-	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh pull "$(NAME)"
-
-cell-push: ## git push on the cell
-	@bash $(RUNTIME_ROOT)/scripts/cell-git.sh push "$(NAME)"
-
-cell-branch: ## Cut a branch in the cell for an edit (vars: BRANCH, optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-branch.sh "$(NAME)" "$(BRANCH)"
-
-cell-pr: ## Open a PR for current cell edits (vars: TITLE, BODY; optional NAME)
-	@bash $(RUNTIME_ROOT)/scripts/cell-pr.sh "$(NAME)" "$(TITLE)" "$(BODY)"
-
-# ----- Doc lint (preserved from v2) -----
+list: ## List the doc-type catalog
+	@$(ROOT)/bin/flow list --doc-types
 
 lint-docs: ## Check markdown docs for style-guide regressions
 	@bad=0; \

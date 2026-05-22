@@ -1,203 +1,169 @@
 # Flow
 
-A learning runtime for Claude Code. Three primitives — `ingest`, `run`, `reflect` — turn any pipeline of skills into something a human can inspect and that gets better the more you use it.
+A pipeline-builder for AI work. You assemble a chain of skills; every step leaves behind **a document a human can actually read** — and resume from.
 
-Flow ships empty. You install a **cell** (a git repo of skills defining one pipeline) and start running it. As you ship work, `reflect` proposes edits to your cell via PR. The cell is yours to evolve.
+Git was for code. Flow is for the docs your agents leave behind.
 
-## Onboarding
+A flow is a chain of **(skill, doc-type)** pairs. The skill does the work; the doc-type is the document it hands to the next step. Every document is a checkpoint you can read, edit, and resume from. Flow ships the construction kit and a catalog of doc-types — not one fixed pipeline. You build your own.
 
-### 1. Install
+> Companion reads: [the Conviction Doc](docs/founding.html) and [the Manual](docs/manual.html).
 
-**End users — marketplace install (recommended):**
+## Install
 
-```bash
-claude plugin marketplace add jyliang/flow
-claude plugin install flow@flow
-```
-
-Slash commands appear under the `/flow:` namespace (`/flow:flow`, `/flow:teach`, etc.). The kernel itself ships **no Claude Code skills** — its three primitives (`run`, `ingest`, `reflect`) are docs at `kernel/<name>/<name>.md` that the slash commands `Read` on demand. This keeps the picker clean and routes every invocation through a `/flow:*` entry.
-
-**Local development:** clone this repo and run `make install`. Hooks into the `flow` marketplace registration with the install location pointed at the live repo, then registers + enables the `flow@flow` plugin so edits flow through without re-installing. Same `/flow:` namespace as the marketplace install.
-
-Verify either install with: `make doctor`.
-
-### 2. First `/flow:flow`
-
-In any project:
-
-```text
-/flow:flow
-```
-
-Flow has no cell installed, so it offers to set up the starter (`code-pipeline`: explore → plan → implement → review → ship). Pick **Yes**.
-
-That installs a git repo at `~/.flow/cells/code-pipeline/` and registers it as the `code-pipeline@flow` plugin. Stage docs live under `stages/<name>/<name>.md` inside the cell — they are not surfaced as skills; the kernel reads them on demand when `/flow:flow` runs. `/flow:flow` is ready.
-
-### 3. Start a thread
-
-Tell flow what you want to build. It cuts a branch, opens a thread folder, and walks you through it stage by stage.
-
-```text
-/flow:flow add a /standup command that summarizes my git activity
-```
-
-You'll see the first handoff (a spec) and a Yes / Adjust / Pause prompt. Edit the spec, or move on.
-
-### 4. Through the stages
-
-Each stage emits a handoff document — spec, plan, findings — readable and editable. At every boundary flow asks:
-
-- **Yes, advance** — go to the next stage.
-- **Adjust** — edit the handoff first.
-- **Pause** — stop here; resume with `/flow:flow` later.
-
-### 5. Ship
-
-The last stage opens a PR. Flow records the PR number in the thread's spec and exits.
-
-Review the PR like any other PR.
-
-### 6. Evolve a skill
-
-After you ship something:
-
-```text
-/flow:reflect
-```
-
-Flow scans the thread for patterns — repeated suggestions you accepted, things you pushed back on twice — and proposes edits to the skills that ran. You see the diffs and pick which to accept. Flow opens a PR against your cell repo with the accepted edits.
-
-This is how the cell matures. Over time, explore learns your codebase quirks, plan learns your style, review learns what you actually care about.
-
-### 7. Wire your cell to a remote
-
-The cell repo is local until you give it a home:
+Flow is a shell CLI (`bin/flow`) plus a doc-type catalog. It never invokes an LLM — only the skills it generates do.
 
 ```bash
-make cell-link-remote URL=git@github.com:you/your-cell.git
+git clone https://github.com/jyliang/flow && cd flow
+make install      # registers the flow plugin + puts the `flow` CLI on PATH
 ```
 
-Once linked, evolutions push on PR merge. Pull from any machine and have the same matured cell.
+`make install` does two things: registers this repo as the `flow@flow` Claude Code plugin (so generated flows appear under `/flow:`), and symlinks `bin/flow` into the first writable bin dir on your `PATH` (preferring `~/.local/bin`). Verify with `make doctor`.
 
-## The model
+Each flow you build compiles into two command files in the plugin's `commands/` dir, so Claude Code surfaces them as `/flow:<name>-spike` and `/flow:<name>-step`.
 
-Three layers:
+### Where Flow finds your skills
 
-| Layer | What it is |
-|---|---|
-| **Kernel** | Three primitives that don't change: `ingest` (turn input into a skill), `run` (orchestrate a cell execution with the human in the loop at every boundary), `reflect` (propose evolutions after a thread). They live as docs at `kernel/<name>/<name>.md` and are Read by the `/flow:*` commands — not surfaced as Claude Code skills. |
-| **Cell** | A git repo containing the stage docs for one pipeline. The starter cell `code-pipeline` ships with the kernel; `/flow` first-run installs it as a personal git repo at `~/.flow/cells/code-pipeline/`. |
-| **Thread** | One piece of work, 1:1 with a git branch. Each stage emits a handoff document that the human inspects and the next stage consumes. |
+When you build a flow, Flow discovers chainable skills from two places — global first, then project-local:
 
-## Vocabulary
+```text
+~/.claude/skills/      # global — shared across every project
+./.claude/skills/      # project-local — checked into the repo
+```
+
+A skill is any directory containing a `SKILL.md`. Cross-tool discovery (Cursor, Cline, and friends) is deferred — Flow reads Claude skills today.
+
+## Core concepts
+
+Six words run everything.
 
 | Term | Meaning |
 |---|---|
-| **Cell** | A git repo of skills that defines one pipeline (e.g. code → PR, idea → blog post). |
-| **Stage** | One step in a pipeline (e.g. explore, plan, implement). |
-| **Thread** | One piece of work. 1:1 with a git branch and a folder under `agent/threads/<date>-<branch>/`. |
-| **Handoff** | The markdown document a stage emits. Two readers: the human and the next stage's agent. |
-| **Boundary** | The moment between stages. Always passes through the human via `AskUserQuestion`. |
-| **Revision** | A re-thought handoff inside one thread (`-r2`, `-r3`). |
-| **Evolution** | A matured skill at the cell level (a PR against your cell repo). |
-| **Delivery** | What the pipeline produces (PR, blog post, slack message). |
+| **flow** | A linear chain of steps you assemble and run. No branches mid-flow — fork by starting a new run from a checkpoint. |
+| **step** | One **(skill, doc-type)** pair. The skill produces; the doc-type captures. |
+| **skill** | An external capability — a Claude Code skill. Flow orchestrates skills; it never edits or rates them. |
+| **doc-type** | A template plus frontmatter describing a kind of document — markdown or HTML. Purely descriptive, nothing to execute. |
+| **checkpoint** | The document a step emits. Every checkpoint is a resume point — that's the whole mechanic. |
+| **spike / step** | The two ways to run a flow. Trust vs. review. The only toggle. |
 
-## Slash commands
+## Build a flow
 
-All commands are namespaced under the `flow` plugin.
+There's no config file to hand-write. `flow new` is an interactive wizard, and the two skills it generates are the only artifacts.
 
-| Command | Reads | What it does |
-|---|---|---|
-| `/flow:flow` | `kernel/run/run.md` | Start or continue a thread. |
-| `/flow:teach` | `kernel/ingest/ingest.md` | Decompose input (a conversation, doc, codebase walk) into a new or updated skill. |
-| `/flow:reflect` | `kernel/reflect/reflect.md` | After threads ship, propose cell evolutions. |
-| `/flow:spike` | `kernel/run/run.md` + cell's spike doc | Run a thread end-to-end unattended; opens a draft PR. |
-| `/flow:here` | `kernel/run/run.md` (with seed) | Distill the current conversation into a thread spec. |
-| `/flow:cell` | — | Cell management (list, switch, init, link remote, open PR). |
+```bash
+flow new
+```
 
-## Make targets
+1. **Name the flow** — short, kebab-case: `build-feature`, `triage-bug`, `write-rfc`.
+2. **Pick skills, in order** — Flow lists what it found; choose them in run order. Linear only.
+3. **Bind a doc-type to each** — for every skill, choose the document it leaves behind, from the catalog. You decide the pairing; Flow never infers it.
 
-| Target | Purpose |
+It compiles the chain into two plugin commands:
+
+```text
+/flow:build-feature-spike   # run end-to-end
+/flow:build-feature-step    # pause at every document
+```
+
+The generated commands carry a "do not edit" header and a machine-readable copy of the chain. To change a flow, run `flow edit <name>` — it recovers the chain and regenerates both commands. Don't hand-edit the output.
+
+You can also build non-interactively:
+
+```bash
+flow new --name build-feature \
+  --step explore::spec --step plan::plan --step review::findings --yes
+```
+
+## Run it — spike & step
+
+The same flow, two temperaments. Invoke the generated command in Claude Code:
+
+```text
+/flow:build-feature-spike    # run it all at once
+/flow:build-feature-step     # walk it doc by doc
+```
+
+- **Spike** runs end-to-end, never pauses, and writes a spike log of what it did. Reach for it when you trust the flow and want a draft fast.
+- **Step** pauses at every checkpoint with **Yes / Adjust / Pause** — edit the document, advance, or stop and resume later. Reach for it when the work needs your judgment in the loop.
+
+## Checkpoints & resuming
+
+Every run writes a numbered trail of documents under the project's `.flow/runs/`. The trail *is* the state — nothing is hidden, nothing is binary.
+
+```text
+.flow/runs/build-feature/
+  2026-05-20T14-30/
+    01-spec.md
+    02-plan.md
+    03-findings.md          ← edit me, then resume
+```
+
+Open any file, change it, then pick up where you left off — or rewind:
+
+```bash
+flow resume build-feature/2026-05-20T14-30 --from 03
+```
+
+To explore an alternative, edit a checkpoint and resume from it — that's a fork. No branch syntax, no DAG: a new run captures the new path while the original trail stays intact.
+
+## The doc-type catalog
+
+Flow ships a bootstrap set of doc-types — the documents a senior engineer or PM already recognizes. See [`doc-types/`](doc-types/).
+
+| Doc-type | Purpose |
 |---|---|
-| `make install` | Install kernel as the `flow@flow` plugin (under the `flow` marketplace pointed at this repo), provision `~/.flow/`. Dev mode. |
-| `make doctor` | Sanity check the install. |
-| `make list` | Show kernel docs + slash commands. |
-| `make cell-init STARTER=code-pipeline NAME=<name>` | Clone a starter into `~/.flow/cells/<name>/`. |
-| `make cell-new NAME=<name>` | Empty cell scaffold. |
-| `make cell-list` | Show installed cells, mark the active one. |
-| `make cell-use NAME=<name>` | Switch active cell (re-registers as `<name>@flow` plugin). |
-| `make cell-status` | Git status of the active cell. |
-| `make cell-link-remote URL=...` | Add origin to the active cell. |
-| `make cell-branch BRANCH=...` | Cut an evolution branch in the active cell. |
-| `make cell-pr TITLE=... BODY=...` | Open a PR for current cell edits. |
-| `make cell-pull` / `make cell-push` | Sync the cell with its remote. |
-| `make lint-docs` | Markdown style lint across runtime + cells. |
+| `spec` | Intent before planning — the *what* and *why*, never the how. |
+| `plan` | The ordered, checkable steps that turn a spec into work. |
+| `findings` | What a review surfaced — issues, risks, what passed. |
+| `decision-record` | Why we chose X over Y, captured at the moment of choosing. |
+| `spike-log` | What was tried and learned on an end-to-end run. |
+| `change-summary` | What shipped — ready to drop into a PR description. |
 
-## Philosophy
+## Authoring doc-types
 
-Two principles, not negotiable:
+A doc-type is just a file: frontmatter declaring what the document is for, then a template body. No DSL, no execution semantics.
 
-**Inspectable.** Every artifact is markdown a human can read. Every boundary is `AskUserQuestion`. Nothing happens silently.
+```markdown
+---
+name: spec
+purpose: capture intent before planning — what + why, not how
+audience: human reviewer, downstream plan skill
+shape: scope / decisions / design / constraints / verification / open
+lifecycle: append-only; supersedes prior specs
+format: markdown            # or html for human-facing, visually-rich docs
+maturity: stable
+---
+[template body in a single ~~~markdown fence, then a worked example]
+```
 
-**Evolvable.** Skills aren't fixed. Cells aren't fixed. The system improves through use, and the mechanism for that improvement is first-class — same git/PR workflow you use for code.
+Drop a new `<name>.md` (or `.html`) into `doc-types/`; it joins the catalog the next time you run `flow new`. The CLI extracts the `## Template` block verbatim and inlines the doc-type's contract into the skills it generates. See [`doc-types/README.md`](doc-types/README.md) for the field reference.
 
-Three biological analogies for how the kernel primitives work:
+## Command reference
 
-- **`ingest` = digestion.** Raw input is broken into reusable nutrients (skills) and the residue is dropped. The system stores the extracted parts, not the meal.
-- **`run` = foraging.** A trained repertoire is executed in a real environment, with online feedback (the human at each boundary).
-- **`reflect` = affinity maturation.** After exposure, the underlying instructions are edited to produce better-bound variants. The next run uses the matured cell.
+| Command | What it does |
+|---|---|
+| `flow new` | Interactive wizard: name the flow, pick skills in order, bind a doc-type to each. Generates the spike + step skills. |
+| `flow list` | Show every flow you've defined (`--doc-types` lists the catalog instead). |
+| `flow edit <name>` | Recover the chain and regenerate both skills. |
+| `flow rm <name>` | Delete a flow and its generated skills. |
+| `flow resume <run> --from <NN>` | Mark a run to resume from checkpoint `NN`. Edit the doc first to fork. |
+| `/flow:<name>-spike` | Run the flow end-to-end, no pauses. Emits a spike log. |
+| `/flow:<name>-step` | Run the flow pausing at every doc for review, edit, or abort. |
 
 ## Layout
 
 ```text
-flow-runtime/
-├── Makefile                          # User-facing CLI for kernel + cells
-├── README.md                         # This file
-├── .claude-plugin/plugin.json        # Plugin manifest — name: flow
-├── commands/                         # Kernel slash commands (auto-namespaced as /flow:*)
-│   ├── flow.md                       # /flow:flow → run
-│   ├── teach.md                      # /flow:teach → ingest
-│   ├── reflect.md                    # /flow:reflect → reflect
-│   ├── spike.md                      # /flow:spike → autonomous run
-│   ├── here.md                       # /flow:here → seed a thread from conversation
-│   └── cell.md                       # /flow:cell → cell management
-├── kernel/                           # Kernel docs — read by /flow:* commands; NOT skills
-│   ├── run/run.md
-│   ├── ingest/ingest.md
-│   └── reflect/reflect.md
-├── cells/                            # Bundled starter cells
-│   └── code-pipeline/
-│       ├── cell.yaml                 # Manifest
-│       ├── stages/<name>/<name>.md   # Stage docs (internal — read by kernel)
-│       ├── disciplines/<name>.md     # Cross-cutting docs (internal)
-│       └── templates/                # Cell-specific templates
-├── scripts/                          # Cell-mgmt internals (called by Makefile)
-└── tools/Cell.mk                     # Imported by each cell's own Makefile
+flow/
+├── bin/flow              # the CLI — assembles flows, generates commands
+├── commands/             # generated flow commands land here (the /flow: namespace)
+├── doc-types/            # the catalog (one file per doc-type) + README
+├── templates/            # protocol-spike.md, protocol-step.md (embedded into commands)
+├── scripts/              # install.sh, doctor.sh
+├── docs/                 # founding.html (conviction doc), manual.html
+└── Makefile              # install · uninstall · doctor · list · lint-docs
 ```
 
-After `make install`:
+Generated commands live in the plugin's `commands/` dir as `<name>-spike.md` / `<name>-step.md` (git-ignored — they're yours, not the product). Run checkpoints live in each project's `.flow/runs/`.
 
-```text
-~/.flow/
-├── cells/<name>/                     # Each cell as its own git repo (and plugin)
-├── active-cell -> cells/<active>/    # Symlink
-├── runtime-path                      # Where this runtime lives
-├── tools/Cell.mk                     # Copy of the runtime's Cell.mk
-└── state/                            # Patches, history, telemetry
+## Philosophy
 
-~/.claude/plugins/installed_plugins.json
-   ├── flow@flow              → /path/to/this/repo            (kernel)
-   └── <cell-name>@flow       → ~/.flow/cells/<cell-name>     (active cell)
-
-~/.claude/plugins/marketplaces/flow -> /path/to/this/repo     # symlink, dev mode
-~/.claude/settings.json
-   └── enabledPlugins: { flow@flow: true, <cell>@flow: true }  # written by make install
-```
-
-Only the `/flow:*` slash commands appear in the picker. Kernel primitives (`kernel/<name>/<name>.md`) and cell stage/discipline docs deliberately live outside `skills/` so they don't show up — the slash commands `Read` them on demand. End-user marketplace installs produce the same layout — `make install` is dev-mode only.
-
-## Reflection
-
-After a few shipped threads, `/flow:reflect` scans them for patterns worth acting on — "same suggestion appeared across three reviews", "decision repeatedly deferred" — and proposes concrete edits. Every proposal goes through `AskUserQuestion`; on Yes, the change auto-lands as a PR against the active cell repo. Nothing lands silently.
-
-Separately, the ship stage fires a **"twice is a pattern"** scan at the end of every PR: if the LLM stated the same non-obvious fact about the project twice this session without it being in `CLAUDE.md`, you'll get a prompt to persist. See `kernel/reflect/reflect.md`.
+Every step a document. Every document a resume point. Flow doesn't host the model, judge the output, or improve your skills — those belong to you and your agents. Flow's one job is knowing what kind of document belongs between skill A and skill B, and making every handoff a human-readable artifact instead of opaque agent state.

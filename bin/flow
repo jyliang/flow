@@ -1,0 +1,515 @@
+#!/usr/bin/env bash
+#
+# flow — a pipeline-builder for AI work.
+#
+# A flow is a linear chain of (skill, doc-type) pairs. This CLI assembles a
+# flow and compiles it into two command files inside the flow plugin —
+# `<name>-spike.md` (run end-to-end) and `<name>-step.md` (pause at every
+# document) — invoked in Claude Code as `/flow:<name>-spike` and
+# `/flow:<name>-step`. The two commands are the only artifacts; no source file.
+#
+# This CLI never invokes an LLM. It discovers skills, reads the doc-type
+# catalog, and writes markdown. The generated commands are what run the work.
+#
+# Subcommands: new · list · edit · rm · resume
+
+set -euo pipefail
+
+FLOW_CLI_VERSION="0.4.0"
+
+# ---- resolve our own location (following symlinks) so we can find the repo ----
+_src="${BASH_SOURCE[0]}"
+while [ -L "$_src" ]; do
+  _dir="$(cd -P "$(dirname "$_src")" && pwd)"
+  _src="$(readlink "$_src")"
+  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
+done
+FLOW_ROOT="$(cd -P "$(dirname "$_src")/.." && pwd)"
+
+CATALOG_DIR="${FLOW_CATALOG_DIR:-$FLOW_ROOT/doc-types}"
+TEMPLATES_DIR="${FLOW_TEMPLATES_DIR:-$FLOW_ROOT/templates}"
+
+# Generated commands are written into the flow plugin's own commands/ dir.
+# Because this CLI lives inside the plugin, $FLOW_ROOT *is* the plugin root, so
+# files written here surface under the plugin's /flow: namespace.
+COMMANDS_DIR="${FLOW_COMMANDS_DIR:-$FLOW_ROOT/commands}"
+
+# Chainable skills are discovered from the global and project Claude skill dirs.
+SKILLS_GLOBAL="${FLOW_SKILLS_DIR:-$HOME/.claude/skills}"
+
+# ---- small output helpers ----
+say()  { printf '%s\n' "$*"; }
+warn() { printf 'flow: %s\n' "$*" >&2; }
+die()  { printf 'flow: %s\n' "$*" >&2; exit 1; }
+
+# ---------------------------------------------------------------------------
+# catalog helpers
+# ---------------------------------------------------------------------------
+
+# List available doc-type names (catalog/<name>.md, minus README), sorted.
+catalog_doctypes() {
+  local f n
+  for f in "$CATALOG_DIR"/*.md; do
+    [ -f "$f" ] || continue
+    n="$(basename "$f" .md)"
+    [ "$n" = "README" ] && continue
+    printf '%s\n' "$n"
+  done | sort
+}
+
+doctype_file() { printf '%s\n' "$CATALOG_DIR/$1.md"; }
+
+# Read a single frontmatter field from a doc-type file.
+doctype_field() {
+  local file="$1" key="$2"
+  awk -v k="$key" '
+    NR==1 && /^---[[:space:]]*$/ { fm=1; next }
+    fm && /^---[[:space:]]*$/    { exit }
+    fm && index($0, k ": ")==1   { print substr($0, length(k)+3); exit }
+  ' "$file"
+}
+
+# Extract the template body: the first ~~~-fenced block after "## Template".
+doctype_template() {
+  awk '
+    /^## Template[[:space:]]*$/ { seen=1; next }
+    seen && /^~~~/ { if (inb) exit; inb=1; next }
+    seen && inb { print }
+  ' "$1"
+}
+
+# ---------------------------------------------------------------------------
+# skill discovery
+# ---------------------------------------------------------------------------
+
+# Discover chainable skills from ~/.claude/skills and ./.claude/skills.
+# A skill is a directory containing SKILL.md.
+discover_skills() {
+  local dir sub name
+  for dir in "$SKILLS_GLOBAL" "$PWD/.claude/skills"; do
+    [ -d "$dir" ] || continue
+    for sub in "$dir"/*/; do
+      [ -f "${sub}SKILL.md" ] || continue
+      name="$(basename "$sub")"
+      printf '%s\n' "$name"
+    done
+  done | sort -u
+}
+
+# ---------------------------------------------------------------------------
+# embedded-spec parsing (recover a flow definition from a generated skill)
+# ---------------------------------------------------------------------------
+
+spec_flow()  { grep -m1 '^flow=' "$1" 2>/dev/null | cut -d= -f2-; }
+spec_steps() { grep    '^step=' "$1" 2>/dev/null | cut -d= -f2-; }
+
+# ---------------------------------------------------------------------------
+# command generation
+# ---------------------------------------------------------------------------
+
+# Build the unique, order-preserving list of doc-types used by STEPS[].
+# For spike mode, spike-log is always included (the protocol writes one).
+chain_doctypes() {
+  local mode="$1" s dt seen item
+  seen=""
+  if [ "$mode" = "spike" ]; then
+    printf '%s\n' "spike-log"
+    seen=" spike-log "
+  fi
+  for s in "${STEPS[@]}"; do
+    dt="${s##*::}"
+    case "$seen" in *" $dt "*) continue ;; esac
+    seen="$seen$dt "
+    printf '%s\n' "$dt"
+  done
+}
+
+# Emit one doc-type contract block into the generated skill.
+emit_contract() {
+  local dt="$1" file fmt fence
+  file="$(doctype_file "$dt")"
+  if [ ! -f "$file" ]; then
+    say "### $dt"
+    say ""
+    say "> Doc-type \`$dt\` was not found in the catalog when this flow was generated."
+    say ""
+    return
+  fi
+  fmt="$(doctype_field "$file" format)"; [ -n "$fmt" ] || fmt="markdown"
+  case "$fmt" in html) fence="~~~html" ;; *) fence="~~~markdown" ;; esac
+  say "### $dt"
+  say ""
+  say "- **purpose:** $(doctype_field "$file" purpose)"
+  say "- **audience:** $(doctype_field "$file" audience)"
+  say "- **shape:** $(doctype_field "$file" shape)"
+  say "- **lifecycle:** $(doctype_field "$file" lifecycle)"
+  say "- **format:** $fmt"
+  say ""
+  say "$fence"
+  doctype_template "$file"
+  say "~~~"
+  say ""
+}
+
+# Generate one command (mode = spike|step) for flow NAME into COMMANDS_DIR.
+# Uses globals NAME and STEPS[].
+generate_command() {
+  local mode="$1" file proto desc s sk dt n chain_desc dt2
+  file="$COMMANDS_DIR/$NAME-$mode.md"
+  proto="$TEMPLATES_DIR/protocol-$mode.md"
+  [ -f "$proto" ] || die "missing protocol template: $proto"
+  mkdir -p "$COMMANDS_DIR"
+
+  # one-line chain summary for the description
+  chain_desc=""
+  for s in "${STEPS[@]}"; do
+    sk="${s%%::*}"
+    [ -z "$chain_desc" ] && chain_desc="$sk" || chain_desc="$chain_desc → $sk"
+  done
+  if [ "$mode" = "spike" ]; then
+    desc="Run the $NAME flow end-to-end, no pauses ($chain_desc). Generated by flow."
+  else
+    desc="Run the $NAME flow pausing at every document ($chain_desc). Generated by flow."
+  fi
+
+  {
+    say "---"
+    say "description: $desc"
+    say "---"
+    say ""
+    say "<!-- GENERATED by flow $FLOW_CLI_VERSION — do not edit by hand."
+    say "     Change this flow with:  flow edit $NAME  (regenerates both commands). -->"
+    say ""
+    say "<!-- FLOW-SPEC v1"
+    say "flow=$NAME"
+    say "mode=$mode"
+    say "created=$(date -u +%Y-%m-%d)"
+    for s in "${STEPS[@]}"; do say "step=$s"; done
+    say "-->"
+    say ""
+    # protocol prose, {{FLOW}} substituted
+    sed "s/{{FLOW}}/$NAME/g" "$proto"
+    say ""
+    say "## The chain"
+    say ""
+    say "| # | skill | doc-type |"
+    say "|---|---|---|"
+    n=1
+    for s in "${STEPS[@]}"; do
+      sk="${s%%::*}"; dt="${s##*::}"
+      printf '| %02d | `%s` | `%s` |\n' "$n" "$sk" "$dt"
+      n=$((n+1))
+    done
+    say ""
+    say "## Doc-type contracts"
+    say ""
+    say "The contract for each doc-type this flow writes — inlined so this skill is self-contained."
+    say ""
+    while IFS= read -r dt2; do
+      [ -n "$dt2" ] || continue
+      emit_contract "$dt2"
+    done < <(chain_doctypes "$mode")
+  } > "$file"
+
+  say "  wrote $file"
+}
+
+generate_both() {
+  generate_command spike
+  generate_command step
+}
+
+# ---------------------------------------------------------------------------
+# wizard pieces (interactive)
+# ---------------------------------------------------------------------------
+
+prompt() { printf '%s' "$1" >&2; }
+
+# Read one line from stdin into the named variable. Never trips set -e: an EOF
+# (piped input exhausted, or no terminal) leaves the variable empty and returns 0,
+# which callers treat as "finish" or "use the default".
+read_tty() {
+  local __var="$1"
+  eval "$__var=''"
+  IFS= read -r "$__var" || :
+}
+
+# Interactively build the STEPS[] array. Pre-seeds with current STEPS if any.
+build_chain_interactive() {
+  local skills=() doctypes=() i choice sk dt picked
+  while IFS= read -r line; do skills+=("$line"); done < <(discover_skills)
+  while IFS= read -r line; do doctypes+=("$line"); done < <(catalog_doctypes)
+
+  [ "${#skills[@]}" -gt 0 ] || die "no skills found in $SKILLS_GLOBAL or ./.claude/skills — create a skill first."
+  [ "${#doctypes[@]}" -gt 0 ] || die "no doc-types found in $CATALOG_DIR."
+
+  say "" >&2
+  say "Skills found:" >&2
+  i=1; for sk in "${skills[@]}"; do printf '  %2d  %s\n' "$i" "$sk" >&2; i=$((i+1)); done
+  say "" >&2
+  say "Doc-types:" >&2
+  i=1; for dt in "${doctypes[@]}"; do printf '  %2d  %s\n' "$i" "$dt" >&2; i=$((i+1)); done
+  say "" >&2
+  say "Build the chain in order. Enter a skill number, then a doc-type number." >&2
+  say "Press Enter at the skill prompt when the chain is complete." >&2
+
+  STEPS=()
+  while :; do
+    say "" >&2
+    prompt "skill # (Enter to finish): "; read_tty choice
+    [ -n "$choice" ] || break
+    case "$choice" in *[!0-9]*) warn "not a number"; continue ;; esac
+    [ "$choice" -ge 1 ] && [ "$choice" -le "${#skills[@]}" ] || { warn "out of range"; continue; }
+    sk="${skills[$((choice-1))]}"
+
+    prompt "  doc-type for '$sk' #: "; read_tty choice
+    case "$choice" in *[!0-9]*) warn "not a number — step dropped"; continue ;; esac
+    [ "$choice" -ge 1 ] && [ "$choice" -le "${#doctypes[@]}" ] || { warn "out of range — step dropped"; continue; }
+    dt="${doctypes[$((choice-1))]}"
+
+    STEPS+=("$sk::$dt")
+    say "  + $sk → $dt" >&2
+  done
+
+  [ "${#STEPS[@]}" -gt 0 ] || die "a flow needs at least one step."
+}
+
+valid_name() { case "$1" in ''|*[!a-z0-9-]*|-*|*-) return 1 ;; *) return 0 ;; esac; }
+
+print_chain_summary() {
+  local s sk dt n=1
+  say "Flow: $NAME"
+  for s in "${STEPS[@]}"; do
+    sk="${s%%::*}"; dt="${s##*::}"
+    printf '  %d. %s → %s\n' "$n" "$sk" "$dt"
+    n=$((n+1))
+  done
+}
+
+# ---------------------------------------------------------------------------
+# subcommands
+# ---------------------------------------------------------------------------
+
+cmd_new() {
+  NAME=""; STEPS=(); local assume_yes=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --name) NAME="$2"; shift 2 ;;
+      --step) STEPS+=("$2"); shift 2 ;;
+      --yes|-y) assume_yes=1; shift ;;
+      -*) die "unknown option: $1" ;;
+      *) [ -z "$NAME" ] && NAME="$1" && shift || die "unexpected argument: $1" ;;
+    esac
+  done
+
+  # interactive name prompt if not provided
+  if [ -z "$NAME" ]; then
+    prompt "flow name (kebab-case): "; read_tty NAME
+  fi
+  valid_name "$NAME" || die "invalid flow name '$NAME' — use lowercase letters, digits, and hyphens."
+
+  if [ -f "$COMMANDS_DIR/$NAME-spike.md" ] || [ -f "$COMMANDS_DIR/$NAME-step.md" ]; then
+    die "flow '$NAME' already exists — use 'flow edit $NAME' or 'flow rm $NAME' first."
+  fi
+
+  # interactive chain if none supplied via --step
+  if [ "${#STEPS[@]}" -eq 0 ]; then
+    build_chain_interactive
+  else
+    validate_steps
+  fi
+
+  say "" >&2
+  print_chain_summary >&2
+  if [ "$assume_yes" -ne 1 ] && [ -t 0 ]; then
+    say "" >&2
+    prompt "Generate the spike + step skills? [Y/n] "; local ans; read_tty ans
+    case "$ans" in [nN]*) die "aborted." ;; esac
+  fi
+
+  generate_both
+  say ""
+  say "✓ flow '$NAME' created. Run it in Claude Code:"
+  say "    /flow:$NAME-spike    # end-to-end"
+  say "    /flow:$NAME-step     # pause at every document"
+  say ""
+  say "(reload Claude Code to pick up the new commands)"
+}
+
+# Validate --step values: skill::doctype, doctype must exist in the catalog.
+validate_steps() {
+  local s dt valid
+  for s in "${STEPS[@]}"; do
+    case "$s" in *"::"*) ;; *) die "bad --step '$s' — expected skill::doc-type" ;; esac
+    dt="${s##*::}"
+    valid=0
+    while IFS= read -r d; do [ "$d" = "$dt" ] && valid=1; done < <(catalog_doctypes)
+    [ "$valid" -eq 1 ] || die "unknown doc-type '$dt' in step '$s' — see: flow list --doc-types"
+  done
+}
+
+cmd_list() {
+  if [ "${1:-}" = "--doc-types" ]; then
+    say "Doc-types in $CATALOG_DIR:"
+    local f
+    while IFS= read -r f; do
+      printf '  %-16s %s\n' "$f" "$(doctype_field "$(doctype_file "$f")" purpose)"
+    done < <(catalog_doctypes)
+    return
+  fi
+
+  local f name s sk dt chain modes found=0
+  for f in "$COMMANDS_DIR"/*-spike.md; do
+    [ -f "$f" ] || continue
+    grep -q '<!-- FLOW-SPEC' "$f" || continue   # only our generated commands
+    name="$(spec_flow "$f")"; [ -n "$name" ] || name="$(basename "$f" -spike.md)"
+    chain=""
+    while IFS= read -r s; do
+      sk="${s%%::*}"; dt="${s##*::}"
+      [ -z "$chain" ] && chain="${sk}→${dt}" || chain="$chain  →  ${sk}→${dt}"
+    done < <(spec_steps "$f")
+    modes="spike"
+    [ -f "$COMMANDS_DIR/$name-step.md" ] && modes="spike, step"
+    printf '%-22s [%s]\n' "$name" "$modes"
+    printf '    %s\n' "$chain"
+    found=1
+  done
+  [ "$found" -eq 1 ] || say "No flows defined yet. Create one with 'flow new'."
+}
+
+cmd_edit() {
+  NAME="${1:-}"; [ -n "$NAME" ] || die "usage: flow edit <name>"
+  shift || true
+  local src="$COMMANDS_DIR/$NAME-spike.md"
+  [ -f "$src" ] || die "no flow named '$NAME' (looked for $src)."
+
+  # recover the current chain
+  STEPS=()
+  while IFS= read -r s; do STEPS+=("$s"); done < <(spec_steps "$src")
+
+  say "Current chain for '$NAME':"
+  print_chain_summary
+
+  # non-interactive override: --step replaces the chain entirely
+  local new_steps=() arg
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --step) new_steps+=("$2"); shift 2 ;;
+      *) die "unknown option: $1" ;;
+    esac
+  done
+  if [ "${#new_steps[@]}" -gt 0 ]; then
+    STEPS=("${new_steps[@]}")
+    validate_steps
+  elif [ -t 0 ]; then
+    say ""
+    prompt "Rebuild the chain? [y/N] "; local ans; read_tty ans
+    case "$ans" in [yY]*) build_chain_interactive ;; esac
+  fi
+
+  rm -f "$COMMANDS_DIR/$NAME-spike.md" "$COMMANDS_DIR/$NAME-step.md"
+  generate_both
+  say ""
+  say "✓ flow '$NAME' regenerated."
+}
+
+cmd_rm() {
+  local assume_yes=0 name=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --yes|-y) assume_yes=1; shift ;;
+      *) name="$1"; shift ;;
+    esac
+  done
+  [ -n "$name" ] || die "usage: flow rm <name>"
+  local a="$COMMANDS_DIR/$name-spike.md" b="$COMMANDS_DIR/$name-step.md"
+  [ -f "$a" ] || [ -f "$b" ] || die "no flow named '$name'."
+  if [ "$assume_yes" -ne 1 ] && [ -t 0 ]; then
+    prompt "Delete flow '$name' (both commands)? [y/N] "; local ans; read_tty ans
+    case "$ans" in [yY]*) ;; *) die "aborted." ;; esac
+  fi
+  rm -f "$a" "$b"
+  say "✓ flow '$name' removed."
+}
+
+cmd_resume() {
+  local run="" from=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --from) from="$2"; shift 2 ;;
+      -*) die "unknown option: $1" ;;
+      *) run="$1"; shift ;;
+    esac
+  done
+  [ -n "$run" ] || die "usage: flow resume <flow>/<run> [--from NN]"
+
+  local rundir
+  case "$run" in
+    /*) rundir="$run" ;;
+    .flow/*) rundir="$PWD/$run" ;;
+    *) rundir="$PWD/.flow/runs/$run" ;;
+  esac
+  [ -d "$rundir" ] || die "no run at $rundir"
+
+  # flow name = first path component under .flow/runs/
+  local flow
+  flow="$(printf '%s\n' "$run" | sed 's#^\.flow/runs/##; s#/.*##')"
+
+  # default --from to the last checkpoint present
+  if [ -z "$from" ]; then
+    local last
+    last="$(ls "$rundir" 2>/dev/null | grep -E '^[0-9]{2}-' | sed 's/-.*//' | sort -n | tail -1)"
+    [ -n "$last" ] || die "no NN-*.md checkpoints in $rundir"
+    from="$last"
+  fi
+  case "$from" in [0-9]) from="0$from" ;; esac
+  case "$from" in *[!0-9]*) die "--from must be a number like 03" ;; esac
+
+  ls "$rundir"/"$from"-*.md >/dev/null 2>&1 || die "no checkpoint $from-*.md in $rundir"
+
+  printf 'from=%s\nat=%s\n' "$from" "$(date -u +%Y-%m-%dT%H-%M)" > "$rundir/.resume"
+
+  local cp; cp="$(basename "$(ls "$rundir"/"$from"-*.md | head -1)")"
+  say "✓ marked $rundir to resume from checkpoint $from ($cp)."
+  say ""
+  say "Edit that checkpoint to fork, then in Claude Code run:"
+  say "    /flow:$flow-step      # walk it with pauses"
+  say "    /flow:$flow-spike     # finish it unattended"
+}
+
+usage() {
+  cat <<EOF
+flow $FLOW_CLI_VERSION — a pipeline-builder for AI work.
+
+A flow is a chain of (skill, doc-type) pairs, compiled into two plugin commands:
+/flow:<name>-spike (end-to-end) and /flow:<name>-step (pause at each doc).
+
+Usage:
+  flow new [<name>]              Build a flow interactively, or with flags:
+                                   flow new --name N --step skill::doctype ...
+  flow list [--doc-types]        List defined flows, or the doc-type catalog.
+  flow edit <name> [--step ...]  Reopen the chain and regenerate both commands.
+  flow rm <name> [--yes]         Delete a flow's two commands.
+  flow resume <flow>/<run> [--from NN]
+                                 Mark a run to resume from a checkpoint.
+
+Commands written to: $COMMANDS_DIR  (the flow plugin → /flow: namespace)
+Doc-type catalog:    $CATALOG_DIR
+EOF
+}
+
+main() {
+  local cmd="${1:-}"; shift || true
+  case "$cmd" in
+    new)    cmd_new "$@" ;;
+    list|ls) cmd_list "$@" ;;
+    edit)   cmd_edit "$@" ;;
+    rm|remove) cmd_rm "$@" ;;
+    resume) cmd_resume "$@" ;;
+    version|--version|-v) say "flow $FLOW_CLI_VERSION" ;;
+    help|--help|-h|"") usage ;;
+    *) die "unknown command '$cmd' — run 'flow help'." ;;
+  esac
+}
+
+main "$@"

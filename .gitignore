@@ -1,3 +1,6 @@
 .DS_Store
 .flow/
 .devswarm-temp/
+
+# Generated flow commands — yours, not the product.
+/commands/

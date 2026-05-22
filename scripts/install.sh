@@ -1,182 +1,81 @@
 #!/usr/bin/env bash
-# Install the flow kernel as a Claude Code plugin (dev mode).
+# Install Flow (dev mode):
+#   1. Register this repo as the `flow@flow` Claude Code plugin, so generated
+#      flows surface under the /flow: namespace.
+#   2. Put the `flow` CLI on PATH, so you can author flows.
 #
-# Claude Code only loads plugins whose `@<marketplace>` suffix matches a registered
-# marketplace in ~/.claude/plugins/known_marketplaces.json. So we hook into the
-# real `flow` marketplace (github.com/jyliang/flow): symlink its install location
-# to the live dev repo, register `flow@flow` in installed_plugins.json. Dev edits
-# flow through; same end state as `claude plugin install flow@flow`.
+# Claude Code only loads plugins whose @<marketplace> suffix matches a registered
+# marketplace. We hook into the real `flow` marketplace (github.com/jyliang/flow):
+# symlink its install location to this repo, register `flow@flow`. Same end state
+# as `claude plugin install flow@flow`, but edits flow through live.
 
 set -euo pipefail
 
-RUNTIME_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-FLOW_HOME="${FLOW_HOME:-$HOME/.flow}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 PLUGINS_DIR="$CLAUDE_DIR/plugins"
 INSTALLED_JSON="$PLUGINS_DIR/installed_plugins.json"
-KNOWN_MARKETPLACES_JSON="$PLUGINS_DIR/known_marketplaces.json"
-MARKETPLACES_DIR="$PLUGINS_DIR/marketplaces"
-FLOW_MARKETPLACE_DIR="$MARKETPLACES_DIR/flow"
-LEGACY_SKILLS_DIR="$CLAUDE_DIR/skills"
-LEGACY_COMMANDS_DIR="$CLAUDE_DIR/commands"
-
-PLUGIN_ID="flow@flow"
-PLUGIN_VERSION="dev"
-
-mkdir -p "$PLUGINS_DIR" "$MARKETPLACES_DIR"
-mkdir -p "$FLOW_HOME/cells" "$FLOW_HOME/state" "$FLOW_HOME/tools"
-
-echo "$RUNTIME_ROOT" > "$FLOW_HOME/runtime-path"
-
-# Point the `flow` marketplace install location at the live dev repo. If a stale
-# clone is present (from a prior `claude plugin marketplace add jyliang/flow`),
-# move it aside so we don't overwrite user state.
-now_iso=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-if [ -L "$FLOW_MARKETPLACE_DIR" ]; then
-    current=$(readlink "$FLOW_MARKETPLACE_DIR")
-    if [ "$current" != "$RUNTIME_ROOT" ]; then
-        rm -f "$FLOW_MARKETPLACE_DIR"
-        ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
-        echo "  re-pointed marketplace symlink: $current → $RUNTIME_ROOT"
-    fi
-elif [ -d "$FLOW_MARKETPLACE_DIR" ]; then
-    backup="$FLOW_MARKETPLACE_DIR.bak.$(date +%s)"
-    mv "$FLOW_MARKETPLACE_DIR" "$backup"
-    ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
-    echo "  moved stale marketplace clone aside: $backup"
-else
-    ln -s "$RUNTIME_ROOT" "$FLOW_MARKETPLACE_DIR"
-fi
-
-# Ensure the marketplace is registered in known_marketplaces.json so Claude Code
-# accepts `flow@flow` (and `<cell>@flow`) plugin keys.
-if [ ! -f "$KNOWN_MARKETPLACES_JSON" ]; then
-    echo '{}' > "$KNOWN_MARKETPLACES_JSON"
-fi
-tmp_km=$(mktemp)
-jq --arg loc "$FLOW_MARKETPLACE_DIR" \
-   --arg ts  "$now_iso" \
-   '.flow = {
-       source: { source: "github", repo: "jyliang/flow" },
-       installLocation: $loc,
-       lastUpdated: $ts
-   }' "$KNOWN_MARKETPLACES_JSON" > "$tmp_km"
-mv "$tmp_km" "$KNOWN_MARKETPLACES_JSON"
-
-# Stable symlink to the runtime so command bodies and stage docs can reference
-# scripts/templates by a fixed path: $HOME/.flow/runtime/kernel/run/scripts/...
-# (Pre-namespacing, these used $HOME/.claude/skills/run/... — no longer valid
-# now that the kernel is installed as a plugin, not symlinked into ~/.claude/.)
-rm -f "$FLOW_HOME/runtime"
-ln -s "$RUNTIME_ROOT" "$FLOW_HOME/runtime"
-
-# Read kernel doc + command names for legacy cleanup. Kernel docs live under
-# kernel/<name>/<name>.md — they are not Claude Code skills (the slash commands
-# Read them directly), so they don't show up in the picker.
-kernel_docs=()
-for dir in "$RUNTIME_ROOT/kernel"/*; do
-    [ -d "$dir" ] || continue
-    kernel_docs+=("$(basename "$dir")")
-done
-
-kernel_commands=()
-for f in "$RUNTIME_ROOT/commands"/*.md; do
-    [ -f "$f" ] || continue
-    kernel_commands+=("$(basename "$f")")
-done
-
-# Legacy cleanup: remove bare-name symlinks in ~/.claude/skills/ and ~/.claude/commands/
-# that point into this repo. Pre-namespacing installs put them there. Also covers
-# pre-relocation installs that pointed into ./skills/ before the kernel moved to ./kernel/.
-legacy_cleaned=0
-if [ -d "$LEGACY_SKILLS_DIR" ]; then
-    for entry in "$LEGACY_SKILLS_DIR"/*; do
-        [ -L "$entry" ] || continue
-        target=$(readlink "$entry")
-        case "$target" in
-            "$RUNTIME_ROOT"/skills/*|"$RUNTIME_ROOT"/kernel/*)
-                rm -f "$entry"
-                legacy_cleaned=$((legacy_cleaned + 1))
-                ;;
-        esac
-    done
-fi
-if [ -d "$LEGACY_COMMANDS_DIR" ]; then
-    # Old install symlinked commands by their source filename. Source files have
-    # since been renamed (flow-here.md → here.md, flow-spike.md → spike.md), so
-    # also clean up the legacy names if they still point here.
-    legacy_command_names=("flow-here.md" "flow-spike.md" "${kernel_commands[@]}")
-    for name in "${legacy_command_names[@]}"; do
-        target_file="$LEGACY_COMMANDS_DIR/$name"
-        [ -L "$target_file" ] || continue
-        target=$(readlink "$target_file")
-        case "$target" in
-            "$RUNTIME_ROOT"/commands/*)
-                rm -f "$target_file"
-                legacy_cleaned=$((legacy_cleaned + 1))
-                ;;
-        esac
-    done
-fi
-
-# Register (or update) the plugin entry in installed_plugins.json.
-# Schema mirrors what `claude plugin install` writes for marketplace plugins.
-if [ ! -f "$INSTALLED_JSON" ]; then
-    echo '{"version": 2, "plugins": {}}' > "$INSTALLED_JSON"
-fi
-
-# Migration: if a prior install used the synthetic `@local-dev` marketplace,
-# drop those entries — they never loaded (Claude Code skips unknown marketplaces).
-tmp_json=$(mktemp)
-jq '.plugins = (.plugins | with_entries(
-       if (.key | endswith("@local-dev")) then empty else . end
-   ))' "$INSTALLED_JSON" > "$tmp_json"
-mv "$tmp_json" "$INSTALLED_JSON"
-
-tmp_json=$(mktemp)
-jq --arg id "$PLUGIN_ID" \
-   --arg path "$RUNTIME_ROOT" \
-   --arg ver "$PLUGIN_VERSION" \
-   --arg ts  "$now_iso" \
-   '.plugins[$id] = [{
-       scope: "user",
-       installPath: $path,
-       version: $ver,
-       installedAt: (.plugins[$id][0].installedAt // $ts),
-       lastUpdated: $ts
-   }]' "$INSTALLED_JSON" > "$tmp_json"
-mv "$tmp_json" "$INSTALLED_JSON"
-
-# Enable the plugin in user settings. Plugins default to disabled — without
-# this, `claude plugin list` shows the entry but the picker hides it.
+KNOWN_JSON="$PLUGINS_DIR/known_marketplaces.json"
+MARKETPLACE_DIR="$PLUGINS_DIR/marketplaces/flow"
 SETTINGS_JSON="$CLAUDE_DIR/settings.json"
-if [ -f "$SETTINGS_JSON" ]; then
-    tmp_settings=$(mktemp)
-    jq --arg id "$PLUGIN_ID" '.enabledPlugins[$id] = true' "$SETTINGS_JSON" > "$tmp_settings"
-    mv "$tmp_settings" "$SETTINGS_JSON"
+NOW="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+
+mkdir -p "$PLUGINS_DIR/marketplaces" "$ROOT/commands"
+
+# ---- 1. plugin registration (needs jq) ----
+if command -v jq >/dev/null 2>&1; then
+  # Point the marketplace install location at this repo (dev symlink).
+  if [ -L "$MARKETPLACE_DIR" ]; then
+    [ "$(readlink "$MARKETPLACE_DIR")" = "$ROOT" ] || { rm -f "$MARKETPLACE_DIR"; ln -s "$ROOT" "$MARKETPLACE_DIR"; }
+  elif [ -d "$MARKETPLACE_DIR" ]; then
+    mv "$MARKETPLACE_DIR" "$MARKETPLACE_DIR.bak.$(date +%s)"; ln -s "$ROOT" "$MARKETPLACE_DIR"
+  else
+    ln -s "$ROOT" "$MARKETPLACE_DIR"
+  fi
+
+  [ -f "$KNOWN_JSON" ] || echo '{}' > "$KNOWN_JSON"
+  tmp="$(mktemp)"; jq --arg loc "$MARKETPLACE_DIR" --arg ts "$NOW" \
+    '.flow = {source:{source:"github",repo:"jyliang/flow"},installLocation:$loc,lastUpdated:$ts}' \
+    "$KNOWN_JSON" > "$tmp" && mv "$tmp" "$KNOWN_JSON"
+
+  [ -f "$INSTALLED_JSON" ] || echo '{"version":2,"plugins":{}}' > "$INSTALLED_JSON"
+  tmp="$(mktemp)"; jq --arg path "$ROOT" --arg ts "$NOW" \
+    '.plugins["code-pipeline@flow"] = null
+     | .plugins["flow@flow"] = [{scope:"user",installPath:$path,version:"dev",
+         installedAt:((.plugins["flow@flow"][0].installedAt) // $ts),lastUpdated:$ts}]
+     | .plugins |= with_entries(select(.value != null))' \
+    "$INSTALLED_JSON" > "$tmp" && mv "$tmp" "$INSTALLED_JSON"
+
+  if [ -f "$SETTINGS_JSON" ]; then
+    tmp="$(mktemp)"; jq '.enabledPlugins["flow@flow"]=true
+      | if .enabledPlugins["code-pipeline@flow"] then .enabledPlugins |= del(.["code-pipeline@flow"]) else . end' \
+      "$SETTINGS_JSON" > "$tmp" && mv "$tmp" "$SETTINGS_JSON"
+  fi
+  echo "✓ plugin registered: flow@flow → $ROOT  (commands appear under /flow:)"
+else
+  echo "⚠  jq not found — skipped plugin registration. Install jq, then re-run, or"
+  echo "   run: claude plugin marketplace add jyliang/flow && claude plugin install flow@flow"
 fi
 
-# Copy shared Cell.mk so cells can import it without depending on runtime path.
-cp "$RUNTIME_ROOT/tools/Cell.mk" "$FLOW_HOME/tools/Cell.mk" 2>/dev/null || true
+# ---- 2. CLI on PATH ----
+pick_bindir() {
+  local d
+  for d in "$HOME/.local/bin" /opt/homebrew/bin /usr/local/bin "$HOME/bin"; do
+    case ":$PATH:" in *":$d:"*) if [ -d "$d" ] && [ -w "$d" ]; then printf '%s\n' "$d"; return; fi ;; esac
+  done
+  printf '%s\n' "$HOME/.local/bin"
+}
+BINDIR="$(pick_bindir)"
+mkdir -p "$BINDIR"
+ln -sf "$ROOT/bin/flow" "$BINDIR/flow"
+echo "✓ flow CLI linked: $BINDIR/flow → $ROOT/bin/flow"
 
-doc_count=${#kernel_docs[@]}
-cmd_count=${#kernel_commands[@]}
+case ":$PATH:" in
+  *":$BINDIR:"*) ;;
+  *) echo
+     echo "  ⚠  $BINDIR is not on your PATH. Add it, e.g.:"
+     echo "       echo 'export PATH=\"$BINDIR:\$PATH\"' >> ~/.zshrc && source ~/.zshrc" ;;
+esac
 
-cat <<EOF
-✓ Kernel installed as plugin '$PLUGIN_ID'
-  → installPath: $RUNTIME_ROOT
-  → $doc_count kernel docs (read by commands; not in picker), $cmd_count commands (namespaced as /flow:*)
-  → live edits flow through — no re-install needed for kernel changes
-✓ ~/.flow/ provisioned
-EOF
-
-if [ "$legacy_cleaned" -gt 0 ]; then
-    echo "✓ Removed $legacy_cleaned legacy bare-name symlink(s) from ~/.claude/{skills,commands}/"
-fi
-
-cat <<EOF
-
-Active cell: $(test -L "$FLOW_HOME/active-cell" && basename "$(readlink "$FLOW_HOME/active-cell")" || echo "none")
-
-Next: run /flow:flow in any project to set up your first cell.
-EOF
+echo
+echo "Next: run 'flow new' to build your first flow, then /flow:<name>-step in Claude Code."
