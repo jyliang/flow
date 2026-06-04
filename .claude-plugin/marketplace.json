@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Flow — a pipeline-builder for AI work (a doc-type catalog + the flow CLI)",
-    "version": "0.1.67"
+    "version": "0.1.69"
   },
   "plugins": [
     {
