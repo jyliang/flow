@@ -159,7 +159,7 @@ flow/
 ├── templates/            # protocol-spike.md, protocol-step.md (embedded into commands)
 ├── scripts/              # install.sh, doctor.sh
 ├── docs/                 # founding/ (conviction doc), manual/ — composite docs
-└── Makefile              # install · uninstall · doctor · list · lint-docs
+└── Makefile              # install · uninstall · doctor · list · lint-docs · serve-docs
 ```
 
 Generated commands live in the plugin's `commands/` dir as `<name>-spike.md` / `<name>-step.md` (git-ignored — they're yours, not the product). Run checkpoints live in each project's `.flow/runs/`.
