@@ -6,7 +6,7 @@ Git was for code. Flow is for the docs your agents leave behind.
 
 A flow is a chain of **(skill, doc-type)** pairs. The skill does the work; the doc-type is the document it hands to the next step. Every document is a checkpoint you can read, edit, and resume from. Flow ships the construction kit and a catalog of doc-types — not one fixed pipeline. You build your own.
 
-> Companion reads: [the Conviction Doc](docs/founding.html) and [the Manual](docs/manual.html).
+> Companion reads: [the Conviction Doc](docs/founding/index.html) and [the Manual](docs/manual/index.html). These are `composite` docs (HTML host + markdown/Mermaid fragments) — run `./docs/serve.sh` and open the printed URLs, since they load fragments over HTTP.
 
 ## Install
 
@@ -158,7 +158,7 @@ flow/
 ├── doc-types/            # the catalog (one file per doc-type) + README
 ├── templates/            # protocol-spike.md, protocol-step.md (embedded into commands)
 ├── scripts/              # install.sh, doctor.sh
-├── docs/                 # founding.html (conviction doc), manual.html
+├── docs/                 # founding/ (conviction doc), manual/ — composite docs
 └── Makefile              # install · uninstall · doctor · list · lint-docs
 ```
 

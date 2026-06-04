@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flow — The Manual</title>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-attrs@4/markdown-it-attrs.browser.js"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+    const md = window.markdownit({ html: true, linkify: true }).use(window.markdownItAttrs);
+    async function render() {
+      for (const el of document.querySelectorAll("[data-md]")) {
+        const src = await fetch(el.dataset.md).then(r => r.text());
+        el.innerHTML = md.render(src);
+      }
+      for (const el of document.querySelectorAll("[data-mermaid]")) {
+        el.textContent = await fetch(el.dataset.mermaid).then(r => r.text());
+        el.classList.add("mermaid");
+      }
+      await mermaid.run();
+      document.dispatchEvent(new Event("doc:rendered"));
+    }
+    render();
+  </script>
+  <style>
+    :root {
+      --bg: #faf8f4; --paper: #fff; --ink: #1a1a1a; --ink-soft: #4a4a4a;
+      --ink-faint: #8a8a8a; --rule: #e6e1d8; --accent: #c4541e; --accent-soft: #fbeee5;
+      --settled: #2f6e3a; --leaning: #b8860b; --max: 760px; --bar-h: 52px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---- sticky top bar ---- */
+    .progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--accent);
+      transform: scaleX(0); transform-origin: 0 50%; z-index: 60; transition: transform .08s linear; }
+    .topbar { position: sticky; top: 0; z-index: 50; background: rgba(250,248,244,.92);
+      backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+    .bar-inner { max-width: var(--max); margin: 0 auto; height: var(--bar-h);
+      display: flex; align-items: center; gap: 14px; padding: 0 32px; }
+    .bar-mark { font-family: system-ui, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -.01em;
+      color: var(--ink); text-decoration: none; flex: none; }
+    .bar-mark span { color: var(--accent); }
+    .chipnav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); }
+    .chipnav::-webkit-scrollbar { display: none; }
+    .chipnav a { flex: none; scroll-snap-align: center; white-space: nowrap;
+      font-family: system-ui, sans-serif; font-size: 12.5px; color: var(--ink-faint);
+      text-decoration: none; padding: 6px 11px; border-radius: 999px; border: 1px solid transparent;
+      transition: color .15s, background .15s, border-color .15s; }
+    .chipnav a:hover { color: var(--ink); }
+    .chipnav a .n { font-variant-numeric: tabular-nums; opacity: .6; margin-right: 5px; }
+    .chipnav a.active { color: var(--accent); background: var(--accent-soft); border-color: #eed8c8; font-weight: 600; }
+    .chipnav a.active .n { opacity: 1; }
+
+    main { max-width: var(--max); margin: 0 auto; padding: 56px 32px 140px; }
+    header.doc { margin-bottom: 24px; }
+    .meta { font-family: system-ui, sans-serif; font-size: 11px; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--ink-faint); margin-bottom: 28px; }
+    h1.title { font-weight: 400; font-size: 60px; line-height: 1.05; letter-spacing: -.02em; margin: 0 0 20px; }
+    h1.title em { font-style: italic; color: var(--accent); }
+    .deck { font-size: 22px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 32px; max-width: 620px; }
+    .deck b { color: var(--ink); }
+    .key { border: 1px solid var(--rule); background: var(--paper); padding: 16px 20px;
+      font-family: system-ui, sans-serif; font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; }
+    .key b { color: var(--ink); }
+
+    section { margin: 60px 0; scroll-margin-top: calc(var(--bar-h) + 14px); }
+    .num { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-faint); letter-spacing: .08em; }
+    h2 { font-weight: 400; font-size: 34px; line-height: 1.15; letter-spacing: -.01em; margin: 6px 0 20px; }
+    h3 { font-weight: 600; font-size: 20px; letter-spacing: -.005em; margin: 36px 0 10px; }
+    p { margin: 16px 0; }
+    .hero p:first-child { font-size: 26px; line-height: 1.25; color: var(--accent); margin-top: 8px; letter-spacing: -.01em; }
+    strong { color: var(--ink); }
+    ul, ol { padding-left: 22px; color: var(--ink-soft); }
+    li { margin: 8px 0; } li strong { color: var(--ink); }
+    code { font-family: ui-monospace, monospace; font-size: .88em; background: var(--paper);
+      border: 1px solid var(--rule); padding: 1px 5px; border-radius: 2px; }
+    pre { background: var(--paper); border: 1px solid var(--rule); padding: 16px; overflow-x: auto;
+      border-radius: 2px; font-size: 13px; line-height: 1.55; }
+    pre code { background: none; border: none; padding: 0; }
+
+    blockquote { margin: 26px 0; background: var(--paper); border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent); padding: 4px 20px; border-radius: 2px;
+      font-size: 16px; color: var(--ink-soft); }
+    blockquote strong:first-child { color: var(--accent); }
+
+    table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 16px 0; }
+    th, td { text-align: left; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-soft); }
+    th { font-family: system-ui, sans-serif; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+    td:first-child { white-space: nowrap; }
+    .mermaid { margin: 28px 0; text-align: center; }
+    footer { margin-top: 100px; padding-top: 28px; border-top: 1px solid var(--rule);
+      font-family: system-ui, sans-serif; font-size: 13px; color: var(--ink-faint);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    footer a { color: var(--ink-soft); }
+
+    /* ---- color & utility classes usable from markdown via {.class} ---- */
+    .accent  { color: var(--accent); }
+    .green   { color: var(--settled); }
+    .warn    { color: var(--leaning); }
+    .muted   { color: var(--ink-faint); }
+    .lead    { font-size: 1.12em; line-height: 1.4; color: var(--ink-soft); }
+    .badge { display: inline-block; font-family: system-ui, sans-serif; font-size: .62em; font-weight: 600;
+      letter-spacing: .09em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px;
+      vertical-align: middle; line-height: 1.5; }
+    .badge.settled { background: #e8f1ea; color: var(--settled); }
+    .badge.open    { background: var(--accent-soft); color: var(--accent); }
+    .badge.warn    { background: #fbf2dc; color: var(--leaning); }
+    .badge.spike   { background: var(--accent-soft); color: var(--accent); }
+    .badge.step    { background: #e8f1ea; color: var(--settled); }
+
+    @media (max-width: 640px) {
+      .bar-inner { padding: 0 16px; gap: 10px; }
+      main { padding: 36px 20px 90px; }
+      h1.title { font-size: 42px; } h2 { font-size: 26px; } .deck { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress"></div>
+
+<header class="topbar">
+  <div class="bar-inner">
+    <a class="bar-mark" href="#top">Flow<span>.</span></a>
+    <nav class="chipnav" id="chipnav">
+      <a href="#overview"><span class="n">01</span>Overview</a>
+      <a href="#concepts"><span class="n">02</span>Concepts</a>
+      <a href="#setup"><span class="n">03</span>Setup</a>
+      <a href="#build"><span class="n">04</span>Build a flow</a>
+      <a href="#run"><span class="n">05</span>Run it</a>
+      <a href="#checkpoints"><span class="n">06</span>Checkpoints</a>
+      <a href="#catalog"><span class="n">07</span>Catalog</a>
+      <a href="#authoring"><span class="n">08</span>Authoring</a>
+      <a href="#reference"><span class="n">09</span>Reference</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <header class="doc">
+    <div class="meta">User Manual · v0.2 · Flow</div>
+    <h1 class="title">The Flow <em>Manual</em></h1>
+    <p class="deck">Flow is a pipeline-builder for AI work. You assemble a chain of skills; every step leaves behind <b>a document a human can actually read</b> — and resume from.</p>
+    <div class="key">
+      <b>Git was for code.</b> Flow is for the docs your agents leave behind. Assemble a flow → run it spike or step → inspect, edit, or fork from any checkpoint.
+    </div>
+  </header>
+
+  <section id="overview">
+    <div class="num">§ 01</div>
+    <h2>What Flow is</h2>
+    <div data-md="sections/00-overview.md"></div>
+  </section>
+
+  <section id="concepts">
+    <div class="num">§ 02</div>
+    <h2>Six words that run everything</h2>
+    <div data-md="sections/10-concepts.md"></div>
+    <div data-mermaid="diagrams/flow-chain.mermaid"></div>
+  </section>
+
+  <section id="setup">
+    <div class="num">§ 03</div>
+    <h2>Install in two lines</h2>
+    <div data-md="sections/20-setup.md"></div>
+  </section>
+
+  <section id="build">
+    <div class="num">§ 04</div>
+    <h2>Build a flow</h2>
+    <div data-md="sections/30-build.md"></div>
+  </section>
+
+  <section id="run">
+    <div class="num">§ 05</div>
+    <h2>Spike &amp; step</h2>
+    <div data-md="sections/40-run.md"></div>
+    <div data-mermaid="diagrams/run-modes.mermaid"></div>
+    <div data-md="sections/45-run-detail.md"></div>
+  </section>
+
+  <section id="checkpoints">
+    <div class="num">§ 06</div>
+    <h2>Inspect, edit, resume, fork</h2>
+    <div data-md="sections/50-checkpoints.md"></div>
+  </section>
+
+  <section id="catalog">
+    <div class="num">§ 07</div>
+    <h2>The doc-type catalog</h2>
+    <div data-md="sections/60-catalog.md"></div>
+  </section>
+
+  <section id="authoring">
+    <div class="num">§ 08</div>
+    <h2>Write your own doc-type</h2>
+    <div data-md="sections/70-authoring.md"></div>
+  </section>
+
+  <section id="reference">
+    <div class="num">§ 09</div>
+    <h2>Command reference</h2>
+    <div data-md="sections/80-reference.md"></div>
+  </section>
+
+  <footer>
+    <div>Flow · The Manual · v0.2 — written for using, not announcing. Every step a document; every document a resume point.</div>
+    <div>Companion read: <a href="../founding/index.html">the Conviction Doc</a></div>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var prog = document.querySelector('.progress');
+  function onScroll() {
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    prog.style.transform = 'scaleX(' + (max > 0 ? h.scrollTop / max : 0) + ')';
+  }
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // active section -> highlight chip, keep it scrolled into view (key on mobile)
+  var chips = {};
+  document.querySelectorAll('.chipnav a').forEach(function (a) { chips[a.getAttribute('href').slice(1)] = a; });
+  function activate(id) {
+    Object.values(chips).forEach(function (c) { c.classList.remove('active'); });
+    var a = chips[id];
+    if (!a) return;
+    a.classList.add('active');
+    a.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) activate(e.target.id); });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('section[id]').forEach(function (s) { obs.observe(s); });
+})();
+</script>
+</body>
+</html>

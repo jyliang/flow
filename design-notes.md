@@ -1,6 +1,6 @@
 # Flow — design notes
 
-Working notes on how the pipeline-builder is put together. The product thesis lives in [`docs/founding.html`](docs/founding.html); the user-facing story in [`docs/manual.html`](docs/manual.html). This file is the implementer's view.
+Working notes on how the pipeline-builder is put together. The product thesis lives in [`docs/founding/`](docs/founding/index.html); the user-facing story in [`docs/manual/`](docs/manual/index.html). This file is the implementer's view.
 
 ## The shape in one breath
 

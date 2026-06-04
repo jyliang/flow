@@ -1,0 +1,16 @@
+%% diagrams/run-modes.mermaid — spike flows straight through; step pauses to review each doc
+flowchart TB
+  subgraph SPIKE["spike — run end-to-end"]
+    direction LR
+    A1[spec] --> A2[plan]
+    A2 --> A3[findings]
+    A3 --> A4[change-summary]
+  end
+  subgraph STEP["step — pause at every doc"]
+    direction LR
+    B1[spec] -.->|review| B2[plan]
+    B2 -.->|review| B3[findings]
+    B3 -.->|review| B4[change-summary]
+  end
+  classDef doc fill:#ffffff,color:#1a1a1a,stroke:#c4541e,stroke-width:1px;
+  class A1,A2,A3,A4,B1,B2,B3,B4 doc;

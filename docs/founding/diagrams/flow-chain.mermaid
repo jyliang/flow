@@ -1,0 +1,11 @@
+%% diagrams/flow-chain.mermaid — a flow as a chain of (skill, doc-type) pairs
+flowchart LR
+  S1[/explore/] --> D1[spec]
+  D1 --> S2[/plan/]
+  S2 --> D2[plan]
+  D2 --> S3[/review/]
+  S3 --> D3[findings]
+  classDef skill fill:#1a1a1a,color:#faf8f4,stroke:#1a1a1a;
+  classDef doc fill:#ffffff,color:#1a1a1a,stroke:#c4541e,stroke-width:1px;
+  class S1,S2,S3 skill;
+  class D1,D2,D3 doc;
