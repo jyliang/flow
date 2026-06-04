@@ -14,6 +14,7 @@ A doc-type is **frontmatter plus a template** — purely descriptive, nothing to
 | `decision-record` | Why we chose X over Y, captured at the moment of choosing. |
 | `spike-log` | What was tried and learned on an end-to-end run. |
 | `change-summary` | What shipped — ready to drop into a PR description. |
+| `composite` | A human-facing document built from an HTML host plus MD and Mermaid fragments. |
 
 ## Frontmatter fields
 
