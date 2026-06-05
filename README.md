@@ -32,6 +32,8 @@ When you build a flow, Flow discovers chainable skills from two places — globa
 
 A skill is any directory containing a `SKILL.md`. Cross-tool discovery (Cursor, Cline, and friends) is deferred — Flow reads Claude skills today.
 
+This repo ships one project-local skill of its own: [`founding-doc`](.claude/skills/founding-doc/) — it produces a [Conviction Doc](docs/founding/index.html) as a `composite` doc-type, and is how this repo's own founding doc was written. It's checked in as a worked example of a chainable skill, not as part of the plugin.
+
 ## Core concepts
 
 Six words run everything.
