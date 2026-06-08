@@ -18,7 +18,7 @@ For step `NN` (its skill → its doc-type) in chain order:
 
 1. **Do the work.** Invoke the step's skill, passing the previous checkpoint as input.
 2. **Decide for yourself.** When the skill needs a decision, take the `(Recommended)` option, else the first reasonable one. Append the decision and a one-line rationale to `spike-log.md`.
-3. **Capture the result** as the step's doc-type and write it to `.flow/runs/{{FLOW}}/<run>/NN-<doc-type>.md` (NN zero-padded).
+3. **Capture the result** as the step's doc-type, by its **format**: **markdown** → write `.flow/runs/{{FLOW}}/<run>/NN-<doc-type>.md` (NN zero-padded); **html** → hand the content to the **glossdoc** skill and capture it as a composite directory `NN-<doc-type>/` (fall back to markdown if glossdoc isn't installed).
 
 ### On completion
 

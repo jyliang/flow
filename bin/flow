@@ -459,17 +459,17 @@ cmd_resume() {
   if [ -z "$from" ]; then
     local last
     last="$(ls "$rundir" 2>/dev/null | grep -E '^[0-9]{2}-' | sed 's/-.*//' | sort -n | tail -1)"
-    [ -n "$last" ] || die "no NN-*.md checkpoints in $rundir"
+    [ -n "$last" ] || die "no NN-* checkpoints in $rundir"
     from="$last"
   fi
   case "$from" in [0-9]) from="0$from" ;; esac
   case "$from" in *[!0-9]*) die "--from must be a number like 03" ;; esac
 
-  ls "$rundir"/"$from"-*.md >/dev/null 2>&1 || die "no checkpoint $from-*.md in $rundir"
+  ls -d "$rundir"/"$from"-* >/dev/null 2>&1 || die "no checkpoint $from-* in $rundir"
 
   printf 'from=%s\nat=%s\n' "$from" "$(date -u +%Y-%m-%dT%H-%M)" > "$rundir/.resume"
 
-  local cp; cp="$(basename "$(ls "$rundir"/"$from"-*.md | head -1)")"
+  local cp; cp="$(basename "$(ls -d "$rundir"/"$from"-* | head -1)")"
   say "✓ marked $rundir to resume from checkpoint $from ($cp)."
   say ""
   say "Edit that checkpoint to fork, then in Claude Code run:"

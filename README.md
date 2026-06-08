@@ -34,6 +34,8 @@ A skill is any directory containing a `SKILL.md`. Cross-tool discovery (Cursor, 
 
 This repo ships one project-local skill of its own: [`founding-doc`](.claude/skills/founding-doc/) — it produces a [Conviction Doc](docs/founding/index.html) as a `composite` doc-type, and is how this repo's own founding doc was written. It's checked in as a worked example of a chainable skill, not as part of the plugin.
 
+> **Companion plugin — [glossdoc](https://github.com/jyliang/glossdoc).** Flow is *process*; glossdoc is *representation*. When a step binds a `composite` (`format: html`) doc-type, the run hands its checkpoint to the glossdoc skill, which renders one source through many *glosses* (lenses) — the same fragments a human reads in a browser and a machine parses on disk. Install it (`glossdoc@glossdoc`) to get composite checkpoints; without it, flow falls back to markdown.
+
 ## Core concepts
 
 Six words run everything.
